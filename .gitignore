@@ -1,0 +1,119 @@
+# ============================================================================
+# MINECRAFT KONWERSJA - GITIGNORE
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# MOD SRC - Kod źródłowy modów (pobierany automatycznie)
+# ----------------------------------------------------------------------------
+mod_src/
+!mod_src/.gitkeep
+!mod_src/**/README.md
+
+# Vineflower decompiler
+mod_src/vineflower.jar
+
+# ----------------------------------------------------------------------------
+# MODPACKI - Pliki JAR (duże, nie do repo)
+# ----------------------------------------------------------------------------
+modpack_1710/*.jar
+modpack_1710/**/*.jar
+modpack_1710/*.zip
+modpack_1710/**/*.zip
+modpack_1710/*.litemod
+modpack_1710/**/*.litemod
+!modpack_1710/.gitkeep
+
+# ----------------------------------------------------------------------------
+# MAPY MINECRAFT - Światy (ogromne, generowane)
+# ----------------------------------------------------------------------------
+mapa_118/
+mapa_1710/
+lightweigh_map_templates/
+
+# Wyjątki - metadata map (małe pliki konfiguracyjne)
+!mapa_*/level.dat
+!mapa_*/session.lock
+!mapa_*/.gitkeep
+
+# ----------------------------------------------------------------------------
+# DEKOMPILACJA - Wyniki tymczasowe
+# ----------------------------------------------------------------------------
+*.class
+mod_src/**/decompiled/
+mod_src/code_from_jar/**/decompiled/
+
+# ----------------------------------------------------------------------------
+# LOGI I Tymczasowe
+# ----------------------------------------------------------------------------
+*.log
+logs/
+tmp/
+temp/
+.cache/
+
+# ----------------------------------------------------------------------------
+# PYTHON
+# ----------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+
+# ----------------------------------------------------------------------------
+# IDE
+# ----------------------------------------------------------------------------
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+
+# ----------------------------------------------------------------------------
+# SYSTEM
+# ----------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+
+# ----------------------------------------------------------------------------
+# DANE ANALIZY (generowane)
+# ----------------------------------------------------------------------------
+*.csv
+*.json
+analysis_output/
+reports/
+*.nbt.dump
+*.schematic
+
+# ----------------------------------------------------------------------------
+# HEADLESS SERVER - Biblioteki i dane generowane
+# ----------------------------------------------------------------------------
+headless_server/*/libraries/
+headless_server/*/logs/
+headless_server_1.7.10/*/logs/
+headless_server/*/world/
+headless_server/*/world_nether/
+headless_server/*/world_the_end/
+headless_server/*/crash-reports/
+headless_server/*/*.jar
+headless_server/*/mods/*.jar
+!headless_server/*/mods/.gitkeep
+
+# ----------------------------------------------------------------------------
+# BACKUPY
+# ----------------------------------------------------------------------------
+*.bak
+*.backup
+backup/
+old/

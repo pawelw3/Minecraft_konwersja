@@ -1,0 +1,9 @@
+python run.py --old "C:\...\konwersja1" --new "C:\...\konwersja1_1710" --chunks -5,-5 --dry-run
+
+python run.py --old "C:\Users\pawel\AppData\Roaming\.minecraft\saves\konwersja1_two" --new "C:\Users\pawel\AppData\Roaming\.minecraft118\saves\konwersja1_two" --chunks -5,-5
+
+python run.py --old "C:\Users\pawel\AppData\Roaming\.minecraft\saves\konwersja3" --new "F:\Users\Pawel\Documents\1d conv\konwersja bck\temp\konwersja1_1710" --dump-save old --dump-te-json te_dump.json --range 0,0:5,5
+
+python run.py --old "C:\Users\pawel\AppData\Roaming\.minecraft118\saves\konwersja3" --new "F:\Users\Pawel\Documents\1d conv\konwersja bck\temp\konwersja1_1710" --dump-save old --dump-te-json te_dump_118.json --range 0,0:5,5
+
+python run.py --old "F:\Users\Pawel\Documents\1d conv\konwersja bck\temp\konwersja1_1710" --new "C:\Users\pawel\AppData\Roaming\.minecraft118\saves\konwersja3" --dump-save new --dump-te-json te_dump_118.json --range 0,0:5,5
