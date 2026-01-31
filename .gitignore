@@ -36,6 +36,16 @@ lightweigh_map_templates/
 !mapa_*/.gitkeep
 
 # ----------------------------------------------------------------------------
+# MAP CLEANING - Wyczyszczone/wynikowe mapy (duże, generowane)
+# ----------------------------------------------------------------------------
+map_cleaning/map_1710_no_mods/
+map_cleaning/test_cleaned/
+map_cleaning/cleaned_map/
+map_cleaning/temp_*/
+map_cleaning/*.mca
+map_cleaning/*.mcr
+
+# ----------------------------------------------------------------------------
 # DEKOMPILACJA - Wyniki tymczasowe
 # ----------------------------------------------------------------------------
 *.class
@@ -148,7 +158,15 @@ headless_server/*/eula.txt
 backup/
 old/
 
-# JAR i BIN - ignoruj wsz�dzie
+# JAR i BIN - ignoruj wsz�dzie
 *.jar
 *.bin
 !**/.gitkeep
+
+# Dystrybucje JVM workera (generowane przez gradle)
+jvm/worker/build/distributions/
+
+# Backupy światów (duże ZIPy)
+headless_server/*/*.zip
+headless_server/*/world-*/
+headless_server/*/spiral_*/
