@@ -1,0 +1,3 @@
+[submodule "jvm/third_party/hephaistos"]
+	path = jvm/third_party/hephaistos
+	url = https://github.com/jglrxavpok/Hephaistos.git
