@@ -118,12 +118,12 @@ data class EditMetadata(
             
             for (edit in edits) {
                 // Oblicz chunk z pozycji
-                val chunkX = edit.x shr 4
-                val chunkZ = edit.z shr 4
-                val regionX = chunkX shr 5
-                val regionZ = chunkZ shr 5
-                val localChunkX = chunkX and 31
-                val localChunkZ = chunkZ and 31
+                val chunkX = chunkCoordFromBlock(edit.x)
+                val chunkZ = chunkCoordFromBlock(edit.z)
+                val regionX = regionCoordFromChunk(chunkX)
+                val regionZ = regionCoordFromChunk(chunkZ)
+                val localChunkX = localChunkFromChunk(chunkX)
+                val localChunkZ = localChunkFromChunk(chunkZ)
                 
                 chunks.add(ChunkCoord(regionX, regionZ, localChunkX, localChunkZ))
                 

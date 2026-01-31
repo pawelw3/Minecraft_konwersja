@@ -151,6 +151,114 @@ fun main(args: Array<String>) {
         return
     }
     
+    // Analiza redstone
+    if (args.contains("--analyze-redstone")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane dla --analyze-redstone")
+            System.exit(1)
+            return
+        }
+        val radius = args.getOrNull(args.indexOf("--analyze-redstone") + 1)?.toIntOrNull() ?: 2
+        analyzeRedstoneCommand(worldPath, radius)
+        return
+    }
+    
+    // Wykrywanie wzorca spirali
+    if (args.contains("--detect-spiral")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane dla --detect-spiral")
+            System.exit(1)
+            return
+        }
+        detectSpiralPattern(worldPath)
+        return
+    }
+    
+    // Inspekcja konkretnych chunków
+    if (args.contains("--inspect-chunks")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane dla --inspect-chunks")
+            System.exit(1)
+            return
+        }
+        // Sprawdź chunki: (0,0), (-1,-1), (0,-1), (-1,0)
+        inspectChunks(worldPath, listOf(
+            Pair(0, 0),
+            Pair(-1, -1),
+            Pair(0, -1),
+            Pair(-1, 0)
+        ))
+        return
+    }
+    
+    // Analiza wszystkich pobliskich chunków
+    if (args.contains("--inspect-all-nearby")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane")
+            System.exit(1)
+            return
+        }
+        inspectAllNearbyChunks(worldPath)
+        return
+    }
+    
+    // Pełne skanowanie obszaru -5 do 4
+    if (args.contains("--scan-full-area")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane")
+            System.exit(1)
+            return
+        }
+        scanFullArea(worldPath)
+        return
+    }
+    
+    // Poprawiona analiza - wszystkie poziomy Y
+    if (args.contains("--correct-analysis")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane")
+            System.exit(1)
+            return
+        }
+        correctAnalysis(worldPath)
+        return
+    }
+    
+    // Szeroka analiza wszystkich regionów
+    if (args.contains("--wide-analysis")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane")
+            System.exit(1)
+            return
+        }
+        wideAreaAnalysis(worldPath)
+        return
+    }
+    
+    // Wizualizacja mapy SVG
+    if (args.contains("--visualize-svg")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane")
+            System.exit(1)
+            return
+        }
+        val outputFile = args.getOrNull(args.indexOf("--visualize-svg") + 1) ?: "map_visualization.svg"
+        visualizeMapArea(worldPath, -70, -70, 70, 70, outputFile)
+        return
+    }
+    
+    // Wizualizacja 4 chunków spirali
+    if (args.contains("--visualize-spiral")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane")
+            System.exit(1)
+            return
+        }
+        val outputDir = args.getOrNull(args.indexOf("--visualize-spiral") + 1) ?: "spiral_visualization"
+        visualizeSpiralChunks(worldPath, outputDir)
+        return
+    }
+    
     // Uruchomienie serwera z walidacją
     if (args.contains("--launch-server")) {
         val serverDir = args.getOrNull(args.indexOf("--launch-server") + 1)
@@ -254,8 +362,11 @@ fun printHelp() {
           # Walidacja świata
           java -jar worker.jar --world headless_server/1.7.10/spiral_y100 --validate-world
           
-          # Uruchomienie serwera z walidacją
-          java -jar worker.jar --launch-server headless_server/1.7.10 spiral_y100 25568
+          # Analiza redstone w chunkach wokół 0,0
+          java -jar worker.jar --world map_read_write_tests/kimi1 --analyze-redstone 2
+          
+          # Uruchomienie serwera z walidacją (domyślny port 25565)
+          java -jar worker.jar --launch-server headless_server/1.7.10 spiral_y100
         
         Format pliku patch:
         {

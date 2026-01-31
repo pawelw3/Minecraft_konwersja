@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="564" height="564" viewBox="0 0 564 564">
+  <rect width="100%" height="100%" fill="#2d5016"/>
+  <!-- Linie chunków -->
+  <line x1="0" y1="0" x2="0" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="64" y1="0" x2="64" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="128" y1="0" x2="128" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="192" y1="0" x2="192" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="256" y1="0" x2="256" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="320" y1="0" x2="320" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="384" y1="0" x2="384" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="448" y1="0" x2="448" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="512" y1="0" x2="512" y2="564" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="0" x2="564" y2="0" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="64" x2="564" y2="64" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="128" x2="564" y2="128" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="192" x2="564" y2="192" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="256" x2="564" y2="256" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="320" x2="564" y2="320" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="384" x2="564" y2="384" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="448" x2="564" y2="448" stroke="#1a3009" stroke-width="1"/>
+  <line x1="0" y1="512" x2="564" y2="512" stroke="#1a3009" stroke-width="1"/>
+  <!-- Redstone Wire -->
+  <circle cx="286" cy="282" r="1.5" fill="#8b0000"/>
+  <circle cx="294" cy="282" r="1.5" fill="#8b0000"/>
+  <circle cx="302" cy="282" r="1.5" fill="#8b0000"/>
+  <circle cx="302" cy="286" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="286" r="1.5" fill="#8b0000"/>
+  <circle cx="302" cy="290" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="290" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="294" r="1.5" fill="#8b0000"/>
+  <circle cx="302" cy="298" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="298" r="1.5" fill="#8b0000"/>
+  <circle cx="302" cy="302" r="1.5" fill="#8b0000"/>
+  <circle cx="282" cy="306" r="1.5" fill="#8b0000"/>
+  <circle cx="286" cy="306" r="1.5" fill="#8b0000"/>
+  <circle cx="290" cy="306" r="1.5" fill="#8b0000"/>
+  <circle cx="298" cy="306" r="1.5" fill="#8b0000"/>
+  <circle cx="302" cy="306" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="306" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="310" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="314" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="318" r="1.5" fill="#8b0000"/>
+  <circle cx="282" cy="322" r="1.5" fill="#8b0000"/>
+  <circle cx="290" cy="322" r="1.5" fill="#8b0000"/>
+  <circle cx="294" cy="322" r="1.5" fill="#8b0000"/>
+  <circle cx="298" cy="322" r="1.5" fill="#8b0000"/>
+  <circle cx="302" cy="322" r="1.5" fill="#8b0000"/>
+  <circle cx="306" cy="322" r="1.5" fill="#8b0000"/>
+  <circle cx="314" cy="322" r="1.5" fill="#8b0000"/>
+  <circle cx="318" cy="322" r="1.5" fill="#8b0000"/>
+  <!-- Repeaters -->
+  <rect x="297" y="281" width="2" height="2" fill="#808080" stroke="#404040" stroke-width="0.5"/>
+  <rect x="317" y="281" width="2" height="2" fill="#808080" stroke="#404040" stroke-width="0.5"/>
+  <rect x="301" y="293" width="2" height="2" fill="#808080" stroke="#404040" stroke-width="0.5"/>
+  <rect x="317" y="301" width="2" height="2" fill="#808080" stroke="#404040" stroke-width="0.5"/>
+  <rect x="293" y="305" width="2" height="2" fill="#808080" stroke="#404040" stroke-width="0.5"/>
+  <rect x="285" y="321" width="2" height="2" fill="#808080" stroke="#404040" stroke-width="0.5"/>
+  <rect x="309" y="321" width="2" height="2" fill="#808080" stroke="#404040" stroke-width="0.5"/>
+  <!-- Torches -->
+  <circle cx="282" cy="282" r="1.5" fill="#ff6600"/>
+  <!-- Other redstone -->
+  <!-- Oś X=0, Z=0 -->
+  <line x1="280" y1="0" x2="280" y2="564" stroke="#ffffff" stroke-width="2" opacity="0.5"/>
+  <line x1="0" y1="280" x2="564" y2="280" stroke="#ffffff" stroke-width="2" opacity="0.5"/>
+  <!-- Legenda -->
+  <text x="10" y="20" fill="white" font-size="12">Redstone Wire: 28</text>
+  <text x="10" y="35" fill="white" font-size="12">Repeaters: 7</text>
+  <text x="10" y="50" fill="white" font-size="12">Torches: 1</text>
+  <text x="10" y="65" fill="white" font-size="12">Obszar: X=-70..70, Z=-70..70</text>
+</svg>

@@ -13,10 +13,10 @@ fun testCommandBlock(worldPath: String, expectedX: Int, expectedY: Int, expected
     println("\nTest 4: Weryfikacja Command Block + TE")
     println("=" * 50)
     
-    val chunkX = expectedX shr 4
-    val chunkZ = expectedZ shr 4
-    val regionX = if (chunkX >= 0) chunkX shr 5 else (chunkX + 1) shr 5 - 1
-    val regionZ = if (chunkZ >= 0) chunkZ shr 5 else (chunkZ + 1) shr 5 - 1
+    val chunkX = chunkCoordFromBlock(expectedX)
+    val chunkZ = chunkCoordFromBlock(expectedZ)
+    val regionX = regionCoordFromChunk(chunkX)
+    val regionZ = regionCoordFromChunk(chunkZ)
     
     println("Szukam command blocka na pozycji ($expectedX, $expectedY, $expectedZ)")
     println("Chunk: ($chunkX, $chunkZ), Region: ($regionX, $regionZ)")

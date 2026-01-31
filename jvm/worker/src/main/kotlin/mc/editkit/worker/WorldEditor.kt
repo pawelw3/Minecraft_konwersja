@@ -45,19 +45,21 @@ class WorldEditor(private val worldPath: String) {
      * Ustawia blok na danej pozycji (format 1.7.10)
      */
     fun setBlock(x: Int, y: Int, z: Int, blockId: Int, meta: Int = 0) {
-        val (chunkX, chunkZ) = blockToChunk(x, z)
-        val (regionX, regionZ) = chunkToRegion(chunkX, chunkZ)
-        val localChunkX = chunkX and 31
-        val localChunkZ = chunkZ and 31
+        val chunkX = chunkCoordFromBlock(x)
+        val chunkZ = chunkCoordFromBlock(z)
+        val regionX = regionCoordFromChunk(chunkX)
+        val regionZ = regionCoordFromChunk(chunkZ)
+        val localChunkX = localChunkFromChunk(chunkX)
+        val localChunkZ = localChunkFromChunk(chunkZ)
         
         val regionFilePath = regionPath.resolve("r.$regionX.$regionZ.mca")
         
         val chunk = getOrCreateChunk(regionFilePath, regionX, regionZ, localChunkX, localChunkZ, chunkX, chunkZ)
         
-        val sectionY = y shr 4
-        val localY = y and 15
-        val localX = x and 15
-        val localZ = z and 15
+        val sectionY = chunkCoordFromBlock(y)
+        val localY = localBlockFromWorld(y)
+        val localX = localBlockFromWorld(x)
+        val localZ = localBlockFromWorld(z)
         
         // Pobierz Level compound
         val level = chunk.nbt?.getCompound("Level") 
@@ -170,22 +172,24 @@ class WorldEditor(private val worldPath: String) {
     }
     
     private fun trackEdit(x: Int, y: Int, z: Int, blockId: Int, meta: Int) {
-        val chunkX = x shr 4
-        val chunkZ = z shr 4
-        val regionX = if (chunkX >= 0) chunkX shr 5 else (chunkX + 1) shr 5 - 1
-        val regionZ = if (chunkZ >= 0) chunkZ shr 5 else (chunkZ + 1) shr 5 - 1
-        val localChunkX = chunkX and 31
-        val localChunkZ = chunkZ and 31
+        val chunkX = chunkCoordFromBlock(x)
+        val chunkZ = chunkCoordFromBlock(z)
+        val regionX = regionCoordFromChunk(chunkX)
+        val regionZ = regionCoordFromChunk(chunkZ)
+        val localChunkX = localChunkFromChunk(chunkX)
+        val localChunkZ = localChunkFromChunk(chunkZ)
         
         modifiedChunks.add(EditMetadata.ChunkCoord(regionX, regionZ, localChunkX, localChunkZ))
         editOperations.add(BlockEdit(x, y, z, blockId, meta))
     }
     
     fun setTileEntity(x: Int, y: Int, z: Int, nbtData: JSONObject) {
-        val (chunkX, chunkZ) = blockToChunk(x, z)
-        val (regionX, regionZ) = chunkToRegion(chunkX, chunkZ)
-        val localChunkX = chunkX and 31
-        val localChunkZ = chunkZ and 31
+        val chunkX = chunkCoordFromBlock(x)
+        val chunkZ = chunkCoordFromBlock(z)
+        val regionX = regionCoordFromChunk(chunkX)
+        val regionZ = regionCoordFromChunk(chunkZ)
+        val localChunkX = localChunkFromChunk(chunkX)
+        val localChunkZ = localChunkFromChunk(chunkZ)
         
         val regionFilePath = regionPath.resolve("r.$regionX.$regionZ.mca")
         val chunk = getOrCreateChunk(regionFilePath, regionX, regionZ, localChunkX, localChunkZ, chunkX, chunkZ)
@@ -263,12 +267,12 @@ class WorldEditor(private val worldPath: String) {
     }
     
     private fun trackTileEntityEdit(x: Int, y: Int, z: Int, id: String, keys: List<String>) {
-        val chunkX = x shr 4
-        val chunkZ = z shr 4
-        val regionX = if (chunkX >= 0) chunkX shr 5 else (chunkX + 1) shr 5 - 1
-        val regionZ = if (chunkZ >= 0) chunkZ shr 5 else (chunkZ + 1) shr 5 - 1
-        val localChunkX = chunkX and 31
-        val localChunkZ = chunkZ and 31
+        val chunkX = chunkCoordFromBlock(x)
+        val chunkZ = chunkCoordFromBlock(z)
+        val regionX = regionCoordFromChunk(chunkX)
+        val regionZ = regionCoordFromChunk(chunkZ)
+        val localChunkX = localChunkFromChunk(chunkX)
+        val localChunkZ = localChunkFromChunk(chunkZ)
         
         modifiedChunks.add(EditMetadata.ChunkCoord(regionX, regionZ, localChunkX, localChunkZ))
         editOperations.add(TEEdit(x, y, z, id, keys))
@@ -540,14 +544,4 @@ class WorldEditor(private val worldPath: String) {
         return output.toByteArray()
     }
     
-    private fun blockToChunk(x: Int, z: Int): Pair<Int, Int> {
-        return Pair(x shr 4, z shr 4)
-    }
-    
-    private fun chunkToRegion(chunkX: Int, chunkZ: Int): Pair<Int, Int> {
-        return Pair(
-            if (chunkX >= 0) chunkX shr 5 else (chunkX + 1) shr 5 - 1,
-            if (chunkZ >= 0) chunkZ shr 5 else (chunkZ + 1) shr 5 - 1
-        )
-    }
 }

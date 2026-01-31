@@ -12,16 +12,16 @@ fun testBlockSet(worldPath: String, expectedX: Int, expectedY: Int, expectedZ: I
     println("\nTest 3: Weryfikacja ustawionego bloku")
     println("=" * 50)
     
-    val chunkX = expectedX shr 4
-    val chunkZ = expectedZ shr 4
-    val regionX = if (chunkX >= 0) chunkX shr 5 else (chunkX + 1) shr 5 - 1
-    val regionZ = if (chunkZ >= 0) chunkZ shr 5 else (chunkZ + 1) shr 5 - 1
-    val localChunkX = chunkX and 31
-    val localChunkZ = chunkZ and 31
-    val localX = expectedX and 15
-    val localY = expectedY and 15
-    val localZ = expectedZ and 15
-    val sectionY = expectedY shr 4
+    val chunkX = chunkCoordFromBlock(expectedX)
+    val chunkZ = chunkCoordFromBlock(expectedZ)
+    val regionX = regionCoordFromChunk(chunkX)
+    val regionZ = regionCoordFromChunk(chunkZ)
+    val localChunkX = localChunkFromChunk(chunkX)
+    val localChunkZ = localChunkFromChunk(chunkZ)
+    val localX = localBlockFromWorld(expectedX)
+    val localY = localBlockFromWorld(expectedY)
+    val localZ = localBlockFromWorld(expectedZ)
+    val sectionY = chunkCoordFromBlock(expectedY)
     
     println("Pozycja globalna: ($expectedX, $expectedY, $expectedZ)")
     println("Chunk: ($chunkX, $chunkZ), Region: ($regionX, $regionZ), Local chunk: ($localChunkX, $localChunkZ)")

@@ -120,13 +120,11 @@ Pozostała część projektu to:
 
 ### 3.2 Stack technologiczny
 
-- **Język:** Python 3.10+
-- **Format mapowań:** YAML (planowane)
+- **Język:** Python 3.10+ dla całego projektu z wyłączeniem funkcjonalności związanych z bezpiecznym zapisem do Sections w .mca i solidnym odczytem z Sections .mca - ten fragment projektu wyjątkowo w Kotlin w związku z tym że biblioteka Hephaistos jest w Kotlin - poza folderem jvm nie stosuj Kotlin lub Javy
+- **Format mapowań:** JSON
 - **Testowanie:** pytest (planowane)
 - **Narzędzia zewnętrzne:**
-  - MCA Selector - przeglądanie/edycja chunków
-  - NBTExplorer - ręczna edycja danych NBT
-  - Amulet Editor - zaawansowana edycja światów
+  - klient minecrafta odpalany przez usera, user może wchodzić na headless serwer w niektórych przypadkach
 
 ### 3.3 Formaty danych
 
@@ -248,7 +246,7 @@ Zastąpienie innymi o zbliżonej tematyce:
 ### 5.5 Kompletna strata (16 modów) ❌
 
 Brak odpowiedników lub niepotrzebne:
-- Extra Utilities, CustomNPCs, Forestry, Statues
+- CustomNPCs, Forestry
 - Wszystkie addony Thaumcraft (Thaumic Energistics, Thaumic Tinkerer, etc.)
 
 ---
@@ -283,6 +281,7 @@ Co zostało zrobione (2-3 zdania).
 
 ### 6.2 Etapy konwersji (priorytetyzacja)
 
+Tutaj przykładowe etapy, to nie ma związku z rzeczywistością ale tłumaczy ideę
 ```
 ETAP 0: Infrastruktura
         ├── Parser NBT 1.7.10
