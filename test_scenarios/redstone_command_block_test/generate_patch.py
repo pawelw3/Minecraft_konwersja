@@ -11,24 +11,38 @@ import json
 import argparse
 from pathlib import Path
 
-def generate_redstone_test_patch(offset_x=50, offset_y=64, offset_z=50):
+def generate_redstone_test_patch(offset_x=50, offset_y=64, offset_z=50, 
+                                   wire_length=3, repeater_count=2, 
+                                   command_msg=None, power_source=None,
+                                   name="Redstone Test"):
     """
     Generuje patch dla układu testowego redstone z command blockiem.
     
     Układ:
-    - Dźwignia (Lever) na początku
-    - Redstone dust (3 bloki)
-    - Repeater (delay=4 ticki)
-    - Redstone dust (3 bloki)
-    - Repeater (delay=4 ticki)
-    - Redstone dust (1 blok)
+    - Dźwignia (Lever) na początku (włączona lub wyłączona)
+    - Redstone dust (wire_length bloki)
+    - Repeater (delay=1 tick, powtarzany co 4 bloki)
+    - ... (powtarzane repeater_count razy)
     - Command Block (z Tile Entity)
+    
+    Args:
+        offset_x, offset_y, offset_z: Pozycja startowa
+        wire_length: Długość kabla między repeaterami (domyślnie 3)
+        repeater_count: Liczba repeaterów (domyślnie 2)
+        command_msg: Komenda do wykonania (domyślnie testowa)
+        lever_active: Czy dźwignia ma być włączona (True/False)
+        name: Nazwa testu
     """
     
     edits = []
     
-    # Podłoga (stone) pod całym układem
-    for i in range(11):
+    # Oblicz całkowitą długość układu
+    # (wire_length + 1 za repeater) * repeater_count + wire_length przed ostatnim repeaterem + command block
+    # Dodajemy 1 blok na początku na power source (redstone torch lub block)
+    total_length = (wire_length + 1) * repeater_count + wire_length + 1 + 1  # +1 na power source
+    
+    # Podłoga (stone) pod całym układem (łącznie z miejscem na power source)
+    for i in range(total_length + 2):
         edits.append({
             "op": "set_block",
             "x": offset_x + i,
@@ -38,103 +52,118 @@ def generate_redstone_test_patch(offset_x=50, offset_y=64, offset_z=50):
             "meta": 0
         })
     
-    # Dźwignia (Lever) - ID 69, meta 5 = facing east, active
+    # Miejsce na power source (zostanie wstawione przez RCON /setblock)
+    # Na razie tylko stone pod nim (już dodany wyżej)
+    power_source_x = offset_x
+    
+    # Pierwszy blok redstone - wyłączony (meta=0, będzie aktywowany przez power source)
     edits.append({
         "op": "set_block",
-        "x": offset_x,
+        "x": offset_x + 1,
         "y": offset_y,
         "z": offset_z,
-        "id": 69,
-        "meta": 5
+        "id": 55,  # Redstone wire
+        "meta": 0   # Wyłączony - zostanie aktywowany przez RCON
     })
     
-    # Redstone dust (3 bloki) - ID 55, meta 15 = fully powered
-    for i in range(1, 4):
+    # Aktualna pozycja X (zaczynamy od offset_x + 2, bo +0 to power source, +1 to pierwszy redstone)
+    current_x = offset_x + 2
+    
+    # Generuj segmenty: redstone + repeater
+    for rep in range(repeater_count):
+        # Redstone dust (wire_length bloków)
+        for i in range(wire_length):
+            edits.append({
+                "op": "set_block",
+                "x": current_x + i,
+                "y": offset_y,
+                "z": offset_z,
+                "id": 55,  # Redstone wire
+                "meta": 15  # Max power
+            })
+        current_x += wire_length
+        
+        # Repeater - ID 93
+        # Meta: bits 0-1 = delay (0-3), bits 2-3 = facing
+        # facing east = 1, delay = 1 tick → meta = 1
+        # delay = 4 ticki → meta = 5 (czyli delay=4, bo 0=1tick, 1=2ticks, 2=3ticks, 3=4ticks w nowszych, ale w 1.7.10: 0=1, 1=2, 2=3, 3=4)
+        # W 1.7.10: 0=1 tick, 1=2 ticks, 2=3 ticks, 3=4 ticks
+        # facing: 0=north, 1=east, 2=south, 3=west
+        # facing east = 1, więc meta = 1 | (delay << 2)
+        # Dla delay=4 ticki: delay_bits=3, meta = 1 | (3 << 2) = 1 | 12 = 13
+        delay_bits = 3  # 4 ticki (max delay)
+        repeater_meta = 1 | (delay_bits << 2)  # facing east + delay
         edits.append({
             "op": "set_block",
-            "x": offset_x + i,
+            "x": current_x,
             "y": offset_y,
             "z": offset_z,
-            "id": 55,  # Redstone wire
-            "meta": 15  # Max power
+            "id": 93,  # Repeater
+            "meta": repeater_meta
         })
+        current_x += 1
     
-    # Repeater 1 - ID 93 (inactive), meta 5 = facing east, delay=1
-    # W MC 1.7.10: bits 0-1 = delay (0-3), bits 2-3 = facing
-    # facing east = 1, delay = 0 (1 tick) → meta = 1 | (0 << 2) = 1
-    # ALE: w praktyce repeater sam się aktualizuje gdy dostanie sygnał
-    edits.append({
-        "op": "set_block",
-        "x": offset_x + 4,
-        "y": offset_y,
-        "z": offset_z,
-        "id": 93,  # Repeater (inactive)
-        "meta": 1   # Facing east, delay=1
-    })
-    
-    # Redstone dust (3 bloki)
-    for i in range(5, 8):
+    # Ostatni odcinek redstone przed command blockiem
+    for i in range(wire_length):
         edits.append({
             "op": "set_block",
-            "x": offset_x + i,
+            "x": current_x + i,
             "y": offset_y,
             "z": offset_z,
             "id": 55,
             "meta": 15
         })
-    
-    # Repeater 2 - ID 93
-    edits.append({
-        "op": "set_block",
-        "x": offset_x + 8,
-        "y": offset_y,
-        "z": offset_z,
-        "id": 93,
-        "meta": 1  # Facing east, delay=1
-    })
-    
-    # Redstone dust (1 blok) przed command blockiem
-    edits.append({
-        "op": "set_block",
-        "x": offset_x + 9,
-        "y": offset_y,
-        "z": offset_z,
-        "id": 55,
-        "meta": 15
-    })
+    current_x += wire_length
     
     # Command Block - ID 137
     edits.append({
         "op": "set_block",
-        "x": offset_x + 10,
+        "x": current_x,
         "y": offset_y,
         "z": offset_z,
         "id": 137,  # Command Block
         "meta": 0
     })
     
+    # Komenda - jeśli nie podano, użyj domyślnej
+    if command_msg is None:
+        command_msg = f"/say [TEST_REDSTONE] {name} - Układ działa! Test PASS."
+    
     # Tile Entity dla Command Blocka
     edits.append({
         "op": "set_te",
-        "x": offset_x + 10,
+        "x": current_x,
         "y": offset_y,
         "z": offset_z,
         "nbt": {
             "id": "Control",
-            "Command": "/say [TEST_REDSTONE] Układ redstone działa poprawnie! Test PASS.",
+            "Command": command_msg,
             "CustomName": "@",
             "TrackOutput": 1,
             "SuccessCount": 0
         }
     })
     
+    # Dodaj informacje o power source do metadanych
+    power_source_info = {
+        "x": power_source_x,
+        "y": offset_y,
+        "z": offset_z,
+        "type": "redstone_torch" if power_source is None else power_source,
+        "command": f"/setblock {power_source_x} {offset_y} {offset_z} minecraft:redstone_torch 5"
+    }
+    
     patch = {
         "metadata": {
-            "name": "Redstone Command Block Test",
+            "name": name,
             "version": "1.7.10",
             "generated_by": "generate_patch.py",
             "offset": {"x": offset_x, "y": offset_y, "z": offset_z},
-            "total_edits": len(edits)
+            "total_edits": len(edits),
+            "wire_length": wire_length,
+            "repeater_count": repeater_count,
+            "command_block_x": current_x,
+            "power_source": power_source_info
         },
         "edits": edits
     }

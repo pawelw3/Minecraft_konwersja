@@ -160,8 +160,8 @@ Jeśli tego nie robisz, nie nazywaj tego “redstone accurate”.
 
 ### Krok H: Test w grze (smoke test + regression)
 Nawet najlepszy symulator może nie złapać wszystkiego. Dlatego:
-- budujesz minimalną mapę testową,
-- wklejasz schematic,
+- budujesz minimalną mapę testową bazując na udostępnionych szablonach mapy,
+- wklejasz schematic, ale uwaga - wstawiony schematic ma być w obszarze który jest kwadratem o wymiarach 250x250 z środkiem w spawnie danej mapy, nie może wystawać poza ten obszar,
 - uruchamiasz scenariusze testowe.
 
 **Zestaw minimalny:**

@@ -99,6 +99,28 @@ fun main(args: Array<String>) {
         return
     }
     
+    // Weryfikacja testowego układu redstone
+    if (args.contains("--verify-redstone-test")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane dla --verify-redstone-test")
+            System.exit(1)
+            return
+        }
+        verifyRedstoneTest(worldPath)
+        return
+    }
+    
+    // Weryfikacja testu 2
+    if (args.contains("--verify-test2")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane dla --verify-test2")
+            System.exit(1)
+            return
+        }
+        verifyTest2(worldPath)
+        return
+    }
+    
     // Test 6: Multi-chunk
     if (args.contains("--generate-multichunk")) {
         val patch = generateMultiChunkTest(0, 64, 0)

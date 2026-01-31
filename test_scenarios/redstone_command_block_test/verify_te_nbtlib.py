@@ -86,7 +86,8 @@ def find_command_block_te(world_path, target_x, target_y, target_z):
     
     # Parsuj NBT
     try:
-        nbt_file = nbtlib.File.parse(chunk_data)
+        from io import BytesIO
+        nbt_file = nbtlib.File.parse(BytesIO(chunk_data))
         root = nbt_file.root
     except Exception as e:
         print(f"[ERR] Błąd parsowania NBT: {e}")
@@ -200,7 +201,8 @@ def verify_all_blocks(world_path):
                 failed += 1
                 continue
             
-            nbt_file = nbtlib.File.parse(chunk_data)
+            from io import BytesIO
+            nbt_file = nbtlib.File.parse(BytesIO(chunk_data))
             level = nbt_file.root["Level"]
             sections = level["Sections"]
             
