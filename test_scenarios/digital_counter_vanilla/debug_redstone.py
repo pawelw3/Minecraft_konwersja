@@ -411,9 +411,8 @@ class RedstoneValidator:
     
     def tick(self) -> Dict:
         """Wykonuje jeden game tick."""
-        # Reset command fired na początku cyklu
-        if self.game_tick % self.CLOCK_PERIOD == 0:
-            self.command_fired.clear()
+        # Reset command fired na początku ticku (tylko cyfry odpalone w TYM ticku)
+        self.command_fired.clear()
         
         self.propagate_bus_power()
         self.process_scheduled_ticks()
@@ -434,7 +433,7 @@ class RedstoneValidator:
             'time': self.game_tick / GAME_TICKS_PER_SECOND,
             'clock': self.get_clock_power() > 0,
             'digit': self.active_digit,
-            'triggered': sorted(self.command_fired),
+            'triggered': sorted(self.command_fired) if self.command_fired else [],
             'dropper_with_item': self._get_dropper_with_item()
         }
         

@@ -108,7 +108,37 @@ headless_server/*/world_the_end/
 headless_server/*/crash-reports/
 headless_server/*/*.jar
 headless_server/*/mods/*.jar
+headless_server/*/config/**/*.cfg
+headless_server/*/config/*.cfg
+headless_server/*/ops.json
+headless_server/*/whitelist.json
+headless_server/*/banned-*.json
+headless_server/*/usercache.json
+headless_server/*/usernamecache.json
+headless_server/*/eula.txt
 !headless_server/*/mods/.gitkeep
+!headless_server/*/README.md
+!headless_server/*/server.properties
+!headless_server/*/run.bat
+!headless_server/*/run.sh
+
+# ----------------------------------------------------------------------------
+# MINECRAFT - Pliki danych (nie śledzimy dużych binarnych)
+# ----------------------------------------------------------------------------
+*.dat
+*.dat_old
+*.dat_mcr
+*.mca
+*.mcr
+*.lock
+*.nbt
+!level.dat
+!**/template*/level.dat
+
+# Configi modów (generowane automatycznie)
+*.cfg
+*.recipe
+!**/default_configs/*.cfg
 
 # ----------------------------------------------------------------------------
 # BACKUPY
