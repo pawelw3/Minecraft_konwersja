@@ -3,7 +3,6 @@ package mc.editkit.worker
 import org.jglrxavpok.hephaistos.mca.RegionFile
 import org.jglrxavpok.hephaistos.nbt.*
 import org.json.JSONObject
-import java.io.File
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -20,6 +19,10 @@ import java.util.zip.Inflater
 class WorldEditor(private val worldPath: String) {
     private val regionPath = Paths.get(worldPath, "region")
     private val modifiedRegions = mutableMapOf<Path, RegionData>()
+    
+    // Śledzenie edycji dla metadanych
+    private val editOperations = mutableListOf<EditOperation>()
+    private val modifiedChunks = mutableSetOf<EditMetadata.ChunkCoord>()
     
     data class RegionData(
         val regionFile: RegionFile,
@@ -160,7 +163,22 @@ class WorldEditor(private val worldPath: String) {
         chunk.nbt = newChunk
         chunk.modified = true
         
+        // Śledź edycję
+        trackEdit(x, y, z, blockId, meta)
+        
         println("setBlock($x, $y, $z): id=$blockId meta=$meta")
+    }
+    
+    private fun trackEdit(x: Int, y: Int, z: Int, blockId: Int, meta: Int) {
+        val chunkX = x shr 4
+        val chunkZ = z shr 4
+        val regionX = if (chunkX >= 0) chunkX shr 5 else (chunkX + 1) shr 5 - 1
+        val regionZ = if (chunkZ >= 0) chunkZ shr 5 else (chunkZ + 1) shr 5 - 1
+        val localChunkX = chunkX and 31
+        val localChunkZ = chunkZ and 31
+        
+        modifiedChunks.add(EditMetadata.ChunkCoord(regionX, regionZ, localChunkX, localChunkZ))
+        editOperations.add(BlockEdit(x, y, z, blockId, meta))
     }
     
     fun setTileEntity(x: Int, y: Int, z: Int, nbtData: JSONObject) {
@@ -237,10 +255,33 @@ class WorldEditor(private val worldPath: String) {
         chunk.nbt = newChunk
         chunk.modified = true
         
-        println("setTileEntity($x, $y, $z): id=${nbtData.optString("id", "unknown")}")
+        // Śledź edycję TE
+        val teId = nbtData.optString("id", "unknown")
+        trackTileEntityEdit(x, y, z, teId, nbtData.keys().asSequence().toList())
+        
+        println("setTileEntity($x, $y, $z): id=$teId")
+    }
+    
+    private fun trackTileEntityEdit(x: Int, y: Int, z: Int, id: String, keys: List<String>) {
+        val chunkX = x shr 4
+        val chunkZ = z shr 4
+        val regionX = if (chunkX >= 0) chunkX shr 5 else (chunkX + 1) shr 5 - 1
+        val regionZ = if (chunkZ >= 0) chunkZ shr 5 else (chunkZ + 1) shr 5 - 1
+        val localChunkX = chunkX and 31
+        val localChunkZ = chunkZ and 31
+        
+        modifiedChunks.add(EditMetadata.ChunkCoord(regionX, regionZ, localChunkX, localChunkZ))
+        editOperations.add(TEEdit(x, y, z, id, keys))
     }
     
     fun commit() {
+        commit(null, null)
+    }
+    
+    /**
+     * Zapisz zmiany wraz z metadanymi do weryfikacji
+     */
+    fun commit(toolName: String?, description: String?): Path? {
         println("Zapisywanie zmian...")
         
         for ((path, regionData) in modifiedRegions) {
@@ -263,7 +304,42 @@ class WorldEditor(private val worldPath: String) {
         }
         
         modifiedRegions.clear()
+        
+        // Zapisz metadane jeśli podano informacje
+        val metadataPath = if (toolName != null && description != null) {
+            val metadata = EditMetadata(
+                toolName = toolName,
+                description = description,
+                modifiedChunks = modifiedChunks.toList(),
+                expectedChanges = editOperations.map { edit ->
+                    when (edit) {
+                        is BlockEdit -> EditMetadata.ExpectedChange.Block(
+                            x = edit.x, y = edit.y, z = edit.z,
+                            blockId = edit.blockId,
+                            metadata = edit.metadata,
+                            description = edit.description
+                        )
+                        is TEEdit -> EditMetadata.ExpectedChange.TileEntity(
+                            x = edit.x, y = edit.y, z = edit.z,
+                            id = edit.id,
+                            requiredNbtKeys = edit.requiredNbtKeys,
+                            description = edit.description
+                        )
+                        else -> throw IllegalStateException("Nieznany typ edycji")
+                    }
+                }
+            )
+            val path = metadata.save(Paths.get(worldPath))
+            println("Zapisano metadane: ${path.fileName}")
+            path
+        } else null
+        
+        // Wyczyść operacje po zapisie
+        editOperations.clear()
+        modifiedChunks.clear()
+        
         println("Zapis zakończony.")
+        return metadataPath
     }
     
     private fun getOrCreateChunk(

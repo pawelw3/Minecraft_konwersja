@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm") version "1.8.22"
+    kotlin("plugin.serialization") version "1.8.22"
     application
 }
 
@@ -16,6 +17,9 @@ dependencies {
     
     // JSON parsing
     implementation("org.json:json:20231013")
+    
+    // Kotlinx Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     
     // Logging
     implementation("org.slf4j:slf4j-simple:2.0.9")

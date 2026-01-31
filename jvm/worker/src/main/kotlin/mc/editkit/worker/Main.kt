@@ -2,6 +2,7 @@ package mc.editkit.worker
 
 import org.json.JSONObject
 import java.io.File
+import java.nio.file.Paths
 
 /**
  * Worker JVM do edycji światów Minecraft 1.7.10 używający Hephaistos
@@ -98,6 +99,73 @@ fun main(args: Array<String>) {
         return
     }
     
+    // Test 6: Multi-chunk
+    if (args.contains("--generate-multichunk")) {
+        val patch = generateMultiChunkTest(0, 64, 0)
+        val outputFile = args.getOrNull(args.indexOf("--generate-multichunk") + 1) ?: "multichunk_patch.json"
+        java.io.File(outputFile).writeText(patch.toString(2))
+        println("Wygenerowano multi-chunk patch: $outputFile")
+        return
+    }
+    
+    // Test 7: Spiral R=1
+    if (args.contains("--generate-spiral-r1")) {
+        val spiral = generateSpiral(0, 64, 0, radius = 1)
+        val patch = spiralToPatch(spiral)
+        val outputFile = args.getOrNull(args.indexOf("--generate-spiral-r1") + 1) ?: "spiral_r1_patch.json"
+        java.io.File(outputFile).writeText(patch.toString(2))
+        println("Wygenerowano spiralę R=1: ${spiral.size} punktów, ${spiral.count { it.isCheckpoint }} checkpointów -> $outputFile")
+        return
+    }
+    
+    // Test 8: Spiral R=3
+    if (args.contains("--generate-spiral-r3")) {
+        val spiral = generateSpiral(0, 64, 0, radius = 3)
+        val patch = spiralToPatch(spiral)
+        val outputFile = args.getOrNull(args.indexOf("--generate-spiral-r3") + 1) ?: "spiral_r3_patch.json"
+        java.io.File(outputFile).writeText(patch.toString(2))
+        println("Wygenerowano spiralę R=3: ${spiral.size} punktów, ${spiral.count { it.isCheckpoint }} checkpointów -> $outputFile")
+        return
+    }
+    
+    // Weryfikacja spirali
+    if (args.contains("--verify-spiral")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane")
+            System.exit(1)
+            return
+        }
+        val expected = args.getOrNull(args.indexOf("--verify-spiral") + 1)?.toIntOrNull() ?: 0
+        verifySpiral(worldPath, expected)
+        return
+    }
+    
+    // Walidacja świata (pre-flight check)
+    if (args.contains("--validate-world")) {
+        if (worldPath == null) {
+            println("Błąd: --world jest wymagane dla --validate-world")
+            System.exit(1)
+            return
+        }
+        validateWorldCommand(worldPath)
+        return
+    }
+    
+    // Uruchomienie serwera z walidacją
+    if (args.contains("--launch-server")) {
+        val serverDir = args.getOrNull(args.indexOf("--launch-server") + 1)
+        val worldName = args.getOrNull(args.indexOf("--launch-server") + 2)
+        val port = args.getOrNull(args.indexOf("--launch-server") + 3)?.toIntOrNull() ?: 25565
+        
+        if (serverDir == null || worldName == null) {
+            println("Błąd: --launch-server <server-dir> <world-name> [port]")
+            System.exit(1)
+            return
+        }
+        launchServerCommand(serverDir, worldName, port)
+        return
+    }
+    
     // Normalna operacja edycji
     if (worldPath == null || patchPath == null) {
         println("Użycie: java -jar worker.jar --world <path> --patch <path>")
@@ -150,27 +218,44 @@ fun main(args: Array<String>) {
         }
     }
     
-    // Zapisz zmiany
-    editor.commit()
+    // Zapisz zmiany z metadanymi
+    val metadataPath = editor.commit(
+        toolName = "MC-EditKit Worker",
+        description = "Applied patch: ${File(patchPath).name} (${edits.length()} edits)"
+    )
     
     println("Edycja zakończona sukcesem.")
+    if (metadataPath != null) {
+        println("Metadane zapisane: ${metadataPath.fileName}")
+    }
 }
 
 fun printHelp() {
     println("""
         MC EditKit Worker (Hephaistos) v1.0
         
-        Użycie:
+        UŻYCIE:
           java -jar worker.jar --world <path> --patch <path>
           java -jar worker.jar --world <path> --list-regions
           java -jar worker.jar --world <path> --test-roundtrip
+          java -jar worker.jar --world <path> --validate-world
+          java -jar worker.jar --launch-server <server-dir> <world-name> [port]
         
-        Opcje:
-          --world <path>      Ścieżka do katalogu świata Minecraft
-          --patch <path>      Ścieżka do pliku JSON z opisem zmian
-          --list-regions      Wyświetla listę regionów (Test 1)
-          --test-roundtrip    Testuje read/write roundtrip (Test 2)
-          --help              Wyświetla tę pomoc
+        OPCJE:
+          --world <path>           Ścieżka do katalogu świata Minecraft
+          --patch <path>           Ścieżka do pliku JSON z opisem zmian
+          --list-regions           Wyświetla listę regionów (Test 1)
+          --test-roundtrip         Testuje read/write roundtrip (Test 2)
+          --validate-world         Sprawdza świat przed uruchomieniem serwera
+          --launch-server <d> <w>  Uruchamia serwer z pre-flight validation
+          --help                   Wyświetla tę pomoc
+        
+        PRZYKŁADY:
+          # Walidacja świata
+          java -jar worker.jar --world headless_server/1.7.10/spiral_y100 --validate-world
+          
+          # Uruchomienie serwera z walidacją
+          java -jar worker.jar --launch-server headless_server/1.7.10 spiral_y100 25568
         
         Format pliku patch:
         {
@@ -180,4 +265,71 @@ fun printHelp() {
           ]
         }
     """.trimIndent())
+}
+
+/**
+ * Komenda walidacji świata
+ */
+fun validateWorldCommand(worldPath: String) {
+    println("=".repeat(60))
+    println("WERYFIKACJA ŚWIATA: $worldPath")
+    println("=".repeat(60))
+    
+    val result = WorldValidator.validateWorld(java.nio.file.Paths.get(worldPath))
+    
+    if (result == null) {
+        println("❌ BRAK METADANYCH")
+        println("Świat nie ma pliku editkit_metadata.json")
+        println("Nie można przeprowadzić weryfikacji.")
+        System.exit(1)
+        return
+    }
+    
+    println(result.formatReport())
+    
+    if (result.isValid) {
+        println("✅ Świat zweryfikowany pomyślnie!")
+        System.exit(0)
+    } else {
+        println("❌ WERYFIKACJA NIE POWIODŁA SIĘ!")
+        println("Napraw błędy przed uruchomieniem serwera.")
+        System.exit(1)
+    }
+}
+
+/**
+ * Komenda uruchomienia serwera z walidacją
+ */
+fun launchServerCommand(serverDir: String, worldName: String, port: Int) {
+    println("=".repeat(60))
+    println("URUCHAMIANIE SERWERA Z WALIDACJĄ")
+    println("=".repeat(60))
+    println("Server dir: $serverDir")
+    println("World: $worldName")
+    println("Port: $port")
+    println()
+    
+    val launcher = ServerLauncher(
+        serverDir = java.nio.file.Paths.get(serverDir),
+        javaPath = "C:\\Program Files (x86)\\Common Files\\Oracle\\Java\\java8path\\java.exe"
+    )
+    
+    val config = ServerLauncher.LaunchConfig(
+        worldName = worldName,
+        port = port
+    )
+    
+    val result = launcher.launchAndWait(config, skipValidation = false, timeoutSeconds = 120)
+    
+    println()
+    println("=".repeat(60))
+    if (result.success) {
+        println("✅ ${result.message}")
+        println("=".repeat(60))
+        System.exit(0)
+    } else {
+        println("❌ ${result.message}")
+        println("=".repeat(60))
+        System.exit(1)
+    }
 }
