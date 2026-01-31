@@ -1,0 +1,264 @@
+---- Minecraft Crash Report ----
+// Who set us up the TNT?
+
+Time: 31.01.26 03:57
+Description: Ticking screen
+
+java.lang.ClassCastException: com.flansmod.common.teams.EntityFlagpole cannot be cast to net.minecraft.entity.EntityLivingBase
+	at net.minecraft.client.network.NetHandlerPlayClient.func_147281_a(NetHandlerPlayClient.java:744)
+	at net.minecraft.network.play.server.S0FPacketSpawnMob.func_148833_a(SourceFile:97)
+	at net.minecraft.network.play.server.S0FPacketSpawnMob.func_148833_a(SourceFile:15)
+	at net.minecraft.network.NetworkManager.func_74428_b(NetworkManager.java:212)
+	at net.minecraft.client.multiplayer.GuiConnecting.func_73876_c(SourceFile:78)
+	at net.minecraft.client.Minecraft.func_71407_l(Minecraft.java:1661)
+	at net.minecraft.client.Minecraft.func_71411_J(Minecraft.java:973)
+	at net.minecraft.client.Minecraft.func_99999_d(Minecraft.java:898)
+	at net.minecraft.client.main.Main.main(SourceFile:148)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at net.minecraft.launchwrapper.Launch.launch(Launch.java:135)
+	at net.minecraft.launchwrapper.Launch.main(Launch.java:28)
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Stacktrace:
+	at net.minecraft.client.network.NetHandlerPlayClient.func_147281_a(NetHandlerPlayClient.java:744)
+	at net.minecraft.network.play.server.S0FPacketSpawnMob.func_148833_a(SourceFile:97)
+	at net.minecraft.network.play.server.S0FPacketSpawnMob.func_148833_a(SourceFile:15)
+	at net.minecraft.network.NetworkManager.func_74428_b(NetworkManager.java:212)
+	at net.minecraft.client.multiplayer.GuiConnecting.func_73876_c(SourceFile:78)
+	at net.minecraft.client.Minecraft.func_71407_l(Minecraft.java:1661)
+
+-- Affected screen --
+Details:
+	Screen name: ~~ERROR~~ NullPointerException: null
+
+-- Affected level --
+Details:
+	Level name: MpServer
+	All players: 1 total; [EntityClientPlayerMP['JanuszGasikot'/570, l='MpServer', x=8,98, y=67,99, z=10,29]]
+	Chunk stats: MultiplayerChunkCache: 45, 45
+	Level seed: 0
+	Level generator: ID 00 - default, ver 1. Features enabled: false
+	Level generator options: 
+	Level spawn location: World: (8,64,-17), Chunk: (at 8,4,15 in 0,-2; contains blocks 0,0,-32 to 15,255,-17), Region: (0,-1; contains chunks 0,-32 to 31,-1, blocks 0,0,-512 to 511,255,-1)
+	Level time: 60642 game time, 60642 day time
+	Level dimension: 0
+	Level storage version: 0x00000 - Unknown?
+	Level weather: Rain time: 0 (now: false), thunder time: 0 (now: false)
+	Level game mode: Game mode: creative (ID 1). Hardcore: false. Cheats: false
+	Forced entities: 36 total; [EntitySquid['Squid'/265, l='MpServer', x=51,03, y=57,31, z=-19,50], EntityItem['item.tile.mushroom'/266, l='MpServer', x=46,28, y=55,13, z=47,28], EntityItem['item.tile.mushroom'/267, l='MpServer', x=46,72, y=58,13, z=44,13], EntityBat['Bat'/208, l='MpServer', x=8,75, y=2,63, z=14,44], EntitySkeleton['Skeleton'/209, l='MpServer', x=7,50, y=14,00, z=-1,03], EntitySkeleton['Skeleton'/210, l='MpServer', x=5,28, y=16,00, z=-3,31], EntityBat['Bat'/146, l='MpServer', x=-27,25, y=21,84, z=-18,75], EntityZombie['Zombie'/147, l='MpServer', x=-46,50, y=21,00, z=-2,50], EntityZombie['Zombie'/148, l='MpServer', x=-37,53, y=21,00, z=-14,03], EntityZombie['Zombie'/149, l='MpServer', x=-39,78, y=20,00, z=-7,53], EntityZombie['Zombie'/150, l='MpServer', x=-43,97, y=23,00, z=-0,50], EntityCow['Cow'/151, l='MpServer', x=-28,28, y=79,00, z=56,69], EntityClientPlayerMP['JanuszGasikot'/570, l='MpServer', x=8,98, y=67,99, z=10,29], EntitySheep['Sheep'/152, l='MpServer', x=-40,84, y=83,00, z=58,66], EntityCow['Cow'/153, l='MpServer', x=-33,75, y=80,00, z=61,28], EntityCreeper['Creeper'/219, l='MpServer', x=24,66, y=65,00, z=-4,50], EntityZombie['Zombie'/220, l='MpServer', x=26,03, y=64,00, z=-5,56], EntityCow['Cow'/221, l='MpServer', x=23,50, y=72,00, z=51,78], EntityCow['Cow'/222, l='MpServer', x=13,31, y=71,00, z=48,81], EntityCow['Cow'/223, l='MpServer', x=23,50, y=71,00, z=50,19], EntityCow['Cow'/224, l='MpServer', x=20,50, y=73,00, z=54,50], EntitySheep['Sheep'/225, l='MpServer', x=12,03, y=72,00, z=50,06], EntitySheep['Sheep'/226, l='MpServer', x=14,50, y=72,00, z=51,84], EntitySheep['Sheep'/227, l='MpServer', x=15,50, y=73,00, z=54,50], EntitySheep['Sheep'/228, l='MpServer', x=18,50, y=73,00, z=54,50], EntityCreeper['Creeper'/168, l='MpServer', x=-22,50, y=64,00, z=-19,50], EntityCreeper['Creeper'/169, l='MpServer', x=-26,50, y=23,00, z=-15,50], EntityZombie['Zombie'/170, l='MpServer', x=-17,84, y=50,06, z=-7,75], EntityCow['Cow'/171, l='MpServer', x=-26,50, y=76,00, z=19,75], EntityCow['Cow'/172, l='MpServer', x=-16,75, y=77,00, z=32,78], EntityCow['Cow'/173, l='MpServer', x=-27,22, y=79,00, z=60,31], EntityPig['Pig'/174, l='MpServer', x=-18,16, y=77,00, z=62,84], EntityCreeper['Creeper'/188, l='MpServer', x=-7,50, y=24,00, z=-25,50], EntityCow['Cow'/189, l='MpServer', x=1,63, y=75,00, z=-12,59], EntityCow['Cow'/190, l='MpServer', x=-8,63, y=76,00, z=19,47], EntitySquid['Squid'/254, l='MpServer', x=43,50, y=56,00, z=-27,22]]
+	Retry entities: 0 total; []
+	Server brand: fml,forge
+	Server type: Non-integrated multiplayer server
+Stacktrace:
+	at net.minecraft.client.Minecraft.func_71396_d(Minecraft.java:2444)
+	at net.minecraft.client.Minecraft.func_99999_d(Minecraft.java:919)
+	at net.minecraft.client.main.Main.main(SourceFile:148)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at net.minecraft.launchwrapper.Launch.launch(Launch.java:135)
+	at net.minecraft.launchwrapper.Launch.main(Launch.java:28)
+
+-- System Details --
+Details:
+	Minecraft Version: 1.7.10
+	Operating System: Windows 10 (amd64) version 10.0
+	Java Version: 1.8.0_431, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 3243986720 bytes (3093 MB) / 4084727808 bytes (3895 MB) up to 4084727808 bytes (3895 MB)
+	Mod Pack: Unknown / None
+	LiteLoader Mods: 1 loaded mod(s)
+          - Omniscience version 1.0.1
+	LaunchWrapper: 44 active transformer(s)
+          - Transformer: logisticspipes.asm.LogisticsPipesClassInjector
+          - Transformer: cpw.mods.fml.common.asm.transformers.PatchingTransformer
+          - Transformer: org.spongepowered.asm.mixin.transformer.MixinTransformer$Proxy
+          - Transformer: cpw.mods.fml.common.asm.transformers.MarkerTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.SideTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.EventSubscriptionTransformer
+          - Transformer: net.minecraftforge.classloading.FluidIdTransformer
+          - Transformer: appeng.transformer.asm.ASMIntegration
+          - Transformer: codechicken.lib.asm.ClassHeirachyManager
+          - Transformer: codechicken.core.asm.InterfaceDependancyTransformer
+          - Transformer: codechicken.core.asm.TweakTransformer
+          - Transformer: codechicken.core.asm.DelegatedTransformer
+          - Transformer: codechicken.core.asm.DefaultImplementationTransformer
+          - Transformer: mrtjp.relocation.asm.Transformer
+          - Transformer: logisticspipes.asm.LogisticsClassTransformer
+          - Transformer: mcp.mobius.mobiuscore.asm.CoreTransformer
+          - Transformer: codechicken.nei.asm.NEITransformer
+          - Transformer: thaumicenergistics.fml.ASMTransformer
+          - Transformer: thaumic.tinkerer.preloader.AccessTransformer
+          - Transformer: com.mumfrey.liteloader.transformers.event.EventProxyTransformer
+          - Transformer: com.mumfrey.liteloader.launch.LiteLoaderTransformer
+          - Transformer: com.mumfrey.liteloader.client.transformers.CrashReportTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.DeobfuscationTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.AccessTransformer
+          - Transformer: net.minecraftforge.transformers.ForgeAccessTransformer
+          - Transformer: appeng.transformer.asm.ASMTweaker
+          - Transformer: codechicken.core.asm.CodeChickenAccessTransformer
+          - Transformer: cofh.asm.CoFHAccessTransformer
+          - Transformer: logisticspipes.asm.LogisticsAccessTransformer
+          - Transformer: mcp.mobius.mobiuscore.asm.CoreAccessTransformer
+          - Transformer: thaumic.tinkerer.preloader.AccessTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.ModAccessTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.ItemStackTransformer
+          - Transformer: org.spongepowered.asm.mixin.transformer.MixinTransformer$Proxy
+          - Transformer: net.darkhax.bookshelf.asm.BookshelfTransformerManager
+          - Transformer: cofh.asm.CoFHClassTransformer
+          - Transformer: fastcraft.J
+          - Transformer: cpw.mods.fml.common.asm.transformers.TerminalTransformer
+          - Transformer: org.spongepowered.asm.mixin.transformer.MixinTransformer$Proxy
+          - Transformer: com.mumfrey.liteloader.client.transformers.LiteLoaderEventInjectionTransformer
+          - Transformer: net.easymfne.omniscience.OmniscienceEventTransformer
+          - Transformer: com.mumfrey.liteloader.client.transformers.MinecraftOverlayTransformer
+          - Transformer: com.mumfrey.liteloader.common.transformers.LiteLoaderPacketTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.ModAPITransformer
+	JVM Flags: 3 total; -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Xmx4096M -Xms4096M
+	AABB Pool Size: 0 (0 bytes; 0 MB) allocated, 0 (0 bytes; 0 MB) used
+	IntCache: cache: 0, tcache: 0, allocated: 0, tallocated: 0
+	FML: MCP v9.05 FML v7.10.99.99 Minecraft Forge 10.13.4.1614 105 mods loaded, 105 mods active
+	States: 'U' = Unloaded 'L' = Loaded 'C' = Constructed 'H' = Pre-initialized 'I' = Initialized 'J' = Post-initialized 'A' = Available 'D' = Disabled 'E' = Errored
+	UCHIJA	mcp{9.05} [Minecraft Coder Pack] (minecraft.jar) 
+	UCHIJA	FML{7.10.99.99} [Forge Mod Loader] (forge-1.7.10-10.13.4.1614-1.7.10.jar) 
+	UCHIJA	Forge{10.13.4.1614} [Minecraft Forge] (forge-1.7.10-10.13.4.1614-1.7.10.jar) 
+	UCHIJA	appliedenergistics2-core{rv3-beta-6} [Applied Energistics 2 Core] (minecraft.jar) 
+	UCHIJA	CodeChickenCore{1.0.7.47} [CodeChicken Core] (minecraft.jar) 
+	UCHIJA	MobiusCore{1.2.5} [MobiusCore] (minecraft.jar) 
+	UCHIJA	NotEnoughItems{1.0.5.120} [Not Enough Items] (NotEnoughItems-1.7.10-1.0.5.120-universal.jar) 
+	UCHIJA	ThE-core{1.0.0.1} [Thaumic Energistics Core] (minecraft.jar) 
+	UCHIJA	ThaumicTinkerer-preloader{0.1} [Thaumic Tinkerer Core] (minecraft.jar) 
+	UCHIJA	<CoFH ASM>{000} [CoFH ASM] (minecraft.jar) 
+	UCHIJA	FastCraft{1.25} [FastCraft] (fastcraft-1.25.jar) 
+	UCHIJA	bspkrsCore{6.15} [bspkrsCore] ([1.7.10]bspkrsCore-universal-6.15.jar) 
+	UCHIJA	Treecapitator{1.7.10} [Treecapitator] ([1.7.10]Treecapitator-universal-2.0.4.jar) 
+	UCHIJA	appliedenergistics2{rv3-beta-6} [Applied Energistics 2] (appliedenergistics2-rv3-beta-6.jar) 
+	UCHIJA	armourersWorkshop{1.7.10-0.48.5} [Armourer's Workshop] (Armourers-Workshop-1.7.10-0.48.5.jar) 
+	UCHIJA	CoFHCore{1.7.10R3.1.4} [CoFH Core] (CoFHCore-[1.7.10]3.1.4-329.jar) 
+	UCHIJA	asielib{0.4.8} [asielib] (AsieLib-1.7.10-0.4.8.jar) 
+	UCHIJA	Backpack{2.0.1} [Backpack] (backpack-2.0.1-1.7.x.jar) 
+	UCHIJA	Baubles{1.0.1.10} [Baubles] (Baubles-1.7.10-1.0.1.10.jar) 
+	UCHIJA	Thaumcraft{4.2.3.5} [Thaumcraft] (Thaumcraft-1.7.10-4.2.3.5.jar) 
+	UCHIJA	betterstorage{0.9.2.107} [BetterStorage] (Better-Storage-Mod-1.7.10 (4).jar) 
+	UCHIJA	BiblioCraft{1.11.7} [BiblioCraft] (BiblioCraftv1.11.7MC1.7.10.jar) 
+	UCHIJA	ThermalFoundation{1.7.10R1.2.6} [Thermal Foundation] (ThermalFoundation-[1.7.10]1.2.6-118.jar) 
+	UCHIJA	ThermalExpansion{1.7.10R4.1.5} [Thermal Expansion] (ThermalExpansion-[1.7.10]4.1.5-248.jar) 
+	UCHIJA	BigReactors{0.4.3A} [Big Reactors] (BigReactors-0.4.3A.jar) 
+	UCHIJA	AWWayofTime{v1.3.3} [Blood Magic: Alchemical Wizardry] (BloodMagic-1.7.10-1.3.3-17.jar) 
+	UCHIJA	bookshelf{1.0.4.172} [Bookshelf] (Bookshelf-1.7.10-1.0.4.172.jar) 
+	UCHIJA	BuildCraft|Core{7.1.23} [BuildCraft] (buildcraft-7.1.23.jar) 
+	UCHIJA	BuildCraft|Transport{7.1.23} [BC Transport] (buildcraft-7.1.23.jar) 
+	UCHIJA	BuildCraft|Factory{7.1.23} [BC Factory] (buildcraft-7.1.23.jar) 
+	UCHIJA	BuildCraft|Silicon{7.1.23} [BC Silicon] (buildcraft-7.1.23.jar) 
+	UCHIJA	BuildCraft|Robotics{7.1.23} [BC Robotics] (buildcraft-7.1.23.jar) 
+	UCHIJA	BuildCraft|Energy{7.1.23} [BC Energy] (buildcraft-7.1.23.jar) 
+	UCHIJA	BuildCraft|Builders{7.1.23} [BC Builders] (buildcraft-7.1.23.jar) 
+	UCHIJA	IC2{2.2.827-experimental} [IndustrialCraft 2] (industrialcraft-2-2.2.827-experimental.jar) 
+	UCHIJA	Forestry{4.2.16.64} [Forestry for Minecraft] (forestry_1.7.10-4.2.16.64.jar) 
+	UCHIJA	BuildCraft|Compat{7.1.7} [BuildCraft Compat] (buildcraft-compat-7.1.7.jar) 
+	UCHIJA	Railcraft{9.12.2.0} [Railcraft] (Railcraft_1.7.10-9.12.2.0.jar) 
+	UCHIJA	ForgeMultipart{1.2.0.345} [Forge Multipart] (ForgeMultipart-1.7.10-1.2.0.345-universal.jar) 
+	UCHIJA	chisel{2.9.5.11} [Chisel] (Chisel-2.9.5.11.jar) 
+	UCHIJA	CarpentersBlocks{3.3.8.1} [Carpenter's Blocks] (Carpenter's Blocks v3.3.8.1 - MC 1.7.10.jar) 
+	UCHIJA	ComputerCraft{1.75} [ComputerCraft] (ComputerCraft1.75.jar) 
+	UCHIJA	craftguide{1.6.8.2} [CraftGuide] (CraftGuide-Mod-1.7.10.jar) 
+	UCHIJA	customnpcs{1.7.10d} [CustomNpcs] (CustomNPCs_1.7.10d(29oct17).jar) 
+	UCHIJA	eplus{4.0.0..73} [Enchanting Plus] (EnchantingPlus-1.7.10-4.0.0.74.jar) 
+	UCHIJA	EnderStorage{1.4.7.38} [EnderStorage] (EnderStorage-1.7.10-1.4.7.38-universal.jar) 
+	UCHIJA	ExtraUtilities{1.2.12} [Extra Utilities] (extrautilities-1.2.12.jar) 
+	UCHIJA	flansmod{4.10.0} [Flan's Mod] (Flans_Mod-1.7.10-4.10.0.jar) 
+	UCHIJA	ForgeEssentialsClient{1.4.4} [Forge Essentials Client Addon] (forgeessentials-1.7.10-1.4.4.1187-client.jar) 
+	UCHIJA	GollumCoreLib{2.0.0} [Gollum Core Lib] (GollumCoreLib-2.0.0-1.7.10.jar) 
+	UCHIJA	Growthcraft{1.7.10-2.7.2} [Growthcraft] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Cellar{1.7.10-2.7.2} [Growthcraft Cellar] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Apples{1.7.10-2.7.2} [Growthcraft Apples] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Bamboo{1.7.10-2.7.2} [Growthcraft Bamboo] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Bees{1.7.10-2.7.2} [Growthcraft Bees] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Fishtrap{1.7.10-2.7.2} [Growthcraft Fishtrap] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Grapes{1.7.10-2.7.2} [Growthcraft Grapes] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Hops{1.7.10-2.7.2} [Growthcraft Hops] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Milk{1.7.10-2.7.2} [Growthcraft Milk] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	Growthcraft|Rice{1.7.10-2.7.2} [Growthcraft Rice] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJA	HelpFixer{1.0.7} [HelpFixer] (HelpFixer-1.0.7.jar) 
+	UCHIJA	IC2NuclearControl{2.4.3a} [Nuclear Control 2] (IC2NuclearControl-2.4.3a.jar) 
+	UCHIJA	iChunUtil{4.2.3} [iChunUtil] (iChunUtil-4.2.3.jar) 
+	UCHIJA	JammyFurniture{5.0.0 [Build Smeagol]} [Jammy Furniture Mod] (Jammy-Furniture-Reborn-Mod-1.7.10.jar) 
+	UCHIJA	LogisticsPipes{0.9.3.132} [Logistics Pipes] (logisticspipes-0.9.3.132.jar) 
+	UCHIJA	Mekanism{9.1.1} [Mekanism] (Mekanism-1.7.10-9.1.1-clienthax.jar) 
+	UCHIJA	MekanismGenerators{9.1.1} [MekanismGenerators] (MekanismGenerators-1.7.10-9.1.1-clienthax.jar) 
+	UCHIJA	MekanismTools{9.1.1} [MekanismTools] (MekanismTools-1.7.10-9.1.1-clienthax.jar) 
+	UCHIJA	cfm{3.4.8} [§9MrCrayfish's Furniture Mod] (MrCrayfishFurnitureModv3.4.8(1.7.10).jar) 
+	UCHIJA	recipehandler{1.7.10} [NoMoreRecipeConflict] (NoMoreRecipeConflict-0.31.7.10.jar) 
+	UCHIJA	openmodularturrets{2.2.11-245} [Open Modular Turrets] (OpenModularTurrets-1.7.10-2.2.11-245.jar) 
+	UCHIJA	MapWriter{2.1.2} [MapWriter] (Opis-1.2.5_1.7.10.jar) 
+	UCHIJA	Opis{1.2.5} [Opis] (Opis-1.2.5_1.7.10.jar) 
+	UCHIJA	harvestcraft{1.7.10j} [Pam's HarvestCraft] (Pam's HarvestCraft 1.7.10Lb.jar) 
+	UCHIJA	placeableitems{2.0.1} [Placeable Items Mod] (Placeable-Items-Mod-1.7.10.jar) 
+	UCHIJA	PowerConverters{1.7.10_3.2.1} [Power Converters] (PowerConverters-1.7.10_3.2.1.jar) 
+	UCHIJA	MrTJPCoreMod{1.1.0.33} [MrTJPCore] (MrTJPCore-1.7.10-1.1.0.33-universal.jar) 
+	UCHIJA	ProjRed|Core{4.7.0pre12.95} [ProjectRed Core] (ProjectRed-1.7.10-4.7.0pre12.95-Base.jar) 
+	UCHIJA	ProjRed|Transmission{4.7.0pre12.95} [ProjectRed Transmission] (ProjectRed-1.7.10-4.7.0pre12.95-Integration.jar) 
+	UCHIJA	ProjRed|Transportation{4.7.0pre12.95} [ProjectRed Transportation] (ProjectRed-1.7.10-4.7.0pre12.95-Mechanical.jar) 
+	UCHIJA	ProjRed|Exploration{4.7.0pre12.95} [ProjectRed Exploration] (ProjectRed-1.7.10-4.7.0pre12.95-World.jar) 
+	UCHIJA	ProjRed|Compatibility{4.7.0pre12.95} [ProjectRed Compatibility] (ProjectRed-1.7.10-4.7.0pre12.95-Compat.jar) 
+	UCHIJA	ProjRed|Integration{4.7.0pre12.95} [ProjectRed Integration] (ProjectRed-1.7.10-4.7.0pre12.95-Integration.jar) 
+	UCHIJA	ProjRed|Fabrication{4.7.0pre12.95} [ProjectRed Fabrication] (ProjectRed-1.7.10-4.7.0pre12.95-Fabrication.jar) 
+	UCHIJA	ProjRed|Illumination{4.7.0pre12.95} [ProjectRed Illumination] (ProjectRed-1.7.10-4.7.0pre12.95-Lighting.jar) 
+	UCHIJA	ProjRed|Expansion{4.7.0pre12.95} [ProjectRed Expansion] (ProjectRed-1.7.10-4.7.0pre12.95-Mechanical.jar) 
+	UCHIJA	ReiMinimap{1.7.10} [Rei's Minimap] (Reis-Minimap-Mod-1.7.10 (1).jar) 
+	UCHIJA	libsandstone{1.0.0} [libsandstone] (Reliquary-1.7.10-1.2.1.483.jar) 
+	UCHIJA	xreliquary{1.2} [Reliquary] (Reliquary-1.7.10-1.2.1.483.jar) 
+	UCHIJA	statues{2.1.4} [Statues] (statues-1.7.10-2.1.4.jar) 
+	UCHIJA	thaumcraftneiplugin{@VERSION@} [Thaumcraft NEI Plugin] (thaumcraftneiplugin-1.7.10-1.7a.jar) 
+	UCHIJA	thaumicenergistics{1.0.0.5} [Thaumic Energistics] (thaumicenergistics-1.0.0.5.jar) 
+	UCHIJA	ThaumicTinkerer{unspecified} [Thaumic Tinkerer] (ThaumicTinkerer-2.5-1.7.10-542.jar) 
+	UCHIJA	ThaumicExploration{0.6.0} [Thaumic Exploration] (ThaumicExploration-1.7.10-1.1-55.jar) 
+	UCHIJA	ThaumicHorizons{1.1.9} [Thaumic Horizons] (thaumichorizons-1.7.10-1.1.9.jar) 
+	UCHIJA	ThermalDynamics{1.7.10R1.2.1} [Thermal Dynamics] (ThermalDynamics-[1.7.10]1.2.1-172.jar) 
+	UCHIJA	tc{4.3.5_014} [Traincraft] (Traincraft-4.3.5_014.jar) 
+	UCHIJA	uuidoffline{1.0} [UUIDOffline] (uuidoffline-1.0.jar) 
+	UCHIJA	witchery{0.24.1} [Witchery] (witchery-1.7.10-0.24.1.jar) 
+	UCHIJA	worldedit{6.1.1} [WorldEdit] (worldedit-forge-mc1.7.10-6.1.1-dist.jar) 
+	UCHIJA	McMultipart{1.2.0.345} [Minecraft Multipart Plugin] (ForgeMultipart-1.7.10-1.2.0.345-universal.jar) 
+	UCHIJA	ForgeRelocation{0.0.1.4} [ForgeRelocation] (ForgeRelocation-1.7.10-0.0.1.4-universal.jar) 
+	UCHIJA	MCFrames{1.0} [MCFrames] (ForgeRelocation-1.7.10-0.0.1.4-universal.jar) 
+	UCHIJA	RelocationFMP{0.0.1.2} [RelocationFMP] (ForgeRelocationFMP-1.7.10-0.0.1.2-universal.jar) 
+	UCHIJA	ForgeMicroblock{1.2.0.345} [Forge Microblocks] (ForgeMultipart-1.7.10-1.2.0.345-universal.jar) 
+	GL info: ' Vendor: 'NVIDIA Corporation' Version: '4.6.0 NVIDIA 560.94' Renderer: 'NVIDIA GeForce GTX 970/PCIe/SSE2'
+	AE2 Version: beta rv3-beta-6 for Forge 10.13.4.1448
+	CoFHCore: -[1.7.10]3.1.4-329
+	ThermalFoundation: -[1.7.10]1.2.6-118
+	ThermalExpansion: -[1.7.10]4.1.5-248
+	ThermalDynamics: -[1.7.10]1.2.1-172
+	Chisel: Errors like "[FML]: Unable to lookup ..." are NOT the cause of this crash. You can safely ignore these errors. And update forge while you're at it.
+	AE2 Integration: IC2:ON, RotaryCraft:OFF, RC:ON, BuildCraftCore:ON, BuildCraftTransport:ON, BuildCraftBuilder:ON, RF:ON, RFItem:ON, MFR:OFF, DSU:ON, FZ:OFF, FMP:ON, RB:OFF, CLApi:OFF, Waila:OFF, InvTweaks:OFF, NEI:ON, CraftGuide:ON, Mekanism:ON, ImmibisMicroblocks:OFF, BetterStorage:OFF, OpenComputers:OFF, PneumaticCraft:OFF
+	Armourer's Workshop: 
+		Render Type: MODEL_ATTACHMENT
+		Texture Render: false
+		Baking Queue: 0
+		Request Queue: 0
+		Texture Painting: true
+		Multipass Skin Rendering: true
+	Launched Version: 1.7.10-Forge10.13.4.1614-1.7.10
+	LWJGL: 2.9.1
+	OpenGL: NVIDIA GeForce GTX 970/PCIe/SSE2 GL version 4.6.0 NVIDIA 560.94, NVIDIA Corporation
+	GL Caps: Using GL 1.3 multitexturing.
+Using framebuffer objects because OpenGL 3.0 is supported and separate blending is supported.
+Anisotropic filtering is supported and maximum anisotropy is 16.
+Shaders are available because OpenGL 2.1 is supported.
+
+	Is Modded: Definitely; Client brand changed to 'fml,forge'
+	Type: Client (map_client.txt)
+	Resource Packs: []
+	Current Language: English (US)
+	Profiler Position: N/A (disabled)
+	Vec3 Pool Size: 0 (0 bytes; 0 MB) allocated, 0 (0 bytes; 0 MB) used
+	Anisotropic Filtering: Off (1)

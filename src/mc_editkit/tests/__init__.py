@@ -1,0 +1,3 @@
+"""
+Testy mc_editkit
+"""
