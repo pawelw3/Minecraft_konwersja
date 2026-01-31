@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyfrowy Licznik - Animacja Działania</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #1a1a2e;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #ffff00;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            color: #888;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .main-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .viewer-section {
+            flex: 1;
+            min-width: 600px;
+            background: #2d2d44;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        
+        .timeline-section {
+            width: 100%;
+            max-width: 1400px;
+            background: #2d2d44;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        #svg-container {
+            width: 100%;
+            height: 600px;
+            background: #1a1a2e;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+        }
+        
+        #svg-container svg {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        button {
+            background: #4a4a6a;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #6a6a8a;
+        }
+        
+        button.primary {
+            background: #ff3333;
+        }
+        
+        button.primary:hover {
+            background: #ff5555;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .frame-info {
+            background: #1a1a2e;
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+        }
+        
+        .frame-counter {
+            color: #ffff00;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        
+        .timeline {
+            display: flex;
+            gap: 5px;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+        
+        .timeline-item {
+            min-width: 80px;
+            padding: 10px;
+            background: #1a1a2e;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+        
+        .timeline-item:hover {
+            background: #3a3a5a;
+        }
+        
+        .timeline-item.active {
+            border-color: #ffff00;
+            background: #4a4a6a;
+        }
+        
+        .timeline-item .digit {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff3333;
+        }
+        
+        .timeline-item .type {
+            font-size: 10px;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+        
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 20px;
+        }
+        
+        .speed-control label {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .speed-control input[type="range"] {
+            width: 100px;
+        }
+        
+        .description {
+            background: #1a1a2e;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .description h3 {
+            color: #ffff00;
+            margin-bottom: 10px;
+        }
+        
+        .description code {
+            background: #2d2d44;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #ff3333;
+        }
+    </style>
+</head>
+<body>
+    <h1>⚡ CYFROWY LICZNIK 4-BITOWY - WIZUALIZACJA ⚡</h1>
+    <p class="subtitle">Scenariusz testowy: digital_counter_vanilla | 10 cyfr × 2 stany = 20 klatek + przejścia</p>
+    
+    <div class="main-container">
+        <div class="viewer-section">
+            <h3 style="margin-bottom: 10px;">🎬 Podgląd klatki</h3>
+            <div id="svg-container">
+                <p style="color: #888;">Kliknij "▶ Start" aby rozpocząć animację</p>
+            </div>
+            
+            <div class="frame-info">
+                <span class="frame-counter" id="frame-counter">Klatka: - / 31</span>
+                <span id="frame-desc" style="margin-left: 20px; color: #888;"></span>
+            </div>
+            
+            <div class="controls">
+                <button onclick="firstFrame()">⏮ Pierwsza</button>
+                <button onclick="prevFrame()">⏴ Poprzednia</button>
+                <button class="primary" id="play-btn" onclick="togglePlay()">▶ Start</button>
+                <button onclick="nextFrame()">⏵ Następna</button>
+                <button onclick="lastFrame()">⏭ Ostatnia</button>
+                
+                <div class="speed-control">
+                    <label>Prędkość:</label>
+                    <input type="range" id="speed" min="200" max="2000" value="1000" step="100">
+                    <span id="speed-val">1s</span>
+                </div>
+            </div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ff3333;"></div>
+                    <span>ON (Redstone aktywny)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3a3a3a;"></div>
+                    <span>OFF (Brak sygnału)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #00ff00;"></div>
+                    <span>AKTYWNY WYJŚCIE (Command Block)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffff00;"></div>
+                    <span>PODŚWIETLENIE</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="timeline-section">
+        <h3 style="margin-bottom: 10px;">📊 Oś czasu (kliknij aby przejść)</h3>
+        <div class="timeline" id="timeline"></div>
+        
+        <div class="description">
+            <h3>📖 Jak działa ten układ?</h3>
+            <p>
+                <strong>1. Zegar 1Hz</strong> - Generuje impuls co 1 sekundę (20 ticków Minecraft). <code>5 repeaterów × 4 ticki = 20 ticków</code>.<br>
+                <strong>2. Licznik 4-bitowy</strong> - 4 kaskadowane T flip-flopy (na obserwatorach). Każdy impuls zegara zwiększa licznik o 1.<br>
+                <strong>3. Dekoder BCD</strong> - Sprawdza stany 4 bitów (Q3,Q2,Q1,Q0) i aktywuje jedną z 10 linii wyjściowych.<br>
+                <strong>4. Command Blocks</strong> - Każda cyfra 0-9 ma swój command block z komendą <code>/say X</code>, widoczną w logach serwera.<br><br>
+                
+                <strong>Przykład:</strong> Gdy licznik pokazuje <code>0101</code> (binarnie) = cyfra 5 (dziesiętnie),<br>
+                dekoder wykrywa stan Q2=1 i Q0=1, aktywuje linię dla cyfry 5, która uruchamia <code>/say 5</code>.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Lista wszystkich plików SVG w kolejności
+        const frames = [
+            { file: 'digit_0_hold.svg', name: '0', type: 'hold', desc: 'Cyfra 0 - stan spoczynku' },
+            { file: 'digit_0_pulse.svg', name: '0', type: 'pulse', desc: 'Cyfra 0 - impuls zegara (następna: 1)' },
+            { file: 'transition_0_to_1.svg', name: '→', type: 'trans', desc: 'Przejście: 0 → 1' },
+            { file: 'digit_1_hold.svg', name: '1', type: 'hold', desc: 'Cyfra 1 - stan spoczynku' },
+            { file: 'digit_1_pulse.svg', name: '1', type: 'pulse', desc: 'Cyfra 1 - impuls zegara (następna: 2)' },
+            { file: 'transition_1_to_2.svg', name: '→', type: 'trans', desc: 'Przejście: 1 → 2' },
+            { file: 'digit_2_hold.svg', name: '2', type: 'hold', desc: 'Cyfra 2 - stan spoczynku' },
+            { file: 'digit_2_pulse.svg', name: '2', type: 'pulse', desc: 'Cyfra 2 - impuls zegara (następna: 3)' },
+            { file: 'transition_2_to_3.svg', name: '→', type: 'trans', desc: 'Przejście: 2 → 3' },
+            { file: 'digit_3_hold.svg', name: '3', type: 'hold', desc: 'Cyfra 3 - stan spoczynku' },
+            { file: 'digit_3_pulse.svg', name: '3', type: 'pulse', desc: 'Cyfra 3 - impuls zegara (następna: 4)' },
+            { file: 'transition_3_to_4.svg', name: '→', type: 'trans', desc: 'Przejście: 3 → 4' },
+            { file: 'digit_4_hold.svg', name: '4', type: 'hold', desc: 'Cyfra 4 - stan spoczynku' },
+            { file: 'digit_4_pulse.svg', name: '4', type: 'pulse', desc: 'Cyfra 4 - impuls zegara (następna: 5)' },
+            { file: 'transition_4_to_5.svg', name: '→', type: 'trans', desc: 'Przejście: 4 → 5' },
+            { file: 'digit_5_hold.svg', name: '5', type: 'hold', desc: 'Cyfra 5 - stan spoczynku' },
+            { file: 'digit_5_pulse.svg', name: '5', type: 'pulse', desc: 'Cyfra 5 - impuls zegara (następna: 6)' },
+            { file: 'transition_5_to_6.svg', name: '→', type: 'trans', desc: 'Przejście: 5 → 6' },
+            { file: 'digit_6_hold.svg', name: '6', type: 'hold', desc: 'Cyfra 6 - stan spoczynku' },
+            { file: 'digit_6_pulse.svg', name: '6', type: 'pulse', desc: 'Cyfra 6 - impuls zegara (następna: 7)' },
+            { file: 'transition_6_to_7.svg', name: '→', type: 'trans', desc: 'Przejście: 6 → 7' },
+            { file: 'digit_7_hold.svg', name: '7', type: 'hold', desc: 'Cyfra 7 - stan spoczynku' },
+            { file: 'digit_7_pulse.svg', name: '7', type: 'pulse', desc: 'Cyfra 7 - impuls zegara (następna: 8)' },
+            { file: 'transition_7_to_8.svg', name: '→', type: 'trans', desc: 'Przejście: 7 → 8' },
+            { file: 'digit_8_hold.svg', name: '8', type: 'hold', desc: 'Cyfra 8 - stan spoczynku' },
+            { file: 'digit_8_pulse.svg', name: '8', type: 'pulse', desc: 'Cyfra 8 - impuls zegara (następna: 9)' },
+            { file: 'transition_8_to_9.svg', name: '→', type: 'trans', desc: 'Przejście: 8 → 9' },
+            { file: 'digit_9_hold.svg', name: '9', type: 'hold', desc: 'Cyfra 9 - stan spoczynku' },
+            { file: 'digit_9_pulse.svg', name: '9', type: 'pulse', desc: 'Cyfra 9 - impuls zegara (następna: 0)' },
+            { file: 'transition_9_to_0.svg', name: '→', type: 'trans', desc: 'Przejście: 9 → 0 (zapętlenie)' }
+        ];
+
+        let currentFrame = 0;
+        let isPlaying = false;
+        let playInterval = null;
+
+        // Generuj timeline
+        function generateTimeline() {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+            
+            // Dodaj podsumowanie na początku
+            const summaryItem = document.createElement('div');
+            summaryItem.className = 'timeline-item';
+            summaryItem.innerHTML = `
+                <div class="digit">📊</div>
+                <div class="type">SUMMARY</div>
+            `;
+            summaryItem.onclick = () => loadFrame(-1);
+            timeline.appendChild(summaryItem);
+            
+            frames.forEach((frame, index) => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.dataset.index = index;
+                
+                let typeLabel = '';
+                if (frame.type === 'hold') typeLabel = 'STAN';
+                else if (frame.type === 'pulse') typeLabel = 'IMPULS';
+                else typeLabel = 'ZMIANA';
+                
+                item.innerHTML = `
+                    <div class="digit">${frame.name}</div>
+                    <div class="type">${typeLabel}</div>
+                `;
+                item.onclick = () => loadFrame(index);
+                timeline.appendChild(item);
+            });
+        }
+
+        // Załaduj klatkę
+        async function loadFrame(index) {
+            if (index === -1) {
+                // Podsumowanie
+                currentFrame = -1;
+                const response = await fetch('00_CYCLE_SUMMARY.svg');
+                const svgText = await response.text();
+                document.getElementById('svg-container').innerHTML = svgText;
+                document.getElementById('frame-counter').textContent = `Podsumowanie cyklu`;
+                document.getElementById('frame-desc').textContent = 'Pełny cykl 0-9 (10 sekund)';
+                updateTimelineHighlight();
+                return;
+            }
+            
+            currentFrame = index;
+            const frame = frames[index];
+            
+            try {
+                const response = await fetch(frame.file);
+                const svgText = await response.text();
+                document.getElementById('svg-container').innerHTML = svgText;
+                document.getElementById('frame-counter').textContent = `Klatka: ${index + 1} / ${frames.length}`;
+                document.getElementById('frame-desc').textContent = frame.desc;
+                updateTimelineHighlight();
+            } catch (e) {
+                console.error('Błąd ładowania:', e);
+            }
+        }
+
+        // Aktualizuj podświetlenie w timeline
+        function updateTimelineHighlight() {
+            document.querySelectorAll('.timeline-item').forEach((item, index) => {
+                item.classList.remove('active');
+                if (index === currentFrame + 1) { // +1 bo podsumowanie jest na indeksie 0
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        // Nawigacja
+        function firstFrame() {
+            stop();
+            loadFrame(-1);
+        }
+
+        function lastFrame() {
+            stop();
+            loadFrame(frames.length - 1);
+        }
+
+        function prevFrame() {
+            stop();
+            if (currentFrame === -1) {
+                loadFrame(frames.length - 1);
+            } else if (currentFrame > 0) {
+                loadFrame(currentFrame - 1);
+            } else {
+                loadFrame(-1);
+            }
+        }
+
+        function nextFrame() {
+            stop();
+            if (currentFrame === -1) {
+                loadFrame(0);
+            } else if (currentFrame < frames.length - 1) {
+                loadFrame(currentFrame + 1);
+            } else {
+                loadFrame(-1);
+            }
+        }
+
+        // Odtwarzanie
+        function togglePlay() {
+            if (isPlaying) {
+                stop();
+            } else {
+                play();
+            }
+        }
+
+        function play() {
+            isPlaying = true;
+            document.getElementById('play-btn').textContent = '⏸ Stop';
+            
+            if (currentFrame === -1) {
+                loadFrame(0);
+            }
+            
+            const speed = parseInt(document.getElementById('speed').value);
+            
+            playInterval = setInterval(() => {
+                if (currentFrame < frames.length - 1) {
+                    loadFrame(currentFrame + 1);
+                } else {
+                    loadFrame(-1); // Wróć do podsumowania
+                    stop();
+                }
+            }, speed);
+        }
+
+        function stop() {
+            isPlaying = false;
+            document.getElementById('play-btn').textContent = '▶ Start';
+            if (playInterval) {
+                clearInterval(playInterval);
+                playInterval = null;
+            }
+        }
+
+        // Aktualizacja prędkości
+        document.getElementById('speed').addEventListener('input', function() {
+            const val = this.value;
+            document.getElementById('speed-val').textContent = (val / 1000) + 's';
+            if (isPlaying) {
+                stop();
+                play();
+            }
+        });
+
+        // Klawiatura
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'ArrowLeft': prevFrame(); break;
+                case 'ArrowRight': nextFrame(); break;
+                case ' ': togglePlay(); break;
+                case 'Home': firstFrame(); break;
+                case 'End': lastFrame(); break;
+            }
+        });
+
+        // Inicjalizacja
+        generateTimeline();
+        loadFrame(-1); // Załaduj podsumowanie na start
+    </script>
+</body>
+</html>

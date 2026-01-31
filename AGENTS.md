@@ -2,7 +2,7 @@
 
 > **Język dokumentacji:** Polski (taki sam jak w dokumentacji projektu)
 > **Data utworzenia:** 2026-01-30
-> **Ostatnia aktualizacja:** 2026-01-30
+> **Ostatnia aktualizacja:** 2026-01-30 (dodano strukturę src/ i mod_src/)
 
 ---
 
@@ -34,12 +34,31 @@ Minecraft_konwersja/
 │   ├── WORKFLOW.md                # Metodyka pracy z Claude
 │   ├── LISTA_KONWERSJI_MODOW.md   # Lista modów i ich mapowanie
 │   ├── ANALIZA_MODOW_SZCZEGOLOWA.md  # Szczegółowa analiza modów
+│   ├── MINECRAFT_MAP_PARSER.md    # Dokumentacja parsera mapy
+│   ├── IGNORED_BLOCKS.md          # Lista bloków/TE do ignorowania
 │   ├── sc_available_1710.md       # Dostępność modów 1.7.10
 │   ├── sc_available_118.md        # Dostępność modów 1.18.2
 │   ├── conversion-list.xlsx       # Lista konwersji (Excel)
 │   └── mod_mapping_indepth/       # Szczegółowe mapowanie modów
 │       ├── from/                  # Analiza modów źródłowych (1.7.10)
 │       └── to/                    # Mapowanie na 1.18.2
+├── output/                        # Wyniki, wizualizacje, raporty
+│   └── visualizations/            # Wizualizacje mapy (SVG, HTML)
+├── src/                           # Główny kod projektu (Python)
+│   ├── minecraft_map_parser/      # Parser mapy Minecraft
+│   │   ├── __init__.py
+│   │   ├── nbt_parser.py          # Parser NBT
+│   │   ├── anvil_parser.py        # Parser regionów MCA
+│   │   ├── mod_block_extractor.py # Ekstraktor bloków z modów
+│   │   ├── visualizer.py          # Wizualizator SVG
+│   │   └── README.md              # Dokumentacja modułu
+│   ├── visualize_choroszcz.py     # Skrypt wizualizacji strefy
+│   ├── analyze_shape.py           # Analiza kształtu struktur
+│   └── analyze_ae2_blocks.py      # Analiza bloków AE2
+├── mod_src/                       # Kody źródłowe modów (repozytoria)
+│   └── actual_src/                # Pobrane repozytoria modów
+│       ├── 1.7.10/                # Mody źródłowe 1.7.10
+│       └── 1.18.2/                # Mody docelowe 1.18.2
 ├── mapa_1710/                     # Dane mapy źródłowej (1.7.10)
 ├── mapa_118/                      # Dane mapy docelowej (1.18.2) - pusta
 ├── modpack_1710/                  # Pliki modpacka 1.7.10 (JARy)
@@ -52,6 +71,8 @@ Minecraft_konwersja/
 │   ├── iii_rzesza/
 │   ├── rzym/
 │   └── zsrr/
+├── brute_force_trial_ae2/         # Testowe konwersje AE2
+├── headless_server/               # Serwer headless do testów
 └── AGENTS.md                      # Ten plik
 ```
 
@@ -74,23 +95,34 @@ W `docs/mod_mapping_indepth/`:
 - `from/mod_funkcjonalnosci_1.7.10_*.md` - Analiza funkcjonalności modów 1.7.10
 - `to/konwersja_1710_do_1182_mapowanie_modow_*.md` - Mapowanie na mody 1.18.2
 
+### 2.3 Bloki/Tile Entities do ignorowania
+
+`docs/IGNORED_BLOCKS.md` zawiera listę elementów które **nie będą konwertowane**:
+- Techniczne TE (np. `RCHiddenTile` z Railcrafta)
+- Markery systemowe
+- Placeholdery wewnętrzne modów
+
 ---
 
 ## 3. Technologia i stack
 
-### 3.1 Brak kodu źródłowego (obecnie)
+### 3.1 Kod źródłowy
 
-Ten projekt **nie zawiera obecnie kodu źródłowego** (Python/Java/etc.). Jest to projekt:
-- **Analityczny** - dokumentacja i planowanie
-- **Konfiguracyjny** - mapowania, definicje stref
-- **Przygotowawczy** - przed fazą implementacji konwertera
+Projekt zawiera kod źródłowy w folderze `src/`:
 
-### 3.2 Planowany stack (zgodnie z PLAN_KONWERSJI.md)
+| Moduł | Opis |
+|-------|------|
+| `src/minecraft_map_parser/` | Parser mapy Minecraft 1.7.10 - ekstrakcja bloków, tile entities, wizualizacja |
 
-Gdy implementacja zostanie rozpoczęta:
-- **Język:** Python 3.11
-- **Format mapowań:** YAML
-- **Testowanie:** pytest
+Pozostała część projektu to:
+- **Analityczna** - dokumentacja i planowanie w `docs/`
+- **Konfiguracyjna** - mapowania, definicje stref
+
+### 3.2 Stack technologiczny
+
+- **Język:** Python 3.10+
+- **Format mapowań:** YAML (planowane)
+- **Testowanie:** pytest (planowane)
 - **Narzędzia zewnętrzne:**
   - MCA Selector - przeglądanie/edycja chunków
   - NBTExplorer - ręczna edycja danych NBT
@@ -107,7 +139,31 @@ Gdy implementacja zostanie rozpoczęta:
 
 ## 4. Organizacja kodu/danych
 
-### 4.1 Mapy Minecraft
+### 4.1 Kod źródłowy (src/)
+
+Główny kod projektu w Pythonie:
+
+```
+src/
+├── minecraft_map_parser/      # Parser mapy Minecraft
+│   ├── nbt_parser.py          # Parser NBT
+│   ├── anvil_parser.py        # Parser regionów MCA
+│   ├── mod_block_extractor.py # Ekstraktor bloków z modów
+│   ├── visualizer.py          # Wizualizator SVG
+│   └── README.md
+├── visualize_choroszcz.py     # Skrypt wizualizacji
+├── analyze_shape.py           # Analiza struktur
+└── README.md
+```
+
+### 4.2 Kody źródłowe modów (mod_src/)
+
+Repozytoria kodów źródłowych modów:
+- `actual_src/1.7.10/` - Mody źródłowe (AE2, Mekanism, IC2, ...)
+- `actual_src/1.18.2/` - Mody docelowe (AE2 11.x, Mekanism 10.x, ...)
+- `code_from_jar/` - Dekompilowane kody z JAR
+
+### 4.3 Mapy Minecraft
 
 #### Mapa źródłowa (mapa_1710/)
 Zawiera dane świata 1.7.10:
@@ -119,7 +175,7 @@ Zawiera dane świata 1.7.10:
 #### Mapa docelowa (mapa_118/)
 Obecnie pusta - tu będzie wynik konwersji.
 
-### 4.2 Strefy (strefy/)
+### 4.4 Strefy (strefy/)
 
 Każda strefa to obszar na mapie zdefiniowany współrzędnymi:
 
@@ -142,12 +198,17 @@ Strefy zdefiniowane:
 - `rzym/` - Rzym
 - `zsrr/` - ZSRR
 
-### 4.3 Modpack (modpack_1710/)
+### 4.5 Modpack (modpack_1710/)
 
 Zawiera 56 modów głównych i 16 bibliotek:
 - Mody główne: `appliedenergistics2-*.jar`, `Mekanism-*.jar`, itp.
 - Biblioteki: `CodeChickenLib-*.jar`, `CoFHCore-*.jar`, itp.
 - Konfiguracje modów w podfolderach: `carpentersblocks/`, `ic2/`, `railcraft/`
+
+### 4.6 Output (output/)
+
+Wyniki analiz, wizualizacji i raportów:
+- `visualizations/` - Wizualizacje SVG i podsumowania HTML
 
 ---
 

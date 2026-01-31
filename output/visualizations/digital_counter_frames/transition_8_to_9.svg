@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="700" viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg">
+<rect width="1000" height="700" fill="#1a1a2e"/>
+<text x="500" y="40" text-anchor="middle" fill="#ffff00" font-family="Consolas, monospace" font-size="28" font-weight="bold">
+    PRZEJŚCIE: 8 → 9
+</text>
+
+
+<rect x="180" y="110" width="600" height="400" fill="#2d2d44" rx="10"/>
+<text x="480" y="140" text-anchor="middle" fill="#ffffff" font-family="Consolas, monospace" font-size="16" font-weight="bold">ZMiana STANÓW</text>
+
+<text x="200" y="180" fill="#ffffff" font-family="Consolas, monospace" font-size="12" font-weight="bold">Bit</text>
+<text x="350" y="180" fill="#ffffff" font-family="Consolas, monospace" font-size="12" font-weight="bold">Przed (8)</text>
+<text x="500" y="180" fill="#ffffff" font-family="Consolas, monospace" font-size="12" font-weight="bold">Po (9)</text>
+<text x="650" y="180" fill="#ffffff" font-family="Consolas, monospace" font-size="12" font-weight="bold">Zmiana?</text>
+
+<text x="200" y="210" fill="#ffffff" font-family="Consolas, monospace" font-size="14">Q3 (MSB)</text>
+<text x="350" y="210" fill="#ff3333" font-family="Consolas, monospace" font-size="20" font-weight="bold">1</text>
+<text x="500" y="210" fill="#ff3333" font-family="Consolas, monospace" font-size="20" font-weight="bold">1</text>
+<text x="650" y="210" fill="#666" font-family="Consolas, monospace" font-size="14" font-weight="bold">-</text>
+
+
+<text x="200" y="260" fill="#ffffff" font-family="Consolas, monospace" font-size="14">Q2</text>
+<text x="350" y="260" fill="#666" font-family="Consolas, monospace" font-size="20" font-weight="bold">0</text>
+<text x="500" y="260" fill="#666" font-family="Consolas, monospace" font-size="20" font-weight="bold">0</text>
+<text x="650" y="260" fill="#666" font-family="Consolas, monospace" font-size="14" font-weight="bold">-</text>
+
+
+<text x="200" y="310" fill="#ffffff" font-family="Consolas, monospace" font-size="14">Q1</text>
+<text x="350" y="310" fill="#666" font-family="Consolas, monospace" font-size="20" font-weight="bold">0</text>
+<text x="500" y="310" fill="#666" font-family="Consolas, monospace" font-size="20" font-weight="bold">0</text>
+<text x="650" y="310" fill="#666" font-family="Consolas, monospace" font-size="14" font-weight="bold">-</text>
+
+
+<text x="200" y="360" fill="#ffffff" font-family="Consolas, monospace" font-size="14">Q0 (LSB)</text>
+<text x="350" y="360" fill="#666" font-family="Consolas, monospace" font-size="20" font-weight="bold">0</text>
+<text x="500" y="360" fill="#ff3333" font-family="Consolas, monospace" font-size="20" font-weight="bold">1</text>
+<text x="650" y="360" fill="#ffff00" font-family="Consolas, monospace" font-size="14" font-weight="bold">ZMIANA! →</text>
+
+
+<text x="480" y="450" text-anchor="middle" fill="#ffffff" font-family="Consolas, monospace" font-size="14">
+    Przełączone bity: Q0
+</text>
+<text x="480" y="480" text-anchor="middle" fill="#ffff00" font-family="Consolas, monospace" font-size="16" font-weight="bold">
+    Następny impuls zegara spowoduje przejście do cyfry 9
+</text>
+</svg>
