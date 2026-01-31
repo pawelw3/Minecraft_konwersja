@@ -11,8 +11,8 @@ repositories {
 }
 
 dependencies {
-    // NBT library (Maven Central, JDK 17 compatible)
-    implementation("com.flowpowered:flow-nbt:1.0.0")
+    // Hephaistos - NBT + MCA (Anvil) library
+    implementation("io.github.jglrxavpok.hephaistos:common:2.2.0")
     
     // JSON parsing
     implementation("org.json:json:20231013")
