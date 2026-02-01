@@ -45,6 +45,7 @@ from .nbt_converters.utility_converters import (
     WirelessAccessPointConverter,
     QuantumBridgeConverter,
 )
+from .nbt_converters.cable_converter import CableConverter
 from .nbt_converters.base_converter import IdentityConverter
 
 
@@ -161,6 +162,9 @@ class AE2Converter:
             'condenser': IdentityConverter(),
             'security_station': SecurityStationConverter(),
             'wireless_ap': WirelessAccessPointConverter(),
+            
+            # Cable Bus (multipart - kable, terminale, bus)
+            'cable_bus': CableConverter(),
             
             # Default
             'default': IdentityConverter(),
