@@ -4,8 +4,11 @@ ME Drive Converter
 Konwertuje NBT ME Drive z 1.7.10 do 1.18.2.
 
 KLUCZOWE RÓŻNICE:
-- 1.7.10: inv (lista), priority (int), fuzzyMode (byte)
-- 1.18.2: items (lista), priority (int), fuzzyMode (string)
+- 1.7.10: inv (compound z item0, item1, ...), priority (int)
+- 1.18.2: inv (compound z item0, item1, ...), priority (int)
+
+WAŻNE: Format inventory jest taki sam w obu wersjach (nested compound),
+ale struktura ItemStack się zmienia.
 """
 
 from typing import Dict, Any, List
@@ -13,34 +16,52 @@ from .base_converter import BaseNBTConverter, NBTConversionResult
 
 
 class DriveConverter(BaseNBTConverter):
-    """Konwerter dla ME Drive i ME Chest"""
+    """Konwerter dla ME Drive
+    
+    Źródło 1.7.10: appeng.tile.storage.TileDrive
+        - inv: AppEngInternalInventory (10 slotów) - zapisany jako compound
+          z kluczami item0, item1, ..., item9
+        - priority: int
+        - forward/up: ForgeDirection (orientacja - teraz w BlockState)
+    
+    Źródło 1.18.2: appeng.blockentity.storage.DriveBlockEntity
+        - inv: AppEngCellInventory (10 slotów) - zapisany jako compound
+          z kluczami item0, item1, ..., item9
+        - priority: int
+        - Orientacja: w BlockState (facing)
+    """
     
     @property
     def converter_name(self) -> str:
         return "drive"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
-        Konwertuje NBT ME Drive/Chest.
+        Konwertuje NBT ME Drive.
         
         Struktura 1.7.10:
         {
             "id": "AEBaseTile",
-            "inv": [{Slot: 0, id: "...", Count: 1, tag: {...}}, ...],
+            "inv": {
+                "item0": {id: "...", Count: 1, tag: {...}},
+                "item1": {},  # pusty jeśli brak itemu
+                ...
+            },
             "priority": 0,
-            "fuzzyMode": 0,
-            "forward": 2,
-            "up": 1,
-            "customName": ""
+            "forward": 2,  # ForgeDirection - teraz w BlockState
+            "up": 1
         }
         
         Struktura 1.18.2:
         {
             "id": "ae2:drive",
-            "items": [...],
-            "priority": 0,
-            "fuzzyMode": "IGNORE_ALL",
-            "visual": {...}
+            "inv": {
+                "item0": {...},
+                "item1": {},
+                ...
+            },
+            "priority": 0
         }
         """
         self.reset()
@@ -50,52 +71,70 @@ class DriveConverter(BaseNBTConverter):
         }
         
         # Konwersja inwentarza (storage cells)
-        inv_1710 = nbt_1710.get('inv', [])
-        if inv_1710:
-            converted['items'] = self._convert_drive_inventory(inv_1710)
+        # 1.7.10: inv jako compound z item0, item1, ...
+        inv_1710 = nbt_1710.get('inv', {})
+        if isinstance(inv_1710, dict):
+            converted['inv'] = self._convert_drive_inventory_compound(inv_1710)
+        elif isinstance(inv_1710, list):
+            # Fallback dla starego formatu listowego (jeśli wystąpi)
+            converted['inv'] = self._convert_drive_inventory_list(inv_1710)
         else:
-            converted['items'] = []
+            converted['inv'] = {}
         
-        # Konwersja fuzzy mode
-        fuzzy_mode = nbt_1710.get('fuzzyMode', 0)
-        converted['fuzzyMode'] = self._convert_fuzzy_mode(fuzzy_mode)
-        
-        # Konwersja custom name
+        # Konwersja custom name (opcjonalne)
         custom_name = nbt_1710.get('customName')
         if custom_name:
             converted['customName'] = custom_name
         
-        # Orientacja
-        orientation = self._get_orientation(nbt_1710)
-        if orientation:
-            converted['visual'] = {'rotation': orientation.get('facing', 'north')}
-        
         return self._create_result(converted)
     
-    def _convert_drive_inventory(self, inv_1710: List[Dict]) -> List[Dict]:
+    def _convert_drive_inventory_compound(self, inv_1710: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Konwertuje inwentarz Drive z 1.7.10 do 1.18.2.
+        Konwertuje inwentarz Drive z formatu compound 1.7.10 do 1.18.2.
         
-        ME Drive ma 10 slotów na storage cells.
-        ME Chest ma 1 slot na storage cell + 54 slotów na itemy.
+        Format: {"item0": {...}, "item1": {...}, ...}
         """
-        items = []
+        result = {}
+        
+        for key, item_data in inv_1710.items():
+            if not key.startswith('item'):
+                continue
+            
+            if not item_data:
+                # Pusty slot - zapisz pusty compound
+                result[key] = {}
+                continue
+            
+            # Konwertuj storage cell
+            converted_item = self._convert_storage_cell_item(item_data)
+            if converted_item:
+                result[key] = converted_item
+            else:
+                result[key] = {}
+        
+        return result
+    
+    def _convert_drive_inventory_list(self, inv_1710: List[Dict]) -> Dict[str, Any]:
+        """
+        Konwertuje inwentarz z formatu listowego (fallback).
+        
+        Format: [{Slot: 0, id: "...", ...}, ...]
+        """
+        result = {}
         
         for slot_data in inv_1710:
             if not slot_data:
                 continue
             
             slot = slot_data.get('Slot', 0)
-            item_id = slot_data.get('id', '')
+            slot_key = f'item{slot}'
             
             # Konwertuj storage cell
             converted_item = self._convert_storage_cell_item(slot_data)
-            
             if converted_item:
-                converted_item['Slot'] = slot
-                items.append(converted_item)
+                result[slot_key] = converted_item
         
-        return items
+        return result
     
     def _convert_storage_cell_item(self, item_nbt: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -166,44 +205,47 @@ class DriveConverter(BaseNBTConverter):
                 'count': storage_cell.get('itemCount', 0)
             }
         }
-    
-    def _convert_fuzzy_mode(self, fuzzy_mode: int) -> str:
-        """
-        Konwertuje fuzzy mode z int do string.
-        
-        1.7.10: 0, 1, 2 (int)
-        1.18.2: "IGNORE_ALL", "PERCENT_25", "PERCENT_50", ...
-        """
-        modes = {
-            0: "IGNORE_ALL",
-            1: "PERCENT_25",
-            2: "PERCENT_50",
-            3: "PERCENT_75",
-            4: "PERCENT_99"
-        }
-        return modes.get(fuzzy_mode, "IGNORE_ALL")
 
 
 class ChestConverter(DriveConverter):
-    """
-    Konwerter dla ME Chest - dziedziczy z DriveConverter
-    z drobnymi modyfikacjami.
+    """Konwerter dla ME Chest - dziedziczy z DriveConverter
+    
+    Źródło 1.7.10: appeng.tile.storage.TileChest
+        - Podobny do TileDrive, ale tylko 1 slot na cell (inv ma 2 sloty:
+          slot 0 na cell, slot 1 na jukebox)
+        - priority: int
+        - paintedColor: byte (kolor)
+        - config: ConfigManager (różne ustawienia)
+    
+    Źródło 1.18.2: appeng.blockentity.storage.MEChestBlockEntity
+        - inv: 2 sloty (cell + jukebox)
+        - priority: int
+        - paintedColor: byte
+        - config: ConfigManager
+        - keyTypeSelection: KeyTypeSelection
     """
     
     @property
     def converter_name(self) -> str:
         return "chest"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
-        ME Chest jest podobny do ME Drive, ale ma tylko 1 slot na cell
-        i dodatkowy inwentarz na itemy.
+        ME Chest jest podobny do ME Drive, ale ma dodatkowe pola.
         """
-        # Użyj konwersji z Drive, ale oznacz jako chest
-        result = super().convert(nbt_1710, block_id)
+        # Użyj konwersji z Drive dla priority i inv
+        result = super().convert(nbt_1710, block_id, metadata)
         
-        if result.success and result.converted_nbt:
-            # Dodaj marker że to chest (może być użyteczne)
-            result.converted_nbt['chestType'] = True
+        if not result.success or not result.converted_nbt:
+            return result
+        
+        # Dodaj paintedColor (opcjonalne, domyślnie Transparent=0)
+        painted_color = nbt_1710.get('paintedColor', 0)
+        if painted_color != 0:  # Zapisz tylko jeśli nie jest domyślny
+            result.converted_nbt['paintedColor'] = painted_color
+        
+        # TODO: Konwersja config (ConfigManager) - zawiera ustawienia dostępu,
+        # sortowania, itp. Wymaga analizy struktury ConfigManager w obu wersjach.
         
         return result

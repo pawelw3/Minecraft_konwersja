@@ -42,13 +42,15 @@ class BaseNBTConverter(ABC):
         self.warnings: List[str] = []
     
     @abstractmethod
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None, 
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT z wersji 1.7.10 do 1.18.2.
         
         Args:
             nbt_1710: Słownik NBT z wersji 1.7.10
             block_id: ID bloku (opcjonalnie, dla kontekstu)
+            metadata: Metadata bloku (dla wariantów)
             
         Returns:
             NBTConversionResult z wynikiem konwersji
@@ -140,16 +142,19 @@ class BaseNBTConverter(ABC):
         Ekstrahuje orientację z NBT 1.7.10.
         
         W 1.7.10: forward (byte), up (byte) - ForgeDirection
-        W 1.18.2: Odpowiednio przekształcone
+        W 1.18.2: BlockState properties (facing, itp.)
+        
+        Returns:
+            Dict z właściwościami blockstate dla orientacji
         """
         forward = nbt.get('forward', 0)
         up = nbt.get('up', 0)
         
+        # Konwersja do blockstate properties
         return {
-            'forward': forward,
-            'up': up,
-            # W 1.18.2 może być inaczej zapisane
-            'facing': self._forge_direction_to_facing(forward)
+            'facing': self._forge_direction_to_facing(forward),
+            # Niektóre bloki mogą używać 'up' (np. me_interface)
+            'up': self._forge_direction_to_facing(up) if up not in [0, 1] else None
         }
     
     def _forge_direction_to_facing(self, direction: int) -> str:
@@ -197,16 +202,20 @@ class IdentityConverter(BaseNBTConverter):
     """
     Konwerter tożsamościowy - kopiowanie bez zmian.
     Używany dla prostych bloków bez specjalnych danych NBT.
+    
+    UWAGA: W 1.18.2 orientacja jest w BlockState, nie w NBT BE!
     """
     
     @property
     def converter_name(self) -> str:
         return "identity"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
-        """Kopiuje NBT bez zmian"""
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
+        """Kopiuje NBT bez zmian (bez orientacji - to jest w blockstate)"""
         # Usuń pola specyficzne dla 1.7.10 które nie są potrzebne w 1.18.2
+        # UWAGA: forward/up są usuwane bo w 1.18.2 są w BlockState
         converted = {k: v for k, v in nbt_1710.items() 
-                    if k not in ['id', 'x', 'y', 'z']}
+                    if k not in ['id', 'x', 'y', 'z', 'forward', 'up']}
         
         return self._create_result(converted)

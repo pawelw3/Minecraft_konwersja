@@ -38,6 +38,8 @@ data class CleaningRules(
         if (fullId in removeBlockIds) return true
         
         // Heurystyka: bloki >= 256 są modowe (dla 1.7.10)
+        // Vanilla bloki: 0-175 (w 1.7.10 jest ich dokładnie 176)
+        // Dodatkowe vanilla: 256+ to już mody
         if (useHeuristics && fullId >= 256) return true
         
         return false
@@ -49,14 +51,23 @@ data class CleaningRules(
     fun isModTileEntity(id: String?): Boolean {
         if (id == null) return false
         
-        // Jeśli nie jest w vanilla - jest modowe
-        if (!isVanillaTileEntity(id)) {
-            // Sprawdź czy pasuje do prefiksów do usunięcia
-            if (removeTileEntityIds.isEmpty()) return true
-            return removeTileEntityIds.any { prefix -> id.startsWith(prefix) || id.contains(prefix) }
+        // Normalizuj ID (usuń prefiks "minecraft:" jeśli jest)
+        val normalizedId = if (id.startsWith("minecraft:")) id.substring(10) else id
+        
+        // Jeśli to vanilla - nie usuwaj
+        if (isVanillaTileEntity(normalizedId)) {
+            return false
         }
         
-        return false
+        // Jeśli lista removeTileEntityIds jest pusta - wszystko co nie vanilla jest modowe
+        if (removeTileEntityIds.isEmpty()) return true
+        
+        // Sprawdź czy pasuje do prefiksów do usunięcia (case-insensitive)
+        val lowerId = id.lowercase()
+        return removeTileEntityIds.any { prefix -> 
+            lowerId.startsWith(prefix.lowercase()) || 
+            lowerId.contains(":" + prefix.lowercase())
+        }
     }
     
     /**
@@ -65,28 +76,37 @@ data class CleaningRules(
     fun isModEntity(id: String?): Boolean {
         if (id == null) return false
         
-        // Jeśli nie jest w vanilla - jest modowe
-        if (!isVanillaEntity(id)) {
-            // Sprawdź czy pasuje do prefiksów do usunięcia
-            if (removeEntityIds.isEmpty()) return true
-            return removeEntityIds.any { prefix -> id.startsWith(prefix) || id.contains(prefix) }
+        // Normalizuj ID
+        val normalizedId = if (id.startsWith("minecraft:")) id.substring(10) else id
+        
+        // Jeśli to vanilla - nie usuwaj
+        if (isVanillaEntity(normalizedId)) {
+            return false
         }
         
-        return false
+        // Jeśli lista removeEntityIds jest pusta - wszystko co nie vanilla jest modowe
+        if (removeEntityIds.isEmpty()) return true
+        
+        // Sprawdź czy pasuje do prefiksów do usunięcia (case-insensitive)
+        val lowerId = id.lowercase()
+        return removeEntityIds.any { prefix -> 
+            lowerId.startsWith(prefix.lowercase()) || 
+            lowerId.contains(":" + prefix.lowercase())
+        }
     }
     
     /**
      * Sprawdza czy TileEntity jest vanilla
      */
     private fun isVanillaTileEntity(id: String): Boolean {
-        return id in VANILLA_TILE_ENTITIES || id.startsWith("minecraft:") && id.substring(10) in VANILLA_TILE_ENTITIES
+        return id in VANILLA_TILE_ENTITIES
     }
     
     /**
      * Sprawdza czy Entity jest vanilla
      */
     private fun isVanillaEntity(id: String): Boolean {
-        return id in VANILLA_ENTITIES || id.startsWith("minecraft:") && id.substring(10) in VANILLA_ENTITIES
+        return id in VANILLA_ENTITIES
     }
     
     companion object {
@@ -100,7 +120,6 @@ data class CleaningRules(
             "AirPortal", // End portal
             "DaylightDetector", "RedstoneLight",
             "Cauldron", "Music", "Piston", // Piston extension
-            "AirPortal", // Portal
             "FlowerPot"
         )
         
@@ -121,12 +140,279 @@ data class CleaningRules(
         )
         
         /**
+         * Prefiksy TileEntities dla wszystkich modów z modpacku 1.7.10
+         */
+        val MOD_TILE_ENTITY_PREFIXES = setOf(
+            // Applied Energistics 2
+            "appliedenergistics2", "AE2", "appeng",
+            
+            // Mekanism
+            "mekanism", "Mekanism",
+            
+            // Thermal Series
+            "thermalexpansion", "ThermalExpansion", "thermalfoundation", "ThermalFoundation",
+            "thermaldynamics", "ThermalDynamics",
+            
+            // Tinkers' Construct
+            "tconstruct", "TConstruct",
+            
+            // BuildCraft
+            "buildcraft", "BuildCraft",
+            
+            // IndustrialCraft 2
+            "ic2", "IC2",
+            
+            // Forestry
+            "forestry", "Forestry",
+            
+            // Railcraft
+            "railcraft", "Railcraft",
+            
+            // BiblioCraft
+            "bibliocraft", "BiblioCraft",
+            
+            // Chisel
+            "chisel", "Chisel",
+            
+            // Iron Chests / JABBA
+            "ironchest", "IronChest", "jabb", "JABBA",
+            
+            // Logistics Pipes
+            "logisticspipes", "LogisticsPipes",
+            
+            // Thaumcraft
+            "thaumcraft", "Thaumcraft",
+            
+            // Witchery
+            "witchery", "Witchery",
+            
+            // Blood Magic
+            "bloodmagic", "BloodMagic", "AWWayofTime",
+            
+            // ProjectRed
+            "projectred", "ProjectRed",
+            
+            // ComputerCraft
+            "computercraft", "ComputerCraft",
+            
+            // OpenComputers
+            "opencomputers", "OpenComputers",
+            
+            // Big Reactors
+            "bigreactors", "BigReactors",
+            
+            // EnderStorage / Ender IO
+            "enderstorage", "EnderStorage", "enderio", "EnderIO",
+            
+            // Carpenter's Blocks
+            "carpentersblocks", "CarpentersBlocks",
+            
+            // Extra Utilities
+            "extrautilities", "ExtraUtilities",
+            
+            // Growthcraft
+            "growthcraft", "Growthcraft",
+            
+            // Pam's HarvestCraft
+            "harvestcraft", "HarvestCraft",
+            
+            // Traincraft
+            "traincraft", "Traincraft",
+            
+            // Flan's Mod
+            "flansmod", "FlansMod",
+            
+            // CustomNPCs
+            "customnpcs", "CustomNPCs",
+            
+            // MrCrayfish Furniture
+            "cfm", "CFM", "furniture", "Furniture",
+            
+            // Open Modular Turrets
+            "openmodularturrets", "OpenModularTurrets",
+            
+            // Statues
+            "statues", "Statues",
+            
+            // Armourer's Workshop
+            "armourers", "Armourers", " ArmourersWorkshop",
+            
+            // Backpacks
+            "backpack", "Backpack",
+            
+            // Better Storage
+            "betterstorage", "BetterStorage",
+            
+            // Nuclear Control
+            "ic2nuclearcontrol", "IC2NuclearControl",
+            
+            // Enchanting Plus
+            "enchantingplus", "EnchantingPlus",
+            
+            // Reliquary
+            "xreliquary", "XReliquary", "reliquary", "Reliquary",
+            
+            // Thaumic addons
+            "thaumicenergistics", "ThaumicEnergistics",
+            "thaumicexploration", "ThaumicExploration",
+            "thaumichorizons", "ThaumicHorizons",
+            "thaumictinkerer", "ThaumicTinkerer",
+            
+            // AsieLib
+            "asielib", "AsieLib",
+            
+            // Placeable Items
+            "placeableitems", "PlaceableItems",
+            
+            // Jammy Furniture
+            "jammyfurniture", "JammyFurniture",
+            
+            // Power Converters
+            "powerconverters", "PowerConverters",
+            
+            // BuildCraft Compat
+            "buildcraftcompat", "BuildCraftCompat"
+        )
+        
+        /**
+         * Prefiksy Entities dla wszystkich modów z modpacku 1.7.10
+         */
+        val MOD_ENTITY_PREFIXES = setOf(
+            // Applied Energistics 2
+            "appliedenergistics2", "AE2", "appeng",
+            
+            // Mekanism
+            "mekanism", "Mekanism",
+            
+            // Thermal Series
+            "thermalexpansion", "ThermalExpansion", "thermalfoundation", "ThermalFoundation",
+            "thermaldynamics", "ThermalDynamics",
+            
+            // Tinkers' Construct
+            "tconstruct", "TConstruct",
+            
+            // BuildCraft
+            "buildcraft", "BuildCraft",
+            
+            // IndustrialCraft 2
+            "ic2", "IC2",
+            
+            // Forestry
+            "forestry", "Forestry",
+            
+            // Railcraft
+            "railcraft", "Railcraft",
+            
+            // BiblioCraft
+            "bibliocraft", "BiblioCraft",
+            
+            // Chisel
+            "chisel", "Chisel",
+            
+            // Iron Chests / JABBA
+            "ironchest", "IronChest", "jabb", "JABBA",
+            
+            // Logistics Pipes
+            "logisticspipes", "LogisticsPipes",
+            
+            // Thaumcraft
+            "thaumcraft", "Thaumcraft",
+            
+            // Witchery
+            "witchery", "Witchery",
+            
+            // Blood Magic
+            "bloodmagic", "BloodMagic", "AWWayofTime",
+            
+            // ProjectRed
+            "projectred", "ProjectRed",
+            
+            // ComputerCraft
+            "computercraft", "ComputerCraft",
+            
+            // OpenComputers
+            "opencomputers", "OpenComputers",
+            
+            // Big Reactors
+            "bigreactors", "BigReactors",
+            
+            // EnderStorage / Ender IO
+            "enderstorage", "EnderStorage", "enderio", "EnderIO",
+            
+            // Carpenter's Blocks
+            "carpentersblocks", "CarpentersBlocks",
+            
+            // Extra Utilities
+            "extrautilities", "ExtraUtilities",
+            
+            // Growthcraft
+            "growthcraft", "Growthcraft",
+            
+            // Pam's HarvestCraft
+            "harvestcraft", "HarvestCraft",
+            
+            // Traincraft
+            "traincraft", "Traincraft",
+            
+            // Flan's Mod
+            "flansmod", "FlansMod",
+            
+            // CustomNPCs
+            "customnpcs", "CustomNPCs",
+            
+            // MrCrayfish Furniture
+            "cfm", "CFM", "furniture", "Furniture",
+            
+            // Open Modular Turrets
+            "openmodularturrets", "OpenModularTurrets",
+            
+            // Statues
+            "statues", "Statues",
+            
+            // Armourer's Workshop
+            "armourers", "Armourers",
+            
+            // Backpacks
+            "backpack", "Backpack",
+            
+            // Better Storage
+            "betterstorage", "BetterStorage",
+            
+            // Nuclear Control
+            "ic2nuclearcontrol", "IC2NuclearControl",
+            
+            // Reliquary
+            "xreliquary", "XReliquary", "reliquary", "Reliquary",
+            
+            // Thaumic addons
+            "thaumicenergistics", "ThaumicEnergistics",
+            "thaumicexploration", "ThaumicExploration",
+            "thaumichorizons", "ThaumicHorizons",
+            "thaumictinkerer", "ThaumicTinkerer",
+            
+            // AsieLib
+            "asielib", "AsieLib",
+            
+            // Placeable Items
+            "placeableitems", "PlaceableItems",
+            
+            // Jammy Furniture
+            "jammyfurniture", "JammyFurniture",
+            
+            // Power Converters
+            "powerconverters", "PowerConverters",
+            
+            // BuildCraft Compat
+            "buildcraftcompat", "BuildCraftCompat"
+        )
+        
+        /**
          * Wczytuje reguły z pliku JSON
          */
         fun fromFile(file: File): CleaningRules {
             if (!file.exists()) {
                 println("Plik reguł nie istnieje: ${file.absolutePath}, używam domyślnych")
-                return CleaningRules()
+                return createDefaultRules()
             }
             
             return try {
@@ -135,29 +421,29 @@ data class CleaningRules(
                 gson.fromJson(json, CleaningRules::class.java)
             } catch (e: Exception) {
                 println("Błąd wczytywania reguł: ${e.message}, używam domyślnych")
-                CleaningRules()
+                createDefaultRules()
             }
         }
         
         /**
-         * Tworzy domyślny plik reguł
+         * Tworzy domyślne reguły dla modpacku 1.7.10
+         */
+        fun createDefaultRules(): CleaningRules {
+            return CleaningRules(
+                removeTileEntityIds = MOD_TILE_ENTITY_PREFIXES,
+                removeEntityIds = MOD_ENTITY_PREFIXES,
+                replacementBlock = 0, // air
+                useHeuristics = true,
+                cleanTileEntities = true,
+                cleanEntities = true
+            )
+        }
+        
+        /**
+         * Tworzy przykładowy plik reguł
          */
         fun createDefaultRules(file: File) {
-            val rules = CleaningRules(
-                removeTileEntityIds = setOf(
-                    "appliedenergistics2", "AE2", "mekanism", "Mekanism",
-                    "thermalexpansion", "ThermalExpansion", "tconstruct",
-                    "TConstruct", "enderio", "EnderIO", "buildcraft", "BuildCraft",
-                    "ic2", "IC2", "forestry", "Forestry", "railcraft", "Railcraft",
-                    "bibliocraft", "BiblioCraft", "chisel", "Chisel",
-                    "ironchest", "IronChest", "jabb", "JABBA", "logisticspipes", "LogisticsPipes"
-                ),
-                removeEntityIds = setOf(
-                    "appliedenergistics2", "mekanism", "thermalexpansion", 
-                    "tconstruct", "enderio", "buildcraft", "ic2", "forestry",
-                    "railcraft", "bibliocraft", "chisel", "ironchest", "jabb"
-                )
-            )
+            val rules = createDefaultRules()
             
             val gson = Gson()
             file.writeText(gson.toJson(rules))

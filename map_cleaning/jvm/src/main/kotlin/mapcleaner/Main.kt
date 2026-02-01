@@ -62,7 +62,7 @@ fun main(args: Array<String>) {
         // Utwórz przykładowy plik reguł
         CleaningRules.createDefaultRules(File("rules.json.example"))
         println("  (Utworzono przykładowy plik rules.json.example)")
-        CleaningRules()
+        CleaningRules.createDefaultRules()
     }
     
     // Dostosuj reguły do poziomu agresywności
@@ -74,6 +74,8 @@ fun main(args: Array<String>) {
     }
     
     println("Czyszczenie: bloki=${finalRules.useHeuristics}, TE=${finalRules.cleanTileEntities}, Entities=${finalRules.cleanEntities}")
+    println("Liczba prefiksów TE do usunięcia: ${finalRules.removeTileEntityIds.size}")
+    println("Liczba prefiksów Entities do usunięcia: ${finalRules.removeEntityIds.size}")
     println("=" * 70)
     println()
     
@@ -160,7 +162,7 @@ private fun copyRegions(source: Path, target: Path) {
     val sourceWorld = source.toFile()
     val targetWorld = target.toFile()
     
-    // Funkkcja pomocnicza do kopiowania regionów
+    // Funkcja pomocnicza do kopiowania regionów
     fun copyRegionDir(sourceDir: File, targetDir: File) {
         if (!sourceDir.exists()) return
         

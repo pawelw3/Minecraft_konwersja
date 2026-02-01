@@ -6,6 +6,7 @@ import java.nio.file.Paths
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Skanuje wszystkie wymiary świata i koordynuje czyszczenie
@@ -130,13 +131,19 @@ class WorldScanner(
         val totalChunks = AtomicInteger(0)
         val totalModifiedChunks = AtomicInteger(0)
         val totalStats = ChunkCleaner.CleanStats()
+        val errors = AtomicReference<MutableList<String>>(mutableListOf())
         
-        val executor = Executors.newFixedThreadPool(threads)
+        // Użyj tylu wątków ile potrzeba, ale nie więcej niż dostępne
+        val actualThreads = minOf(threads, regions.size, Runtime.getRuntime().availableProcessors())
+        val executor = Executors.newFixedThreadPool(actualThreads)
+        
+        println("Używam $actualThreads wątków do przetwarzania ${regions.size} regionów")
         
         regions.forEach { (regionPath, dimension) ->
             executor.submit {
+                val threadName = Thread.currentThread().name
                 try {
-                    val result = processor.processRegion(regionPath.toFile(), dryRun)
+                    val result = processor.processRegion(regionFile = regionPath.toFile(), dryRun = dryRun)
                     
                     totalRegions.incrementAndGet()
                     totalChunks.addAndGet(result.chunksProcessed)
@@ -150,27 +157,58 @@ class WorldScanner(
                     }
                     
                     val processed = totalRegions.get()
-                    if (processed % 10 == 0 || processed == regions.size) {
-                        println("[$processed/${regions.size}] Przetworzono ${regionPath.fileName} ($dimension)")
+                    if (processed % 10 == 0 || processed == regions.size || result.chunksModified > 0) {
+                        println("[$processed/${regions.size}] Przetworzono ${regionPath.fileName} ($dimension) - chunki: ${result.chunksProcessed}, zmodyfikowane: ${result.chunksModified}")
                     }
                 } catch (e: Exception) {
-                    println("BŁĄD w ${regionPath.fileName}: ${e.message}")
+                    val errorMsg = "BŁĄD w ${regionPath.fileName}: ${e.message}"
+                    println(errorMsg)
                     e.printStackTrace()
+                    synchronized(errors) {
+                        errors.get().add(errorMsg)
+                    }
+                } catch (e: Error) {
+                    val errorMsg = "POWAŻNY BŁĄD w ${regionPath.fileName}: ${e.message}"
+                    println(errorMsg)
+                    e.printStackTrace()
+                    synchronized(errors) {
+                        errors.get().add(errorMsg)
+                    }
                 }
             }
         }
         
+        // Zamknij executor i poczekaj na zakończenie
         executor.shutdown()
-        val timeoutMinutes = if (dryRun) 5L else 30L  // Dry-run = 5min, zapis = 30min
-        val finished = executor.awaitTermination(timeoutMinutes, TimeUnit.MINUTES)
         
-        if (!finished) {
-            println("UWAGA: Timeout po ${timeoutMinutes} minutach. Niektóre regiony mogły nie zostać przetworzone.")
-            println("Możliwe przyczyny:")
-            println("  - Bardzo duże zmodyfikowane chunki (wolny zapis na dysk)")
-            println("  - Problem z dostępem do pliku (blokada)")
-            println("  - Zbyt wolny dysk dla liczby wątków (spróbuj --threads 1)")
+        try {
+            // Czekaj na zakończenie wszystkich zadań
+            val timeoutMinutes = if (dryRun) 10L else 60L  // Zwiększony timeout
+            val finished = executor.awaitTermination(timeoutMinutes, TimeUnit.MINUTES)
+            
+            if (!finished) {
+                println("UWAGA: Timeout po ${timeoutMinutes} minutach. Niektóre regiony mogły nie zostać przetworzone.")
+                println("Zatrzymuję pozostałe wątki...")
+                executor.shutdownNow()
+                
+                // Poczekaj jeszcze chwilę na zatrzymanie
+                executor.awaitTermination(30, TimeUnit.SECONDS)
+            }
+        } catch (e: InterruptedException) {
+            println("Przerwano oczekiwanie na wątki")
             executor.shutdownNow()
+            Thread.currentThread().interrupt()
+        }
+        
+        // Wyświetl błędy jeśli były
+        val errorList = errors.get()
+        if (errorList.isNotEmpty()) {
+            println("\n=== BŁĘDY PODCZAS PRZETWARZANIA (${errorList.size}) ===")
+            errorList.take(10).forEach { println(it) }
+            if (errorList.size > 10) {
+                println("... i ${errorList.size - 10} więcej")
+            }
+            println("=== KONIEC BŁĘDÓW ===\n")
         }
         
         val processedDimensions = regions.map { it.second }.distinct()

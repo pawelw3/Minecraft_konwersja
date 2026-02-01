@@ -99,8 +99,15 @@ class ChunkCleaner(private val rules: CleaningRules) {
         stats: CleanStats,
         modifiedPositions: MutableSet<BlockPos>
     ): Pair<NBTList<NBTCompound>, Boolean> {
-        val sectionsList = level.getList<NBTCompound>("Sections")
-            ?: return Pair(NBT.List(NBTType.TAG_Compound, emptyList()), false)
+        val sectionsList = try {
+            level.getList<NBTCompound>("Sections")
+        } catch (e: Exception) {
+            null
+        } ?: return Pair(NBT.List(NBTType.TAG_Compound, emptyList()), false)
+        
+        if (sectionsList.isEmpty()) {
+            return Pair(sectionsList, false)
+        }
         
         val chunkX = level.getInt("xPos") ?: 0
         val chunkZ = level.getInt("zPos") ?: 0
@@ -117,7 +124,11 @@ class ChunkCleaner(private val rules: CleaningRules) {
             val skyLight = sectionNbt.getByteArray("SkyLight")?.copyArray()
             val blockLight = sectionNbt.getByteArray("BlockLight")?.copyArray()
             
-            if (blocks == null) continue
+            if (blocks == null) {
+                // Jeśli nie ma Blocks, dodaj sekcję bez zmian
+                newSections.add(sectionNbt)
+                continue
+            }
             
             var sectionModified = false
             var newAdd = addArray?.copyOf()
@@ -128,7 +139,7 @@ class ChunkCleaner(private val rules: CleaningRules) {
                 val fullId = BlockCodec.readFullId(blocks, addArray, idx)
                 
                 if (rules.isModBlock(fullId)) {
-                    // Zastąp blok
+                    // Zastąp blok powietrzem (ID 0)
                     val x = idx and 0x0F
                     val z = (idx shr 4) and 0x0F
                     val localY = (idx shr 8) and 0x0F
@@ -184,11 +195,13 @@ class ChunkCleaner(private val rules: CleaningRules) {
     ): NBTList<NBTCompound>? {
         if (!rules.cleanTileEntities) return null
         
-        val teList = level.getList<NBTCompound>("TileEntities")
-            ?: return null
+        val teList = try {
+            level.getList<NBTCompound>("TileEntities")
+        } catch (e: Exception) {
+            null
+        } ?: return null
         
-        val chunkX = level.getInt("xPos") ?: 0
-        val chunkZ = level.getInt("zPos") ?: 0
+        if (teList.isEmpty()) return teList
         
         val newTileEntities = mutableListOf<NBTCompound>()
         
@@ -223,8 +236,13 @@ class ChunkCleaner(private val rules: CleaningRules) {
     ): NBTList<NBTCompound>? {
         if (!rules.cleanEntities) return null
         
-        val entityList = level.getList<NBTCompound>("Entities")
-            ?: return null
+        val entityList = try {
+            level.getList<NBTCompound>("Entities")
+        } catch (e: Exception) {
+            null
+        } ?: return null
+        
+        if (entityList.isEmpty()) return entityList
         
         val newEntities = mutableListOf<NBTCompound>()
         

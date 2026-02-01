@@ -20,13 +20,22 @@ class StorageCellConverter(BaseNBTConverter):
     - Fluid Storage Cells (1k, 4k, 16k, 64k)
     - Portable Cells
     - View Cell
+    
+    Źródło 1.7.10: appeng.items.storage.ItemBasicStorageCell
+        - NBT: StorageCell.items, StorageCell.itemCount
+        
+    Źródło 1.18.2: appeng.items.storage.BasicStorageCell
+        - NBT: storage.items, storage.count
+    
+    UWAGA: W 1.18.2 struktura NBT może się różnić - wymaga weryfikacji!
     """
     
     @property
     def converter_name(self) -> str:
         return "storage_cell"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT Storage Cell item.
         

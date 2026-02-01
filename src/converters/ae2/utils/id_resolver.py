@@ -42,22 +42,31 @@ class IDResolver:
         """
         Ładuje mapowanie ID z mapy Minecraft.
         
+        UWAGA: W 1.7.10 z Forge bloki z modów mają STRINGOWE ID w NBT chunków.
+        Nie ma potrzeby parsowania level.dat dla mapowania numerycznego ID.
+        
         Args:
             map_path: Ścieżka do folderu mapy (zawierającego level.dat)
             
         Returns:
             True jeśli udało się załadować
+            
+        Raises:
+            NotImplementedError: Jeśli wykryjemy stare numeryczne ID (przed Forge)
         """
         level_dat = os.path.join(map_path, "level.dat")
         if not os.path.exists(level_dat):
+            self._last_error = f"Nie znaleziono level.dat w {map_path}"
             return False
         
-        # TODO: Parsowanie level.dat NBT
-        # Na razie zakładamy, że ID AE2 są standardowe
+        # W 1.7.10 z Forge, ID bloków w NBT chunków są STRINGAMI
+        # (np. "appliedenergistics2:tile.BlockController")
+        # Nie ma potrzeby parsowania level.dat dla mapowania ID.
         
-        # AE2 ma zazwyczaj ID w zakresie 200-250 (zależnie od modów)
-        # Ale nazwy bloków w NBT chunków są stringami w 1.7.10 z Forge
+        # JEŚLI ktoś używa BARDZO starej wersji (pre-Forge), wtedy
+        # ID są numeryczne i wymagają mapowania. To nie jest wspierane.
         
+        self._mode = "string_id_only"
         return True
     
     def resolve_block_id(self, numeric_id: int, metadata: int = 0) -> BlockIDInfo:
@@ -189,17 +198,17 @@ class IDResolver:
 
 class DynamicIDRegistry:
     """
-    Rejestr dynamicznych ID dla konwersji.
+    Rejestr mapowań ID dla konwersji.
     
-    Śledzi które ID zostały przypisane do jakich bloków
-    i zapewnia spójność podczas konwersji.
+    W 1.7.10 z Forge ID są stringami - nie ma "dynamicznych" ID numerycznych.
+    Ta klasa służy do śledzenia mapowań nazw bloków między wersjami.
     """
     
     def __init__(self):
         # Mapa: oryginalne ID (1.7.10) -> nowe ID (1.18.2)
         self.id_mapping: Dict[str, str] = {}
-        # Counter dla nowych ID (jeśli potrzeba generowania)
-        self._next_id: int = 1000
+        # Ostrzeżenia o nieznanych ID
+        self.warnings: List[str] = []
         
     def register_mapping(self, old_id: str, new_id: str):
         """Rejestruje mapowanie ID"""

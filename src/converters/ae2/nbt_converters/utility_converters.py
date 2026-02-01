@@ -17,13 +17,18 @@ from .base_converter import BaseNBTConverter, NBTConversionResult
 
 
 class ChargerConverter(BaseNBTConverter):
-    """Konwerter dla Charger (ładowanie Certus Quartz)"""
+    """Konwerter dla Charger (ładowanie Certus Quartz)
+    
+    Źródło 1.7.10: appeng.tile.misc.TileCharger
+    Źródło 1.18.2: appeng.blockentity.misc.ChargerBlockEntity
+    """
     
     @property
     def converter_name(self) -> str:
         return "charger"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT Charger.
         
@@ -45,22 +50,24 @@ class ChargerConverter(BaseNBTConverter):
         energy = nbt_1710.get('internalCurrentPower', 0)
         converted['internalCurrentPower'] = energy
         
-        # Orientacja
-        orientation = self._get_orientation(nbt_1710)
-        if orientation:
-            converted['visual'] = {'rotation': orientation.get('facing', 'north')}
+        # UWAGA: Orientacja jest w BlockState, nie w NBT!
         
         return self._create_result(converted)
 
 
 class InscriberConverter(BaseNBTConverter):
-    """Konwerter dla Inscriber (tworzenie procesorów)"""
+    """Konwerter dla Inscriber (tworzenie procesorów)
+    
+    Źródło 1.7.10: appeng.tile.misc.TileInscriber
+    Źródło 1.18.2: appeng.blockentity.misc.InscriberBlockEntity
+    """
     
     @property
     def converter_name(self) -> str:
         return "inscriber"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT Inscriber.
         
@@ -91,10 +98,7 @@ class InscriberConverter(BaseNBTConverter):
         if progress > 0:
             converted['progress'] = progress
         
-        # Orientacja
-        orientation = self._get_orientation(nbt_1710)
-        if orientation:
-            converted['visual'] = {'rotation': orientation.get('facing', 'north')}
+        # UWAGA: Orientacja jest w BlockState, nie w NBT!
         
         return self._create_result(converted)
 
@@ -103,15 +107,19 @@ class VibrationChamberConverter(BaseNBTConverter):
     """
     Konwerter dla Vibration Chamber (generator AE).
     
+    Źródło 1.7.10: appeng.tile.misc.TileVibrationChamber
+    Źródło 1.18.2: appeng.blockentity.misc.VibrationChamberBlockEntity
+    
     W 1.7.10: własny system energii AE
-    W 1.18.2: kompatybilność z Forge Energy
+    W 1.18.2: Forge Energy (FE) compatibility
     """
     
     @property
     def converter_name(self) -> str:
         return "vibration_chamber"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT Vibration Chamber.
         
@@ -150,6 +158,9 @@ class IOPortConverter(BaseNBTConverter):
     """
     Konwerter dla IO Port.
     
+    Źródło 1.7.10: appeng.tile.storage.TileIOPort
+    Źródło 1.18.2: appeng.blockentity.storage.IOPortBlockEntity
+    
     Transfer zawartości między storage cells.
     """
     
@@ -157,7 +168,8 @@ class IOPortConverter(BaseNBTConverter):
     def converter_name(self) -> str:
         return "io_port"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT IO Port.
         
@@ -179,10 +191,7 @@ class IOPortConverter(BaseNBTConverter):
         priority = nbt_1710.get('priority', 0)
         converted['priority'] = priority
         
-        # Orientacja
-        orientation = self._get_orientation(nbt_1710)
-        if orientation:
-            converted['visual'] = {'rotation': orientation.get('facing', 'north')}
+        # UWAGA: Orientacja jest w BlockState, nie w NBT!
         
         return self._create_result(converted)
     
@@ -310,10 +319,7 @@ class WirelessAccessPointConverter(BaseNBTConverter):
         if custom_name:
             converted['customName'] = custom_name
         
-        # Orientacja
-        orientation = self._get_orientation(nbt_1710)
-        if orientation:
-            converted['visual'] = {'rotation': orientation.get('facing', 'north')}
+        # UWAGA: Orientacja jest w BlockState, nie w NBT!
         
         return self._create_result(converted)
 
@@ -385,9 +391,6 @@ class SpatialIOPortConverter(BaseNBTConverter):
                 for item in inv if item
             ]
         
-        # Orientacja
-        orientation = self._get_orientation(nbt_1710)
-        if orientation:
-            converted['visual'] = {'rotation': orientation.get('facing', 'north')}
+        # UWAGA: Orientacja jest w BlockState, nie w NBT!
         
         return self._create_result(converted)
