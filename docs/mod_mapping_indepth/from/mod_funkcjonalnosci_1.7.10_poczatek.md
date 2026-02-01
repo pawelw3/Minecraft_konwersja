@@ -6,7 +6,7 @@
 
 ---
 
-## 1) bspkrsCore (`[1.7.10]bspkrsCore-universal-6.15.jar`)
+## 1) bspkrsCore (`[1.7.10]bspkrsCore-universal-6.15.jar`) - UWAGA - konwersja niewymagana - ignoruj
 
 **Typ:** biblioteka / dependency (rdzeń dla modów bspkrs)  
 **Zależności:** wymagany przez m.in. Treecapitator (i inne mody bspkrs)
@@ -27,7 +27,7 @@
 
 ---
 
-## 2) Treecapitator (`[1.7.10]Treecapitator-universal-2.0.4.jar`)
+## 2) Treecapitator (`[1.7.10]Treecapitator-universal-2.0.4.jar`) - UWAGA - konwersja niewymagana - ignoruj
 
 **Typ:** QoL / narzędzie do ścinania drzew  
 **Zależności:** wymaga bspkrsCore
@@ -162,7 +162,7 @@ Części montowane na kablach (bus’y, terminale “na kablu”) to zwykle “p
 
 ---
 
-## 5) AsieLib (`AsieLib-1.7.10-0.4.8.jar`)
+## 5) AsieLib (`AsieLib-1.7.10-0.4.8.jar`) - UWAGA - konwersja niewymagana - ignoruj
 
 **Typ:** biblioteka / dependency
 
@@ -180,7 +180,7 @@ Części montowane na kablach (bus’y, terminale “na kablu”) to zwykle “p
 
 ---
 
-## 6) Backpacks (Eydamos) (`backpack-2.0.1-1.7.x.jar`)
+## 6) Backpacks (Eydamos) (`backpack-2.0.1-1.7.x.jar`) - UWAGA - konwersja niewymagana - ignoruj
 
 **Typ:** przenośny magazyn (itemy-plecaki)
 
@@ -207,7 +207,7 @@ Części montowane na kablach (bus’y, terminale “na kablu”) to zwykle “p
 
 ---
 
-## 7) Baubles (`Baubles-1.7.10-1.0.1.10.jar`)
+## 7) Baubles (`Baubles-1.7.10-1.0.1.10.jar`)- UWAGA - konwersja niewymagana - ignoruj
 
 **Typ:** API + dodatkowe sloty ekwipunku gracza
 

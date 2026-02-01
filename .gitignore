@@ -45,6 +45,11 @@ map_cleaning/temp_*/
 map_cleaning/*.mca
 map_cleaning/*.mcr
 
+# Map Cleaner JVM (build artifacts)
+map_cleaning/jvm/build/
+map_cleaning/jvm/.gradle/
+map_cleaning/jvm/*.jar
+
 # ----------------------------------------------------------------------------
 # DEKOMPILACJA - Wyniki tymczasowe
 # ----------------------------------------------------------------------------

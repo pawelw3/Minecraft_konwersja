@@ -11,7 +11,15 @@ repositories {
 }
 
 dependencies {
+    // Hephaistos - NBT + MCA (Anvil) library
+    implementation("io.github.jglrxavpok.hephaistos:common:2.2.0")
+    
+    // Gson dla JSON
+    implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Kotlinx Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+    
     testImplementation(kotlin("test"))
 }
 

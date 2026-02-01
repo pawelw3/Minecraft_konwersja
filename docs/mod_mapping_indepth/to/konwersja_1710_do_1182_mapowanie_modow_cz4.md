@@ -92,7 +92,7 @@ W tym pliku, przy każdym modzie, podaję:
 
 ---
 
-## 2) MrTJPCore (1.7.10)
+## 2) MrTJPCore (1.7.10)  - UWAGA - konwersja niewymagana - ignoruj
 
 ### Funkcjonalności 1.7.10
 - Biblioteka / dependency (m.in. pod ProjectRed), bez własnych dużych bloków.
@@ -121,7 +121,7 @@ W tym pliku, przy każdym modzie, podaję:
 
 ---
 
-## 4) NotEnoughItems (NEI) (1.7.10)
+## 4) NotEnoughItems (NEI) (1.7.10)  - UWAGA - konwersja niewymagana - ignoruj
 
 ### Funkcjonalności 1.7.10
 - Przegląd przepisów, wyszukiwarka itemów, cheat-mode, integracje.
@@ -154,7 +154,7 @@ W tym pliku, przy każdym modzie, podaję:
 
 ---
 
-## 6) Opis (1.7.10)
+## 6) Opis (1.7.10)  - UWAGA - konwersja niewymagana - ignoruj
 
 ### Funkcjonalności 1.7.10
 - Diagnostyka: TPS, profile ticków, obciążenia TE/encje.
@@ -192,7 +192,7 @@ W tym pliku, przy każdym modzie, podaję:
 
 ---
 
-## 8) Placeable Items Mod (1.7.10)
+## 8) Placeable Items Mod (1.7.10) - UWAGA - konwersja niewymagana - ignoruj
 
 ### Funkcjonalności 1.7.10
 - Pozwala kłaść przedmioty w świecie jako modele 3D (często w formie TE).
@@ -292,7 +292,7 @@ Najbliższe sensowne “zastępstwo funkcjonalne”:
 
 ---
 
-## 12) Rei’s Minimap (1.7.10)
+## 12) Rei’s Minimap (1.7.10) - UWAGA - konwersja niewymagana - ignoruj
 
 ### Funkcjonalności 1.7.10
 - Minimapa, waypointy, opcjonalnie “cave mode”.

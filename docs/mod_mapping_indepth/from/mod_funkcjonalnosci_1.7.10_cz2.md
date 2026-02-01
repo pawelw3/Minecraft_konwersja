@@ -168,7 +168,7 @@ Lista bloków z wiki FTB (w 1.7.10):
 
 ---
 
-## 4) Bookshelf 1.7.10-1.0.4.172
+## 4) Bookshelf 1.7.10-1.0.4.172 - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `Bookshelf-1.7.10-1.0.4.172.jar`  
 **Typ:** biblioteka (dependency) dla innych modów.
 
@@ -299,7 +299,7 @@ Pełna lista wariantów jest bardzo duża — w praktyce najlepiej przeglądać 
 
 ---
 
-## 8) CodeChickenCore + CodeChickenLib
+## 8) CodeChickenCore + CodeChickenLib - UWAGA - konwersja nie wymagana - ignoruj
 **Jary:**  
 - `CodeChickenCore-1.7.10-1.0.7.47-universal.jar`  
 - `CodeChickenLib-1.7.10-1.1.3.140-universal.jar`
@@ -319,7 +319,7 @@ Pełna lista wariantów jest bardzo duża — w praktyce najlepiej przeglądać 
 
 ---
 
-## 9) CoFHCore 3.1.4-329
+## 9) CoFHCore 3.1.4-329 - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `CoFHCore-[1.7.10]3.1.4-329.jar`  
 **Typ:** core/biblioteka dla modów Team CoFH + API (m.in. RF).
 
@@ -371,7 +371,7 @@ Najważniejsze bloki (część ma GUI/inwentarz → TE):
 
 ---
 
-## 11) CraftGuide (1.7.10)
+## 11) CraftGuide (1.7.10) - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `CraftGuide-Mod-1.7.10.jar`  
 **Typ:** przeglądarka receptur w grze.
 
@@ -391,7 +391,7 @@ Najważniejsze bloki (część ma GUI/inwentarz → TE):
 
 ---
 
-## 12) CustomNPCs 1.7.10d (29oct17)
+## 12) CustomNPCs 1.7.10d (29oct17) - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `CustomNPCs_1.7.10d(29oct17).jar`  
 **Typ:** tworzenie NPC, questów, dialogów, skryptów + sporo bloków/itemów do map/adventure.
 
@@ -423,7 +423,7 @@ Najważniejsze bloki (część ma GUI/inwentarz → TE):
 
 ---
 
-## 13) EJML-core 0.26 (IC2 folder)
+## 13) EJML-core 0.26 (IC2 folder) - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `ic2/EJML-core-0.26.jar`  
 **Typ:** biblioteka matematyczna (dependency).
 
@@ -526,7 +526,7 @@ Z FTB Wiki (występują liczne bloki; część to TE z GUI):
 
 ---
 
-## 17) FastCraft 1.25
+## 17) FastCraft 1.25 - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `fastcraft-1.25.jar`  
 **Typ:** optymalizacja wydajności (client i server), bez zmian gameplay.
 

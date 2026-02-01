@@ -58,7 +58,7 @@
 
 ---
 
-## 2) RadarBro — `RadarBro\settings.txt`
+## 2) RadarBro — `RadarBro\settings.txt` - UWAGA - konwersja niewymagana - ignoruj
 **To nie jest mod `.jar`, tylko plik ustawień** dla moda RadarBro (GUI radar).
 
 ### Co robi RadarBro
@@ -143,7 +143,7 @@ Poniżej “must-have” stacje i elementy konstrukcji (zwykle TE):
 
 ---
 
-## 5) Thaumcraft NEI Plugin — `thaumcraftneiplugin-1.7.10-1.7a.jar`
+## 5) Thaumcraft NEI Plugin — `thaumcraftneiplugin-1.7.10-1.7a.jar` - UWAGA - konwersja niewymagana - ignoruj
 **Typ:** integracja z NEI dla Thaumcraft 4
 
 ### Co dodaje
@@ -350,7 +350,7 @@ Nazewnictwo może się lekko różnić zależnie od wersji, ale zwykle obejmuje:
 
 ---
 
-## 14) UUID offline — `uuidoffline-1.0.jar`
+## 14) UUID offline — `uuidoffline-1.0.jar` - UWAGA - konwersja niewymagana - ignoruj
 **Typ:** mały mod “API/naprawczy” dla 1.7.10
 
 ### Co robi
@@ -396,7 +396,7 @@ Nazewnictwo może się lekko różnić zależnie od wersji, ale zwykle obejmuje:
 
 ---
 
-## 16) WorldEdit (Forge) — `worldedit-forge-mc1.7.10-6.1.1-dist.jar`
+## 16) WorldEdit (Forge) — `worldedit-forge-mc1.7.10-6.1.1-dist.jar` - UWAGA - konwersja niewymagana - ignoruj
 **Typ:** narzędzie budowlane/admin (edycja świata), komendy i schematy
 
 ### Funkcjonalności

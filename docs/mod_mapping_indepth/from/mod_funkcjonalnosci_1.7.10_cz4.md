@@ -75,7 +75,7 @@ W tej klasie modów TE pojawiają się głównie w blokach:
 
 ---
 
-## 2) MrTJPCore 1.1.0.33
+## 2) MrTJPCore 1.1.0.33  - UWAGA - konwersja niewymagana - ignoruj
 **Jar:** `MrTJPCore-1.7.10-1.1.0.33-universal.jar`
 
 ### Co robi
@@ -90,7 +90,7 @@ W tej klasie modów TE pojawiają się głównie w blokach:
 
 ---
 
-## 3) NoMoreRecipeConflict 0.31 (1.7.10)
+## 3) NoMoreRecipeConflict 0.31 (1.7.10)  - UWAGA - konwersja niewymagana - ignoruj
 **Jar:** `NoMoreRecipeConflict-0.31.7.10.jar`
 
 ### Co robi
@@ -109,7 +109,7 @@ W tej klasie modów TE pojawiają się głównie w blokach:
 
 ---
 
-## 4) NotEnoughItems (NEI) 1.0.5.120
+## 4) NotEnoughItems (NEI) 1.0.5.120  - UWAGA - konwersja niewymagana - ignoruj
 **Jar:** `NotEnoughItems-1.7.10-1.0.5.120-universal.jar`  
 **Wymaga:** CodeChickenCore (masz w paczce)
 
@@ -171,7 +171,7 @@ W 1.7.10 w praktyce spotyka się zestaw obejmujący:
 
 ---
 
-## 6) Opis 1.2.5
+## 6) Opis 1.2.5  - UWAGA - konwersja niewymagana - ignoruj
 **Jar:** `Opis-1.2.5_1.7.10.jar`  
 **Wymaga:** MobiusCore (masz w paczce wcześniej)
 
@@ -236,7 +236,7 @@ Na wiki są wypisane m.in. (w praktyce wiele z nich to TE z GUI):
 
 ---
 
-## 8) Placeable Items Mod (1.7.10)
+## 8) Placeable Items Mod (1.7.10) - UWAGA - konwersja niewymagana - ignoruj
 **Jar:** `Placeable-Items-Mod-1.7.10.jar`
 
 ### Co robi
@@ -356,7 +356,7 @@ Na wiki są wypisane m.in. (w praktyce wiele z nich to TE z GUI):
 
 ---
 
-## 11) Railcraft 9.12.2.0 (MC 1.7.10)
+## 11) Railcraft 9.12.2.0 (MC 1.7.10)  - UWAGA - nie konwertuj TE śladu graczy z tego moda
 **Jar:** `Railcraft_1.7.10-9.12.2.0.jar`
 
 ### Co robi (filary)
@@ -408,7 +408,7 @@ Na wiki są wypisane m.in. (w praktyce wiele z nich to TE z GUI):
 
 ---
 
-## 12) Rei’s Minimap (1.7.10)
+## 12) Rei’s Minimap (1.7.10) - UWAGA - konwersja niewymagana - ignoruj
 **Jar:** `Reis-Minimap-Mod-1.7.10 (1).jar`
 
 ### Co robi

@@ -76,7 +76,7 @@ Ten plik opisuje **funkcjonalności** modów z Twojej listy `cz5` (1.7.10) oraz 
 
 ---
 
-## 2) RadarBro (settings.txt) → minimapa z radarem encji
+## 2) RadarBro (settings.txt) → minimapa z radarem encji - UWAGA - konwersja niewymagana - ignoruj
 
 ### Funkcjonalności 1.7.10
 - Radar encji (moby/gracze) i konfiguracja po stronie klienta. citeturn5search12turn5search8
@@ -241,7 +241,7 @@ Ten plik opisuje **funkcjonalności** modów z Twojej listy `cz5` (1.7.10) oraz 
 
 ---
 
-## 9) uuidoffline (1.7.10)
+## 9) uuidoffline (1.7.10) - UWAGA - konwersja niewymagana - ignoruj
 
 ### Funkcjonalności 1.7.10
 - Narzędzie/patch wokół systemu UUID w starych wersjach (zwykle serwery/offline-mode).
@@ -279,7 +279,7 @@ Ten plik opisuje **funkcjonalności** modów z Twojej listy `cz5` (1.7.10) oraz 
 
 ---
 
-## 11) WorldEdit (1.7.10) → WorldEdit (1.18.2)
+## 11) WorldEdit (1.7.10) → WorldEdit (1.18.2) - UWAGA - konwersja niewymagana - ignoruj
 
 ### Funkcjonalności
 - Selekcje, schematy, copy/paste, pędzle, szybka edycja mapy. citeturn2search2turn2search23

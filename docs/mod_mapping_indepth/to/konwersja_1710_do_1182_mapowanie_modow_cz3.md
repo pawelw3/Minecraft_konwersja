@@ -41,7 +41,7 @@
 
 ---
 
-## 2) Forestry → 1.18.2
+## 2) Forestry → 1.18.2  - UWAGA - konwersja nie wymagana - ignoruj
 
 ### Funkcjonalności (1.7.10)
 - Pszczoły (apiary/alveary), produkty (combs, honey), maszyny (centrifuge, squeezer, fermenter, carpenter), farmy (multifarm), backpacki, czasem mail.
@@ -67,7 +67,7 @@
 
 ---
 
-## 3) ForgeEssentials → 1.18.2
+## 3) ForgeEssentials → 1.18.2   - UWAGA - konwersja nie wymagana - ignoruj
 
 To mod serwerowy (komendy, permisje, warpy).  
 **Nie mapuje się na bloki**, więc nie wpływa na konwersję chunków.
@@ -77,8 +77,7 @@ To mod serwerowy (komendy, permisje, warpy).
 ## 4) ForgeMultipart / ForgeRelocation → 1.18.2
 
 ### ForgeMultipart
-- Zamiennik: **CB Multipart** (biblioteka multipartów na 1.18.2).  
-- Uwaga: bez konkretnego moda „na multipartach” (kable/microbloki) sama biblioteka nic nie wnosi — mapowanie zależy od tego, co faktycznie było użyte na mapie.
+- Zamiennik: **CB Multipart** (biblioteka multipartów na 1.18.2) - konieczne perfekcyjne przekonwertowanie mikrobloków
 
 ### ForgeRelocation (+FMP)
 - Brak prostego 1:1 w 1.18.2.
@@ -155,7 +154,7 @@ Uwaga: dla „bezstratnej” migracji maszyn nadal potrzebujesz remappera NBT, a
 
 ---
 
-## 10) LiteLoader / Omniscience / MobiusCore / iChunUtil → 1.18.2
+## 10) LiteLoader / Omniscience / MobiusCore / iChunUtil → 1.18.2 - UWAGA - konwersja nie wymagana - ignoruj
 
 To narzędzia klientowe/biblioteczne — **nie zostawiają bloków w chunkach**.  
 Dla konwersji mapy: możesz je pominąć i dobrać QOL osobno.

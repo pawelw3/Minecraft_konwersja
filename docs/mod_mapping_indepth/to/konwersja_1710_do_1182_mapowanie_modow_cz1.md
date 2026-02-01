@@ -17,13 +17,13 @@ Ten dokument robi **to samo**, co wcześniejsze mapowania, ale dla modów z list
 
 ## Szybka lista docelowych modów 1.18.2 (dla `cz1`)
 
-**QoL (drzewa):**
-- Treecapitator → **FallingTree** (1.18.2) *(podobny efekt “ścinasz 1 log i leci drzewo”)* citeturn0search3turn0search7
+**QoL (drzewa):** 
+- Treecapitator → **FallingTree** - UWAGA konwersja niewymagana - ignoruj (1.18.2) *(podobny efekt “ścinasz 1 log i leci drzewo”)* citeturn0search3turn0search7
 
 **ME storage / logistyka:**
 - AE2 → **Applied Energistics 2** (Forge 1.18.2) citeturn0search0turn0search4
 
-**Kosmetyka pancerza (zastępstwo za Armourer’s Workshop w 1.18.2):**
+**Kosmetyka pancerza (zastępstwo za Armourer’s Workshop w 1.18.2):**  - UWAGA - konwersja tego moda niech pójdzie na sam koniec kolejki
 - Armourer’s Workshop: **brak wydania na 1.18.2** (na CurseForge podane wersje zaczynają się od 1.19.3+) citeturn1search12turn1search8  
   Zamienniki funkcjonalne:
   - “drugi zestaw pancerza do wyglądu”: **Cosmetic Armor Reworked** citeturn2search2  
@@ -33,7 +33,7 @@ Ten dokument robi **to samo**, co wcześniejsze mapowania, ale dla modów z list
 - Backpacks (Eydamos) → **Sophisticated Backpacks** citeturn0search2turn0search6  
   Alternatywa: **Traveler’s Backpack** (też 1.18.2) citeturn2search1turn2search14
 
-**Baubles / dodatkowe sloty:**
+**Baubles / dodatkowe sloty:** - UWAGA - konwersja nie wymagana - ignoruj
 - Baubles → **Curios API** citeturn0search13turn0search1
 
 **Storage + zabezpieczenia (zamienniki za Better Storage):**

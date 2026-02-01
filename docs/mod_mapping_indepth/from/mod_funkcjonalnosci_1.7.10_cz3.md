@@ -50,7 +50,7 @@ W samym „core” Flan’s Mod najczęściej pojawiają się (nazewnictwo zale�
 
 ---
 
-## 2) Forestry 4.2.16.64 (MC 1.7.10)
+## 2) Forestry 4.2.16.64 (MC 1.7.10) - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `forestry_1.7.10-4.2.16.64.jar`  
 **Typ:** rolnictwo/produkcja, pszczelarstwo i hodowla drzew, maszyny, energia, poczta.
 
@@ -93,7 +93,7 @@ W samym „core” Flan’s Mod najczęściej pojawiają się (nazewnictwo zale�
 
 ---
 
-## 3) ForgeEssentials 1.4.4.1187 (server utility)
+## 3) ForgeEssentials 1.4.4.1187 (server utility)  - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `forgeessentials-1.7.10-1.4.4.1187-client.jar` (z nazwy: komponent kliencki / companion)  
 **Typ:** zestaw narzędzi serwerowych typu „Bukkit/Essentials dla Forge”.
 
@@ -112,7 +112,7 @@ Z logów/konfiguracji i opisów spotyka się m.in.: Afterlife, Backups, Chat, Co
 
 ---
 
-## 4) ForgeMultipart 1.2.0.345 (ChickenBones)
+## 4) ForgeMultipart 1.2.0.345 (ChickenBones)  - UWAGA - microblocks są bardzo powszechne na mapie i muszą być przekonwertowane perfekcyjnie
 **Jar:** `ForgeMultipart-1.7.10-1.2.0.345-universal.jar`  
 **Typ:** biblioteka do „wielu rzeczy w jednym bloku” (microblocks / multiparts).
 
@@ -141,7 +141,7 @@ Z logów/konfiguracji i opisów spotyka się m.in.: Afterlife, Backups, Chat, Co
 
 ---
 
-## 6) GollumCoreLib 2.0.0 (1.7.10)
+## 6) GollumCoreLib 2.0.0 (1.7.10)  - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `GollumCoreLib-2.0.0-1.7.10.jar`  
 **Typ:** biblioteka (dependency) dla modów „Smeagol”/GollumTeam.
 
@@ -178,7 +178,7 @@ Z logów/konfiguracji i opisów spotyka się m.in.: Afterlife, Backups, Chat, Co
 
 ---
 
-## 8) HelpFixer 1.0.7
+## 8) HelpFixer 1.0.7  - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `HelpFixer-1.0.7.jar`  
 **Typ:** naprawa komendy `/help` na serwerach (modded).
 
@@ -209,7 +209,7 @@ Z logów/konfiguracji i opisów spotyka się m.in.: Afterlife, Backups, Chat, Co
 
 ---
 
-## 10) iChunUtil 4.2.3
+## 10) iChunUtil 4.2.3  - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `iChunUtil-4.2.3.jar`  
 **Typ:** biblioteka dla modów iChun (dependency).
 
@@ -279,7 +279,7 @@ Z logów/konfiguracji i opisów spotyka się m.in.: Afterlife, Backups, Chat, Co
 
 ---
 
-## 13) LiteLoader 1.7.10
+## 13) LiteLoader 1.7.10  - UWAGA - konwersja nie wymagana - ignoruj
 **Plik:** `liteloader-1.7.10.jar`  
 **Typ:** lekki loader do modów klienckich (HUD, minimapy, QoL) – równolegle do Forge.
 
@@ -394,7 +394,7 @@ Przykład szczegółu: **Gas-Burning Generator** zużywa palny gaz (np. hydrogen
 
 ---
 
-## 17) Omniscience (LiteLoader mod) 1.0.1
+## 17) Omniscience (LiteLoader mod) 1.0.1  - UWAGA - konwersja nie wymagana - ignoruj
 **Plik:** `mod_Omniscience_1.0.1_mc1.7.10.litemod`  
 **Typ:** mały mod kliencki pod LiteLoader — „widzenie niewidzialnych”.
 

@@ -24,7 +24,7 @@ Cel: wskazać, **na jakie mody w 1.18.2 (Forge)** przejść, żeby dało się *o
 - Nie ma powszechnie używanego, stabilnego portu BiblioCraft na 1.18.2; istnieją inicjatywy typu **BiblioCraft Legacy**, ale dotyczą nowszych wersji (np. 1.21.x / NeoForge), więc **nie ratują 1.18.2**.
 
 **Rekomendowane „zastępstwa funkcjonalne” (1.18.2):**
-- **Supplementaries** – dużo vanilla+ dekoracji, część z automatyzacją i interakcjami (dobre „zastępstwo klimatu”).
+- **Supplementaries** – dużo vanilla+ dekoracji, część z automatyzacją i interakcjami (dobre „zastępstwo klimatu”). 
 - **Handcrafted** – duży pakiet mebli (wnętrza) jako zamiennik meblowania.
 - (opcjonalnie) **Chipped / Rechiseled** (patrz sekcja Chisel) do „detalu” bloków.
 
@@ -68,7 +68,7 @@ Cel: wskazać, **na jakie mody w 1.18.2 (Forge)** przejść, żeby dało się *o
 
 ---
 
-## 4) Bookshelf (1.7.10) → Bookshelf (1.18.2)
+## 4) Bookshelf (1.7.10) → Bookshelf (1.18.2) - UWAGA - konwersja nie wymagana - ignoruj 
 
 To był **mod-biblioteka**. W 1.18.2 nadal istnieje jako biblioteka dla innych modów.
 
@@ -103,13 +103,14 @@ To był **mod-biblioteka**. W 1.18.2 nadal istnieje jako biblioteka dla innych m
 
 ---
 
-## 6) Carpenter’s Blocks (1.7.10) → FramedBlocks (1.18.2)
+## 6) Carpenter’s Blocks (1.7.10) → FramedBlocks (1.18.2)  - UWAGA - poza framed blocks WŁASNY MOD
 
 **Cel funkcjonalny w 1.7.10:**
 „blok w blok” (pokrywanie teksturą innego bloku), masę kształtów (schody, skosy, płoty, drzwi itp.), czyli **budowlane mikroszlifowanie**.
 
 **Zamiennik w 1.18.2:**
 - **FramedBlocks** – daje wiele kształtów, które mogą „udawać” prawie dowolny blok (bardzo blisko idei Carpenter’s).
+- własny mod - wprowadzający collapsible block z carpenter blocks z 1.7.10 - blok w którym można zmniejszać lub zwiększać wysokość jego 4 wierzchołków
 
 **Uwagi migracyjne:**
 - To *nie jest* ten sam mod, więc NBT/ID nie będzie zgodny.
@@ -134,7 +135,7 @@ To był **mod-biblioteka**. W 1.18.2 nadal istnieje jako biblioteka dla innych m
 
 ---
 
-## 8) CodeChickenCore + CodeChickenLib (1.7.10) → CodeChickenLib (1.18.2)
+## 8) CodeChickenCore + CodeChickenLib (1.7.10) → CodeChickenLib (1.18.2) - UWAGA - konwersja nie wymagana - ignoruj 
 
 - W praktyce to głównie **biblioteki** pod inne mody.
 - **CodeChickenLib** istnieje na nowszych wersjach (w tym linia pod 1.18.2).
@@ -172,7 +173,7 @@ W 1.7.10 CoFHCore często był „rdzeniem” dla Thermal i dodatków.
 
 ---
 
-## 11) CraftGuide (1.7.10) → JEI (1.18.2)
+## 11) CraftGuide (1.7.10) → JEI (1.18.2) - UWAGA - konwersja nie wymagana - ignoruj
 
 CraftGuide to stary przegląd receptur, dziś standardem jest **Just Enough Items (JEI)**.
 
@@ -180,7 +181,7 @@ CraftGuide to stary przegląd receptur, dziś standardem jest **Just Enough Item
 
 ---
 
-## 12) CustomNPCs (1.7.10) → Easy NPC (1.18.2) + (opcjonalnie) system questów
+## 12) CustomNPCs (1.7.10) → Easy NPC (1.18.2) + (opcjonalnie) system questów - UWAGA - konwersja nie wymagana - ignoruj
 
 **Problem:** CustomNPCs w stylu Noppes nie ma stabilnego wydania na 1.18.2 (sensownie pojawia się dopiero na nowszych wersjach lub w ogóle brak).
 
@@ -204,7 +205,7 @@ To biblioteka matematyczna dorzucona przy IC2, nie treść świata.
 
 ---
 
-## 14) Enchanting Plus (1.7.10) → Apotheosis (1.18.2) + (opcjonalnie) Polymorph
+## 14) Enchanting Plus (1.7.10) → Apotheosis (1.18.2) + (opcjonalnie) Polymorph  - UWAGA - sprawdź Enchanting Infuser i jeśli jest to poprawny zamiennik to go zastosuj
 
 **Co dawał Enchanting Plus:** większa kontrola nad enchantami (wybór/zarządzanie, kosztem XP).
 
@@ -262,7 +263,7 @@ To jest najbliższa droga do zachowania „klimatu” i części mechanik.
 
 ---
 
-## 17) FastCraft (1.7.10) → zestaw modów optymalizacyjnych (1.18.2)
+## 17) FastCraft (1.7.10) → zestaw modów optymalizacyjnych (1.18.2) - UWAGA - konwersja nie wymagana - ignoruj
 
 FastCraft w 1.7.10 był „performance core”. W 1.18.2 robisz to zestawem kilku małych modów:
 
