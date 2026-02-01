@@ -1,4 +1,10 @@
-# SKILL: Automated Testing on Headless Minecraft Server
+---
+name: autotest-on-server
+description: Automated testing workflow on headless Minecraft server using RCON remote control and log analysis. Use when creating, deploying, and verifying automated tests for in-game mechanics (redstone circuits, command blocks, mod behaviors).
+disable-model-invocation: false
+---
+
+# Automated Testing on Headless Minecraft Server
 
 This skill documents the workflow for creating, deploying, and verifying automated tests on a headless Minecraft server using RCON remote control and log analysis.
 

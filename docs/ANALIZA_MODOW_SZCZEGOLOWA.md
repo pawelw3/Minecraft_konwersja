@@ -2,6 +2,49 @@
 
 > **STATUS: Analiza na podstawie paczki modpack_1710**
 > Data analizy: 2026-01-30
+> **SPÓJNE Z:** docs/mod_mapping_indepth/ (z uwzględnieniem UWAG)
+
+---
+
+## 0. UWAGI krytyczne z dokumentacji szczegółowej
+
+### Mody do IGNOROWANIA (konwersja nie wymagana)
+Poniższe mody nie zostawiają trwałych bloków/TE w świecie:
+
+| Mod 1.7.10 | Kategoria | Uwaga |
+|------------|-----------|-------|
+| **Treecapitator** | QoL | FallingTree - instalować osobno |
+| **Baubles** | API | Curios API - instalować osobno |
+| **Bookshelf** | Biblioteka | Nowa wersja - instalować osobno |
+| **bspkrsCore** | Biblioteka | Nie potrzebna (zastąpiona) |
+| **CodeChickenCore** | Biblioteka | Wbudowana w CCL |
+| **CraftGuide** | QoL | JEI - instalować osobno |
+| **FastCraft** | Optymalizacja | Rubidium+Starlight - instalować osobno |
+| **ForgeEssentials** | Serwer | Nowsza wersja lub inne mody |
+| **LiteLoader/Omniscience** | Klient | Nie potrzebne |
+| **MobiusCore** | Biblioteka | Nie potrzebna (dla Opis) |
+| **MrTJPCore** | Biblioteka | Wbudowana w ProjectRed |
+| **NEI** | QoL | JEI - instalować osobno |
+| **NoMoreRecipeConflict** | QoL | Polymorph - instalować osobno |
+| **Opis** | Diagnostyka | Spark - instalować osobno |
+| **RadarBro** | QoL | Xaero's Minimap - instalować osobno |
+| **Rei's Minimap** | QoL | JourneyMap/Xaero's - instalować osobno |
+| **uuidoffline** | Serwer | Nie potrzebna (UUID natywne) |
+| **WorldEdit** | Narzędzie | WorldEdit - instalować osobno |
+
+### UWAGI do konwersji
+1. **Armourer's Workshop** → NA KOŃCU KOLEJKI (skomplikowana konwersja skinów)
+2. **Carpenter's Blocks** → WŁASNY MOD wymagany (collapsible block)
+3. **Enchanting Plus** → Do weryfikacji zamiennika (Enchanting Infuser vs Apotheosis)
+4. **Placeable Items** → Do weryfikacji dostępności 1.18.2
+5. **Growthcraft** → Do weryfikacji dostępności modułów
+6. **Jammy Furniture** → Do weryfikacji użycia na mapie
+
+### Status weryfikacji
+- [ ] Growthcraft - dostępność wersji 1.18.2
+- [ ] Jammy Furniture - dostępność
+- [x] Placeable Items - **JEST** na 1.18.2
+- [ ] Enchanting Plus/Enchanting Infuser - do sprawdzenia kompatybilności
 
 ---
 

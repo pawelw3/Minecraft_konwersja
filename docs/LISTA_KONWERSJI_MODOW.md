@@ -431,7 +431,75 @@ Wszystkie wymagają Thaumcraft który **nie ma portu na 1.18.2**:
 
 ---
 
-## 9. Priorytetyzacja etapów konwersji
+## 9. Mody do IGNOROWANIA w konwersji (konwersja nie wymagana) 📋
+
+Poniższe mody **nie wymagają konwersji danych świata** - są to biblioteki, mody klientowe, narzędzia diagnostyczne lub mody serwerowe, które nie pozostawiają trwałych bloków/TE w chunkach.
+
+| Mod 1.7.10 | Typ | Powód pominięcia | Zamiennik 1.18.2 |
+|------------|-----|------------------|------------------|
+| **Treecapitator** | Klientowy/QoL | Nie zostawia bloków | **FallingTree** (instalować osobno) |
+| **Baubles** | Biblioteka/API | Tylko API slotów | **Curios API** (instalować osobno) |
+| **Bookshelf** | Biblioteka | Tylko dependency | **Bookshelf** (nowa wersja) |
+| **bspkrsCore** | Biblioteka | Tylko dla Treecapitator | *Nie potrzebna* |
+| **CodeChickenCore** | Biblioteka | Wbudowany w CCL | *Nie potrzebna* |
+| **CraftGuide** | Klientowy/QoL | Przeglądarka receptur | **JEI** (instalować osobno) |
+| **CustomNPCs** | Serwerowy | Nieużywane na mapie | **Easy NPC** (opcjonalnie) |
+| **FastCraft** | Optymalizacja | Nie zostawia bloków | **Rubidium + Starlight + FerriteCore** |
+| **Forestry** | Pominięty | Crashuje, laguje | *Brak konwersji* |
+| **ForgeEssentials** | Serwerowy | Komendy, permisje | Nowsza wersja FE lub inne mody |
+| **iChunUtil** | Biblioteka | Dependency iChun | *Nie potrzebna* |
+| **LiteLoader** | Loader | Loader dla litemodów | *Nie potrzebny* |
+| **MobiusCore** | Biblioteka | Dla Opis | *Nie potrzebna* |
+| **MrTJPCore** | Biblioteka | Wbudowany w ProjectRed | *Nie potrzebna* |
+| **NEI** | Klientowy/QoL | Przeglądarka itemów | **JEI** (instalować osobno) |
+| **NoMoreRecipeConflict** | Klientowy/QoL | Konflikty receptur | **Polymorph** (opcjonalnie) |
+| **Opis** | Diagnostyczny | Profiler TPS | **Spark** (instalować osobno) |
+| **Placeable Items** | Klientowy/Dekoracja | *Do weryfikacji* | **Placeable Items** (jest na 1.18.2) |
+| **PowerConverters** | Techniczny | Niepotrzebny (FE natywne) | *Nie potrzeba* |
+| **RadarBro** | Klientowy/QoL | Radar encji | **Xaero's Minimap** (ma Entity Radar) |
+| **Rei's Minimap** | Klientowy/QoL | Minimapa | **JourneyMap** / **Xaero's** |
+| **uuidoffline** | Serwerowy | Patch UUID offline | *Nie potrzebna* (UUID natywne) |
+| **WorldEdit** | Narzędzie | Edycja mapy | **WorldEdit** (instalować osobno) |
+
+> **Legenda:** Mody oznaczone jako "instalować osobno" należy dodać do paczki 1.18.2, ale nie wymagają konwersji danych z mapy 1.7.10.
+
+---
+
+## 10. UWAGI krytyczne do konwersji ⚠️
+
+### UWAGA 1: Armourer's Workshop - NA KOŃCU KOLEJKI
+Armourer's Workshop ma wersję 1.18.2 (3.2.7-beta), ale:
+- Konwersja jest **skomplikowana** (formaty skinów, NTE)
+- Zalecane wykonanie **na samym końcu** po wszystkich innych modach
+- Wymaga weryfikacji kompatybilności NBT skinów
+
+### UWAGA 2: Carpenter's Blocks - WŁASNY MOD wymagany
+Oprócz FramedBlocks potrzebny **własny mod** dla:
+- Collapsible Block (zmienna wysokość 4 wierzchołków)
+- Zgodność z oryginalnym Carpenter's Blocks z 1.7.10
+
+### UWAGA 3: Enchanting Plus - DO WERYFIKACJI
+Sprawdzić czy **Enchanting Infuser** jest poprawnym zamiennikiem:
+- Jeśli TAK → użyć do konwersji
+- Jeśli NIE → mapować na **Apotheosis**
+
+### UWAGA 4: Placeable Items - DO WERYFIKACJI
+Sprawdzić dostępność i kompatybilność wersji 1.18.2:
+- Jeśli jest port → można konwertować
+- Jeśli nie ma → dekoracje jako placeholdery
+
+### UWAGA 5: Growthcraft - DO WERYFIKACJI
+Sprawdzić dostępność poszczególnych modułów Growthcraft na 1.18.2:
+- Core, Cellar, Apple, Bamboo, Bees, Fishtrap, Grapes, Hops, Milk, Rice
+
+### UWAGA 6: Jammy Furniture - DO WERYFIKACJI
+Sprawdzić czy na mapie są bloki tego modu:
+- Jeśli TAK → mapować na **Macaw's Furniture** lub **Handcrafted**
+- Jeśli mało używany → zamiana na placeholdery
+
+---
+
+## 11. Priorytetyzacja etapów konwersji
 
 ```
 ETAP 0: Infrastruktura
@@ -509,7 +577,12 @@ ETAP 14: Pojazdy i transport
         ├── Flan's Mod → TaCZ + Immersive Vehicles
         └── Statues → Statues (ShyNieke)
 
-ETAP 15: Extra Utilities - hybrydowo
+ETAP 15: Armourer's Workshop (NA KOŃCU - złożona konwersja skinów)
+        ├── Warsztaty, biblioteki, projektory
+        ├── Eksport/import skinów
+        └── Weryfikacja kompatybilności NBT
+
+ETAP 16: Extra Utilities - hybrydowo
         ├── Cursed Earth → Cursed Earth mod
         ├── Angel Block → Angel Block Renewed
         ├── Mega Torch → Torchmaster
@@ -518,7 +591,7 @@ ETAP 15: Extra Utilities - hybrydowo
 
 ---
 
-## 10. Otwarte pytania
+## 12. Otwarte pytania
 
 ### ✅ Rozwiązane
 - [x] Armourer's Workshop - JEST wersja 1.18.2 (3.2.7-beta)
@@ -552,7 +625,7 @@ ETAP 15: Extra Utilities - hybrydowo
 
 ---
 
-## 11. Różnice względem oryginalnej listy Excel
+## 13. Różnice względem oryginalnej listy Excel
 
 | Zmiana | Opis |
 |--------|------|
@@ -573,6 +646,8 @@ ETAP 15: Extra Utilities - hybrydowo
 | ➕ Ars Nouveau + Occultism | Dodany (zamiennik Thaumcraft + Witchery) |
 | ➕ TaCZ | Dodany (zamiennik broni z Flan's Mod) |
 | ➕ Immersive Vehicles | Dodany (zamiennik pojazdów z Flan's Mod) |
+| ➕ Mody ignorowane | Dodana sekcja 22 modów nie wymagających konwersji |
+| ➕ UWAGI krytyczne | Dodana sekcja 6 uwag do konwersji |
 
 ### Podsumowanie zmian
 - **Z 16 modów "do usunięcia"** - większość ma teraz mapowanie na nowe mody
@@ -581,7 +656,7 @@ ETAP 15: Extra Utilities - hybrydowo
 - **Forestry** - rozwinięte mapowanie na Productive Bees + inne
 - **Thaumcraft + addony** - dodane szczegółowe mapowanie na Ars Nouveau + Occultism
 
-## 12. Pełna lista modów z paczki modpack_1710
+## 14. Pełna lista modów z paczki modpack_1710
 
 ### Mody główne (56)
 ```
@@ -676,5 +751,6 @@ uuidoffline-1.0.jar
 
 ---
 
-*Ostatnia aktualizacja: 2026-01-30 (v2 - po weryfikacji paczki)*
+*Ostatnia aktualizacja: 2026-02-01 (v3 - po analizie mod_mapping_indepth)*
+*Spójne z: docs/mod_mapping_indepth/to/konwersja_1710_do_1182_mapowanie_modow_cz*.md*
 *Źródła: modpack_1710, CurseForge, Modrinth*

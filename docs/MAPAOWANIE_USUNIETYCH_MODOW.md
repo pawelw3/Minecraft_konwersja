@@ -1,7 +1,42 @@
 # Mapowanie usuniętych modów 1.7.10 → 1.18.2
 
-> **Cel dokumentu:** Szczegółowe mapowanie 16 modów sklasyfikowanych jako "Kompletna strata" na nowe mody 1.18.2.  
-> **Status:** Spójny z `mod_mapping_indepth`
+> **Cel dokumentu:** Szczegółowe mapowanie modów sklasyfikowanych jako "Kompletna strata" lub "Ignorowane" na nowe mody 1.18.2.  
+> **Status:** Spójny z `mod_mapping_indepth` (z uwzględnieniem UWAG)
+
+---
+
+## Lista modów IGNOROWANYCH (nie wymagają konwersji)
+
+Mody te **nie zostawiają trwałych bloków/TE** w chunkach i nie wymagają konwersji danych świata:
+
+| # | Mod 1.7.10 | Kategoria | Dlaczego ignorowany | Zamiennik 1.18.2 |
+|---|------------|-----------|---------------------|------------------|
+| 1 | **Treecapitator** | QoL | Tylko klientowy efekt | FallingTree |
+| 2 | **Baubles** | API | Tylko sloty akcesoriów | Curios API |
+| 3 | **Bookshelf** | Biblioteka | Dependency innych modów | Bookshelf (nowa wersja) |
+| 4 | **bspkrsCore** | Biblioteka | Tylko dla Treecapitator | *Nie potrzebna* |
+| 5 | **CodeChickenCore** | Biblioteka | Wbudowany w CCL | *Nie potrzebna* |
+| 6 | **CraftGuide** | QoL | Przeglądarka receptur | JEI |
+| 7 | **CustomNPCs** | Serwerowy | Nieużywane na mapie | Easy NPC (opcjonalnie) |
+| 8 | **FastCraft** | Optymalizacja | Tylko performance | Rubidium + Starlight |
+| 9 | **ForgeEssentials** | Serwerowy | Komendy, permisje | Nowsza wersja FE |
+| 10 | **iChunUtil** | Biblioteka | Dependency iChun | *Nie potrzebna* |
+| 11 | **LiteLoader** | Loader | Loader litemodów | *Nie potrzebny* |
+| 12 | **MobiusCore** | Biblioteka | Dla Opis | *Nie potrzebna* |
+| 13 | **MrTJPCore** | Biblioteka | Wbudowany w ProjectRed | *Nie potrzebna* |
+| 14 | **NEI** | QoL | Przeglądarka itemów | JEI |
+| 15 | **NoMoreRecipeConflict** | QoL | Konflikty receptur | Polymorph |
+| 16 | **Opis** | Diagnostyka | Profiler TPS | Spark |
+| 17 | **RadarBro** | QoL | Radar encji | Xaero's Minimap |
+| 18 | **Rei's Minimap** | QoL | Minimapa | JourneyMap / Xaero's |
+| 19 | **uuidoffline** | Serwerowy | Patch UUID | *Nie potrzebna* |
+| 20 | **WorldEdit** | Narzędzie | Edycja mapy | WorldEdit (nowa wersja) |
+
+**Uwaga:** Mody oznaczone jako "instalować osobno" (FallingTree, JEI, Spark, itp.) należy dodać do paczki 1.18.2, ale nie wymagają konwersji danych z mapy.
+
+---
+
+## Lista 16 usuniętych modów WYMAGAJĄCYCH konwersji/mapowania
 
 ---
 
@@ -260,4 +295,5 @@ Thaumcraft 4 i wszystkie addony **nie mają portu** na 1.18.2. Wymagana jest kon
 
 ---
 
-*Dokument spójny z `mod_mapping_indepth` - ostatnia aktualizacja: 2026-01-30*
+*Dokument spójny z `mod_mapping_indepth` - ostatnia aktualizacja: 2026-02-01*
+*Zawiera sekcję modów ignorowanych (22 mody nie wymagające konwersji)*

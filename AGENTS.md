@@ -2,7 +2,7 @@
 
 > **Język dokumentacji:** Polski (taki sam jak w dokumentacji projektu)
 > **Data utworzenia:** 2026-01-30
-> **Ostatnia aktualizacja:** 2026-01-30 (dodano strukturę src/ i mod_src/)
+> **Ostatnia aktualizacja:** 2026-02-01 (aktualizacja planu konwersji, mod_src/118)
 
 ---
 
@@ -30,7 +30,7 @@ Ten projekt to **konwersja mapy Minecraft z wersji 1.7.10 na 1.18.2**. Jest to z
 ```
 Minecraft_konwersja/
 ├── docs/                          # Dokumentacja projektu
-│   ├── PLAN_KONWERSJI.md          # Główny plan konwersji
+│   ├── PLAN.md                    # Główny plan konwersji (backlog, milestones)
 │   ├── WORKFLOW.md                # Metodyka pracy z Claude
 │   ├── LISTA_KONWERSJI_MODOW.md   # Lista modów i ich mapowanie
 │   ├── ANALIZA_MODOW_SZCZEGOLOWA.md  # Szczegółowa analiza modów
@@ -56,9 +56,10 @@ Minecraft_konwersja/
 │   ├── analyze_shape.py           # Analiza kształtu struktur
 │   └── analyze_ae2_blocks.py      # Analiza bloków AE2
 ├── mod_src/                       # Kody źródłowe modów (repozytoria)
-│   └── actual_src/                # Pobrane repozytoria modów
-│       ├── 1.7.10/                # Mody źródłowe 1.7.10
-│       └── 1.18.2/                # Mody docelowe 1.18.2
+│   ├── actual_src/                # Pobrane repozytoria modów
+│   │   ├── 1.7.10/                # Mody źródłowe 1.7.10
+│   │   └── 1.18.2/                # Mody docelowe 1.18.2 (29 modów)
+│   └── code_from_jar/             # Zdekompilowane kody (JourneyMap, ...)
 ├── mapa_1710/                     # Dane mapy źródłowej (1.7.10)
 ├── mapa_118/                      # Dane mapy docelowej (1.18.2) - pusta
 ├── modpack_1710/                  # Pliki modpacka 1.7.10 (JARy)
@@ -84,10 +85,11 @@ Minecraft_konwersja/
 
 | Plik | Zawartość |
 |------|-----------|
-| `docs/PLAN_KONWERSJI.md` | Architektura konwertera, plan etapów, system testowania |
+| `docs/PLAN.md` | Architektura konwertera, backlog konwersji, milestones, scenariusze testowe |
 | `docs/WORKFLOW.md` | Metodyka pracy z Claude Code, dokumentacja HANDOFF |
 | `docs/LISTA_KONWERSJI_MODOW.md` | Pełna lista 56 modów z paczki i ich mapowanie na 1.18.2 |
 | `docs/ANALIZA_MODOW_SZCZEGOLOWA.md` | Szczegółowe mapowanie bloków, tile entities, NBT |
+| skills | Folder ze skills agenta do wyboru w zależności od rodzaju zadania |
 
 ### 2.2 Dokumentacja modów (szczegółowa)
 
@@ -158,8 +160,9 @@ src/
 
 Repozytoria kodów źródłowych modów:
 - `actual_src/1.7.10/` - Mody źródłowe (AE2, Mekanism, IC2, ...)
-- `actual_src/1.18.2/` - Mody docelowe (AE2 11.x, Mekanism 10.x, ...)
-- `code_from_jar/` - Dekompilowane kody z JAR
+- `actual_src/1.18.2/` - Mody docelowe - **29 repozytorów** (AE2, Mekanism 10.x, Thermal, ...)
+- `code_from_jar/1.18.2/` - Dekompilowane kody z JAR (np. JourneyMap)
+- `mod_jars/1.18.2/` - Pobrane pliki JAR modów docelowych (31 JARów)
 
 ### 4.3 Mapy Minecraft
 
@@ -238,16 +241,38 @@ Wymagają mapowania bloków/Tile Entities:
 ### 5.4 Konwersja "w duchu" (8 modów) 🔄
 
 Zastąpienie innymi o zbliżonej tematyce:
-- **Thaumcraft** → Ars Nouveau
-- **Witchery** → Occultism
-- **Flan's Mod** → TaCZ + Realism Vehicle
+- **Thaumcraft** → Ars Nouveau + Occultism + Botania
+- **Witchery** → Hexerei / Enchanted: Witchcraft
+- **Flan's Mod** → TaCZ + Immersive Vehicles
 - **Traincraft** → Create + Steam'n'Rails
+- **BiblioCraft** → Supplementaries + Handcrafted
+- **BuildCraft** → Pipez + RFTools Builder + XNet
 
-### 5.5 Kompletna strata (16 modów) ❌
+### 5.5 Kompletna strata / Mapowanie na nowe mody (16 modów) ❌
 
-Brak odpowiedników lub niepotrzebne:
-- CustomNPCs, Forestry
-- Wszystkie addony Thaumcraft (Thaumic Energistics, Thaumic Tinkerer, etc.)
+Szczegółowe mapowanie w `docs/MAPAOWANIE_USUNIETYCH_MODOW.md`:
+- **Extra Utilities** → ExU Reborn + zestaw modów
+- **Forestry** → Productive Bees + Create/Thermal
+- **IC2 Nuclear Control** → CC:Tweaked monitory
+- **Open Modular Turrets** → IE turrets / K-Turrets
+- **Thaumcraft + addony** → Ars Nouveau + Occultism
+- **Statues** → Statues (ShyNieke) - JEST PORT!
+
+### 5.6 Mody IGNOROWANE (konwersja nie wymagana) 📋
+
+Te mody **nie zostawiają trwałych bloków/TE** w świecie (szczegóły w `docs/LISTA_KONWERSJI_MODOW.md`, sekcja 9):
+
+**QoL / Klientowe:** Treecapitator → FallingTree, NEI → JEI, CraftGuide → JEI, Rei's Minimap → JourneyMap, RadarBro → Xaero's, Opis → Spark
+
+**Biblioteki:** Baubles → Curios API, Bookshelf → Bookshelf (nowa), bspkrsCore, CodeChickenCore, MobiusCore, MrTJPCore, iChunUtil
+
+**Serwerowe:** ForgeEssentials, uuidoffline
+
+**Narzędzia:** WorldEdit (nowa wersja), CustomNPCs (nieużywane)
+
+**Optymalizacja:** FastCraft → Rubidium + Starlight + FerriteCore
+
+**Konflikty receptur:** NoMoreRecipeConflict → Polymorph
 
 ---
 
@@ -279,28 +304,47 @@ Co zostało zrobione (2-3 zdania).
 2. [ ] Dodać testy
 ```
 
-### 6.2 Etapy konwersji (priorytetyzacja)
+### 6.2 Etapy konwersji (plan z docs/PLAN.md)
 
-Tutaj przykładowe etapy, to nie ma związku z rzeczywistością ale tłumaczy ideę
+Konwersja jest podzielona na **Unity** (pojedyncze mody/funkcjonalności) i **Milestones** (grupy modów testowane razem). Szczegóły w `docs/PLAN.md`.
+
+#### **Unity konwersji (16 etapów)**
+
 ```
 ETAP 0: Infrastruktura
         ├── Parser NBT 1.7.10
         ├── Writer NBT 1.18.2
         └── Framework testowy
 
-ETAP 1: Rechiseled (Chisel) ← NAJŁATWIEJSZY
-ETAP 2: Storage (Backpack, JABBA)
-ETAP 3: EnderStorage
-ETAP 4: Thermal Series
-ETAP 5: Applied Energistics 2
-ETAP 6: Mekanism
-ETAP 7: Bigger Reactors
-ETAP 8: Blood Magic
-ETAP 9: ProjectRed + CC:Tweaked
-ETAP 10: IndustrialCraft 2 → Mekanism
-ETAP 11: BuildCraft → RFTools + Pretty Pipes
-ETAP 12: Carpenter's Blocks ← WŁASNY MOD
+ETAP 1: Proste bloki dekoracyjne (Rechiseled, Chipped)
+ETAP 2: Storage i plecaki (Iron Chests, Sophisticated Storage, Backpacks)
+ETAP 3: EnderStorage (sprawdzić dostępność 1.18.2)
+ETAP 4: Thermal Series (Foundation + Expansion + Dynamics)
+ETAP 5: Applied Energistics 2 (ME storage + autocraft)
+ETAP 6: Mekanism (ore processing + energia)
+ETAP 7: Energy (Bigger Reactors / Extreme Reactors)
+ETAP 8: Magia (Blood Magic)
+ETAP 9: Redstone + Komputery (ProjectRed, CC:Tweaked, CB Multipart)
+ETAP 10: Konwersja "w duchu" - Tech (IC2 → Mekanism/Thermal, EU→FE)
+ETAP 11: Konwersja "w duchu" - Magia (Thaumcraft → Ars/Occultism)
+ETAP 12: Meble i dekoracje (BiblioCraft → Supplementaries/Handcrafted)
+ETAP 13: Carpenter's Blocks / FramedBlocks ← WŁASNY MOD wymagany
+ETAP 14: Pojazdy i transport (Traincraft → Create + Steam'n'Rails)
+ETAP 15: Armourer's Workshop ← NA KOŃCU! (skomplikowana konwersja skinów)
+ETAP 16: Extra Utilities (hybrydowo, część funkcji do zamienników)
 ```
+
+#### **Scenariusze testowe** (przykłady z PLAN.md)
+
+Każdy etap zawiera:
+1. Wypisanie wszystkich bloków i TE moda
+2. Symulacje działania funkcjonalności (w Pythonie)
+3. Kod konwersji (wspólne narzędzia + specyficzne per-mod)
+4. Sprawdzenie dla stref głównej mapy
+5. Testowa mapa 1.7.10 → konwersja → weryfikacja
+6. Test headless serwer (3 min ticków + restart)
+
+Po **3-7 Unity** wykonywany jest **Milestone** (test integracyjny).
 
 ### 6.3 Zasady pracy z dużą mapą (5GB)
 
@@ -392,7 +436,10 @@ Get-ChildItem modpack_1710 -Recurse -Filter "*thermal*"
 - [ ] Czy pisać własny mod dla Carpenter's Blocks czy szukać alternatywy?
 - [ ] Jak obsłużyć Thaumcraft research progress (strata vs kompensacja)?
 - [ ] Czy konwertować pociągi Traincraft na Create?
-- [ ] Dostępność modów: Growthcraft, Jammy Furniture, Placeable Items
+- [x] **Placeable Items** - JEST wersja 1.18.2
+- [ ] **Growthcraft** - sprawdzić dostępność modułów
+- [ ] **Jammy Furniture** - sprawdzić użycie na mapie
+- [ ] **Enchanting Plus** - zweryfikować zamiennik (Enchanting Infuser vs Apotheosis)
 
 ### 10.2 Wymaga weryfikacji na mapie
 
@@ -414,7 +461,29 @@ Projekt należy do użytkownika `pawel` - wszystkie decyzje architektoniczne wym
 - **2026-01-30** - Utworzenie dokumentacji AGENTS.md
 - **2026-01-30** - Analiza paczki modpack_1710 (56 modów)
 - **2026-01-30** - Dokumentacja mapowania modów
+- **2026-02-01** - Aktualizacja AGENTS.md (dodano odwołanie do docs/PLAN.md)
+- **2026-02-01** - Pobrano 29 repozytoriów kodów źródłowych modów 1.18.2
 
 ---
 
 *Ten dokument jest żywy - należy go aktualizować wraz z postępem projektu.*
+
+---
+
+## 12. Spis dokumentów (kolejność aktualizacji)
+
+Główna dokumentacja projektu (aktualizowana po zmianach w `mod_mapping_indepth`):
+
+| Dokument | Zawartość |
+|----------|-----------|
+| `docs/LISTA_KONWERSJI_MODOW.md` | Pełna lista modów, statusy, mapowania |
+| `docs/ANALIZA_MODOW_SZCZEGOLOWA.md` | Szczegółowa analiza per-mod |
+| `docs/MAPAOWANIE_USUNIETYCH_MODOW.md` | Mapowanie 16 modów usuniętych + 20 ignorowanych |
+| `docs/PLAN.md` | Backlog konwersji, milestones, scenariusze testowe |
+| `AGENTS.md` | Ten dokument - przegląd dla AI |
+
+Dokumentacja szczegółowa (`docs/mod_mapping_indepth/`):
+| Dokument | Zakres |
+|----------|--------|
+| `from/mod_funkcjonalnosci_1.7.10_*.md` | Analiza modów źródłowych |
+| `to/konwersja_1710_do_1182_mapowanie_modow_cz*.md` | Mapowanie na 1.18.2 (zawiera UWAGI) |
