@@ -78,7 +78,7 @@ Mody wymagające konwersji bloków/tile entities na inny mod.
 
 | # | Mod 1.7.10 | Mod 1.18.2 | Złożoność | Uwagi |
 |---|------------|------------|-----------|-------|
-| 1 | **BiblioCraft** | **Builders Crafts & Additions** | Średnia | Półki, biurka → odpowiedniki |
+| 1 | **BiblioCraft** | **Supplementaries** + **FramedBlocks** + **Immersive Paintings** | Średnia | Meble → Supplementaries, tekstury → FramedBlocks, obrazy → Immersive Paintings |
 | 2 | **IndustrialCraft 2** | **Mekanism** + **Thermal** | Wysoka | EU→FE (×4), mapowanie maszyn |
 | 3 | **BuildCraft** (rury, maszyny) | **Pipez** + **RFTools Builder** | Wysoka | Rury item/fluid/power |
 | 4 | **Better Storage** (JABBA) | **Storage Drawers** / **Sophisticated Storage** | Średnia | Beczki/skrzynie → szuflady |
@@ -148,7 +148,7 @@ Mody zastępowane innymi o zbliżonej tematyce (strategia B).
 | 8 | **Rei's Minimap** | **JourneyMap** / **Xaero's** | Minimapa + waypointy | NISKIE (tylko waypointy) |
 | 9 | **Extra Utilities** | **ExU Reborn** + zestaw modów | Patrz sekcja 5 | ŚREDNIE |
 | 10 | **Forestry** | **Productive Bees** + **Create** | Pszczoły + przetwórstwo | WYSOKIE |
-| 11 | **BiblioCraft** | **Supplementaries** + **Handcrafted** | Meble i dekoracje | WYSOKIE |
+| 11 | **BiblioCraft** | **Supplementaries** + **FramedBlocks** + **Immersive Paintings** | Meble, ramki, obrazy | ŚREDNIE |
 | 12 | **Jammy Furniture** | **Macaw's Furniture** / **Handcrafted** | Meble | WYSOKIE |
 | 13 | **Railcraft** | **Create: Steam'n'Rails** | Kolej (inna mechanika) | WYSOKIE |
 
@@ -222,6 +222,50 @@ Mody bez bezpośredniego portu - bloki usunięte lub zamienione na placeholdery.
 | Ender Quarry | **RFTools Builder** (Quarry Card) | Wydobycie obszarowe |
 | Generatory RF | **Mekanism Generators** / **Thermal** | Inne generatory |
 | Ender-Thermic Pump | **Mekanism** / **Create** | Pompy |
+
+#### BiblioCraft → Zestaw modów 1.18.2
+
+**Uwaga:** BiblioCraft nie ma portu na 1.18.2. Konwersja wymaga zestawu modów.
+
+| Funkcja BiblioCraft | Mod docelowy 1.18.2 | Blok/Element | Uwagi |
+|---------------------|---------------------|--------------|-------|
+| **Półki meblowe** | **Supplementaries** | `ItemShelfBlock` | Ekspozycja przedmiotów |
+| **Regały na książki** | **Supplementaries** | `BookPileBlock` | Stos książek (inna forma) |
+| **Zegar** | **Supplementaries** | `ClockBlock` | Wyświetlanie czasu |
+| **Latarnia/Lampa** | **Supplementaries** | `WallLanternBlock`, `EndLampBlock` | Oświetlenie |
+| **Znak (Fancy Sign)** | **Supplementaries** | `HangingSignBlock` | Wiszący znak |
+| **Piedestał** | **Supplementaries** | `PedestalBlock` | Ekspozycja broni |
+| **Globus** | **Supplementaries** | `GlobeBlock` | Dekoracja |
+| **Worek** | **Supplementaries** | `SackBlock` | Storage |
+| **Sejf** | **Supplementaries** | `SafeBlock` | Zabezpieczony storage |
+| **Tablica** | **Supplementaries** | `BlackboardBlock` | Rysowanie |
+| **Słoik** | **Supplementaries** | `JarBlock` | Na dowolne przedmioty |
+| **Meble z teksturami** | **FramedBlocks** | `Framed*Block` | System "coverable blocks" |
+| **Customowe obrazy** | **Immersive Paintings** | `PaintingEntity` | Własne obrazy z plików |
+| **Stół (Table)** | **BlockCarpentry** / **Handcrafted** | `FrameBlock` / różne | Stoły |
+| **Krzesła** | **Handcrafted** | Różne | System siedzeń |
+
+**Nie wymagają konwersji (nieistotne):**
+- Typesetting Table / Printing Press - funkcja druku nieistotna
+- Tape Measure / Atlas - można zastąpić innymi modami (JourneyMap)
+- Redstone Book - funkcja specyficzna dla BC
+
+**Konwersja NBT:**
+```java
+// FramedBlocks - przykład
+BiblioCraft: TileEntityFramedChest
+  → frameTexture: String (ID bloku)
+  
+FramedBlocks: FramedBlockEntity
+  → camoState: BlockState (stan bloku jako tekstura)
+  
+// Immersive Paintings - przykład
+BiblioCraft: TileEntityPainting
+  → resourceLocation: "bibliocraft:paintings/custom/xxx.png"
+  
+ImmersivePaintings: PaintingEntity
+  → image: String (zarejestrowana nazwa obrazu)
+```
 
 #### Forestry → Zestaw modów 1.18.2
 | Funkcja Forestry | Mod docelowy 1.18.2 | Uwagi |
@@ -347,6 +391,18 @@ Wszystkie wymagają Thaumcraft który **nie ma portu na 1.18.2**:
 | **Storage Drawers** | Szuflady na itemy | JABBA, Better Storage |
 | **Sophisticated Storage** | Skrzynie/barrels z upgrade'ami | Better Storage, Forestry crates |
 | **Iron Chests** | Większe skrzynie | Better Storage reinforced |
+
+### Meble i dekoracje (zamiennik BiblioCraft / Jammy Furniture)
+| Mod | Funkcja | Zastępuje |
+|-----|---------|-----------|
+| **Supplementaries** | Półki, globusy, latarnie, tablice | BiblioCraft (główne meble) |
+| **FramedBlocks** | Bloki przyjmujące wygląd innych bloków | BiblioCraft Framed, Furniture Paneler |
+| **BlockCarpentry** | "Coverable blocks" (frames/illusions) | BiblioCraft (alternatywa dla FramedBlocks) |
+| **Handcrafted** | Meble, krzesła, stoły, kanapy | BiblioCraft, Jammy Furniture |
+| **Immersive Paintings** | Customowe obrazy z plików | BiblioCraft Paintings |
+| **Another Furniture** | Proste, spójne meble | BiblioCraft (uzupełnienie) |
+| **Chipped** | Warianty dekoracyjne bloków | Chisel (uzupełnienie) |
+| **Rechiseled** | Warianty dekoracyjne bloków | Chisel (główny zamiennik) |
 | **FramedBlocks** | Bloki "w bloku" (cover system) | Carpenter's Blocks (alternatywa) |
 
 ### Dekoracje (zamiennik BiblioCraft / Jammy Furniture)
