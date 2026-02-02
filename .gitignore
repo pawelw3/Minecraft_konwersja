@@ -175,3 +175,9 @@ jvm/worker/build/distributions/
 headless_server/*/*.zip
 headless_server/*/world-*/
 headless_server/*/spiral_*/
+
+# ----------------------------------------------------------------------------
+# ARCHIWA (duże pliki binarne)
+# ----------------------------------------------------------------------------
+*.7z
+*.zip
