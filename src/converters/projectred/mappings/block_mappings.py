@@ -297,6 +297,21 @@ IC_BLOCK_MAPPINGS: Dict[int, BlockMapping] = {
 }
 
 # ============================================================================
+# EXPLORATION MODULE - Lily (USUNIĘTE w 1.18.2)
+# ============================================================================
+
+# W 1.7.10 Lily to kolorowe kwiaty (metadata 0-15 dla kolorów)
+# W 1.18.2 zostały usunięte - zamiana na vanilla flowers
+LILY_MAPPING = BlockMapping(
+    id_1710="ProjRed|Exploration:projectred.exploration.lily",
+    id_1182="",  # USUNIĘTY w 1.18.2
+    has_block_entity=True,  # TileLily
+    nbt_converter=None,
+    notes="BlockLily/TileLily - USUNIĘTY w 1.18.2. Zastąpić vanilla flowers.",
+    removed=True
+)
+
+# ============================================================================
 # EXPANSION MODULE - Frame (blok ramki bez BE)
 # ============================================================================
 
@@ -381,6 +396,10 @@ def get_block_mapping(block_id_1710: str, metadata: int = 0) -> Optional[BlockMa
     if "projectred.expansion.frame" in normalized_id:
         return FRAME_MAPPING
 
+    # Lily (Exploration) - USUNIĘTY w 1.18.2
+    if "projectred.exploration.lily" in normalized_id:
+        return LILY_MAPPING
+
     # Lampy (Illumination)
     if "projectred.illumination.lamp" in normalized_id:
         return get_lamp_mapping(metadata, "lamp")
@@ -412,6 +431,9 @@ def get_all_mappings() -> List[BlockMapping]:
     # Frame
     all_mappings.append(FRAME_MAPPING)
 
+    # Lily (usunięty)
+    all_mappings.append(LILY_MAPPING)
+
     # Lampy (wszystkie kolory)
     for meta in range(16):
         all_mappings.append(get_lamp_mapping(meta, "lamp"))
@@ -431,6 +453,7 @@ ALL_PROJECTRED_BLOCK_IDS_1710 = {
     "ProjRed|Expansion:projectred.expansion.machine2",
     "ProjRed|Exploration:projectred.exploration.ore",
     "ProjRed|Exploration:projectred.exploration.stone",
+    "ProjRed|Exploration:projectred.exploration.lily",  # Usunięty w 1.18.2
     "ProjRed|Fabrication:projectred.fabrication.icblock",
     "ProjRed|Expansion:projectred.expansion.frame",
     "ProjRed|Illumination:projectred.illumination.lamp",

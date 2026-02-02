@@ -1,0 +1,93 @@
+============================================================
+RAPORT ANALIZY PROJECTRED W STREFACH MAPY 1.7.10
+Zadanie 4: Sprawdzenie pokrycia kodu konwersji
+============================================================
+
+Całkowita liczba regionów: 17
+Całkowita liczba chunków: 7676
+Strefy z ProjectRed: billund, choroszcz, iii_rzesza, rzym, zsrr
+
+------------------------------------------------------------
+ZNALEZIONE TILE ENTITIES PROJECTRED:
+------------------------------------------------------------
+✅ WSPIERANE | tile.projectred.expansion.machine1|1: 18
+✅ WSPIERANE | tile.projectred.expansion.machine2|0: 13
+✅ WSPIERANE | tile.projectred.expansion.machine2|10: 3
+✅ WSPIERANE | tile.projectred.expansion.machine2|4: 1
+✅ WSPIERANE | tile.projectred.expansion.machine2|8: 18
+⚠️ USUNIĘTE W 1.18.2 | tile.projectred.exploration.lily|0: 1
+✅ WSPIERANE | tile.projectred.illumination.lamp|0: 519
+✅ WSPIERANE | tile.projectred.integration.icblock|0: 1
+
+------------------------------------------------------------
+ZNALEZIONE CZĘŚCI MULTIPART:
+------------------------------------------------------------
+✅ pr_bundled: 77
+❌ pr_icgate: 9
+✅ pr_igate: 4
+✅ pr_insulated: 1332
+✅ pr_sgate: 7
+
+------------------------------------------------------------
+TYPY BRAMEK (subID):
+------------------------------------------------------------
+  subID=2: 1
+  subID=17: 3
+  subID=20: 1
+  subID=34: 9
+
+------------------------------------------------------------
+KOLORY PRZEWODÓW:
+------------------------------------------------------------
+  colour=4: 42
+  colour=7: 559
+  colour=8: 193
+  colour=11: 42
+  colour=13: 42
+  colour=14: 68
+  colour=15: 386
+
+============================================================
+RAPORT POKRYCIA KODU KONWERSJI:
+============================================================
+
+Tile Entities:
+  - Znalezione na mapie: 8
+  - Wspierane przez konwerter: 7
+  - Usunięte w 1.18.2 (z ostrzeżeniem): 1
+  - NIE wspierane: 0
+  - POKRYCIE: 100.0%
+
+Multipart Parts:
+  - Znalezione na mapie: 5
+  - Wspierane przez konwerter: 4
+  - NIE wspierane: 1
+  - POKRYCIE: 80.0%
+
+Typy bramek:
+  - Znalezione typy: 4
+  - Wspierane przez konwerter: 3
+
+------------------------------------------------------------
+⚠️ NIEWSPIERANE CZĘŚCI MULTIPART:
+------------------------------------------------------------
+  - pr_icgate: 9
+
+------------------------------------------------------------
+PRZYKŁADOWE POZYCJE (do weryfikacji):
+------------------------------------------------------------
+  tile.projectred.illumination.lamp|0 @ (485, 95, -347)
+  tile.projectred.expansion.machine2|10 @ (556, 68, -284)
+  tile.projectred.illumination.lamp|0 @ (876, 77, -710)
+  tile.projectred.illumination.lamp|0 @ (878, 77, -715)
+  tile.projectred.illumination.lamp|0 @ (880, 77, -707)
+  tile.projectred.illumination.lamp|0 @ (878, 77, -702)
+  tile.projectred.illumination.lamp|0 @ (883, 77, -699)
+  tile.projectred.expansion.machine2|0 @ (677, 72, 3219)
+  tile.projectred.expansion.machine2|0 @ (528, 77, 3381)
+  tile.projectred.expansion.machine2|0 @ (528, 81, 3381)
+  tile.projectred.expansion.machine2|0 @ (528, 73, 3381)
+  tile.projectred.expansion.machine2|10 @ (472, 106, 392)
+  tile.projectred.expansion.machine2|10 @ (482, 105, 409)
+  tile.projectred.illumination.lamp|0 @ (644, 77, 253)
+  tile.projectred.illumination.lamp|0 @ (644, 77, 254)
