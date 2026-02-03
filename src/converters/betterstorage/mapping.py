@@ -94,6 +94,23 @@ BLOCK_MAPPING: Dict[str, Tuple[str, Dict[str, Any]]] = {
     'betterstorage:flintBlock': ('minecraft:stone', {
         'note': 'Blok dekoracyjny - placeholder',
     }),
+    
+    # Thaumium Chest → Iron Chests (Thaumium to materiał z Thaumcraft)
+    'betterstorage:thaumiumChest': ('ironchest:iron_chest', {
+        'note': 'Thaumium Chest z Thaumcraft - traktowany jak Reinforced Chest',
+        'capacity_mapping': {
+            27: 'ironchest:copper_chest',
+            33: 'ironchest:iron_chest',
+            39: 'ironchest:iron_chest',
+        },
+        'material_is_cosmetic': True,
+    }),
+    
+    # Thaumcraft Backpack → Sophisticated Backpacks
+    'betterstorage:thaumcraftBackpack': ('sophisticatedbackpacks:backpack', {
+        'note': 'Backpack z Thaumcraft - osobny crafting',
+        'separate_task': True,
+    }),
 }
 
 
@@ -301,6 +318,12 @@ CONTAINER_MATERIALS: Dict[str, Dict[str, Any]] = {
         'block': 'blockSteel',
         'info': 'Dekoracyjny - Iron Chests NIE ma steel!',
         'warning': 'No steel chest in IronChests',
+    },
+    'thaumium': {
+        'ore_dict': 'ingotThaumium',
+        'block': 'blockThaumium',
+        'info': 'Dekoracyjny - Iron Chests NIE ma thaumium! (Thaumcraft)',
+        'warning': 'No thaumium chest in IronChests - using iron',
     },
 }
 

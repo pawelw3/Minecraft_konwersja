@@ -73,6 +73,26 @@ class GrowthcraftConverter:
         "grcmilk:cheese_vat": MixingVatNBTConverter,
     }
     
+    # Mapowanie TileEntity ID (z mapy 1.7.10) -> Block ID (dla konwertera)
+    # UWAGA: Te formaty zostały ODKRYTE z mapy, nie zgadnięte!
+    TE_ID_TO_BLOCK_ID = {
+        # Formaty odkryte z mapa_1710:
+        "grc.tileentity.fermentBarrel": "grccellar:ferment_barrel",
+        "grc.tileentity.beeBox": "grcbees:bee_box",
+        "grc.tileentity.fishTrap": "grcfishtrap:fish_trap",
+        # Standardowe formaty (dla kompatybilności)
+        "TileEntityFermentationBarrel": "grccellar:ferment_barrel",
+        "TileEntityBrewKettle": "grccellar:brew_kettle",
+        "TileEntityBeeBox": "grcbees:bee_box",
+        "TileEntityCheeseVat": "grcmilk:cheese_vat",
+        "TileEntityFruitPress": "grccellar:fruit_press",
+        "TileEntityCultureJar": "grccellar:culture_jar",
+        "TileEntityPancheon": "grcmilk:pancheon",
+        "TileEntityButterChurn": "grcmilk:butter_churn",
+        "TileEntityCheesePress": "grcmilk:cheese_press",
+        "TileEntityFishTrap": "grcfishtrap:fish_trap",
+    }
+    
     def __init__(self):
         self.errors: List[str] = []
         self.warnings: List[str] = []
@@ -83,13 +103,28 @@ class GrowthcraftConverter:
             "warnings": 0,
         }
     
+    def _resolve_block_id(self, block_or_te_id: str) -> str:
+        """
+        Rozwiązuje ID bloku lub TE do standardowego ID bloku.
+        
+        Obsługuje formaty:
+        - Block ID: "grccellar:ferment_barrel"
+        - TE ID z mapy: "grc.tileentity.fermentBarrel"
+        - Standardowy TE ID: "TileEntityFermentationBarrel"
+        """
+        # Jeśli to TE ID z mapy, zamień na Block ID
+        if block_or_te_id in self.TE_ID_TO_BLOCK_ID:
+            return self.TE_ID_TO_BLOCK_ID[block_or_te_id]
+        # W przeciwnym razie zwróć oryginalne ID
+        return block_or_te_id
+    
     def convert_block(self, block_id: str, metadata: int = 0,
                      nbt: Optional[Dict[str, Any]] = None) -> ConversionResult:
         """
         Konwertuje blok GrowthCraft z 1.7.10 do 1.18.2.
         
         Args:
-            block_id: ID bloku w formacie 1.7.10 (np. "grccellar:ferment_barrel")
+            block_id: ID bloku lub TE w formacie 1.7.10 (np. "grccellar:ferment_barrel" lub "grc.tileentity.fermentBarrel")
             metadata: Metadata bloku (dla wariantów)
             nbt: Opcjonalne NBT Tile Entity
             
@@ -97,6 +132,9 @@ class GrowthcraftConverter:
             ConversionResult z wynikiem konwersji
         """
         self.stats["processed"] += 1
+        
+        # Rozwiąż ID (może być TE ID z mapy)
+        resolved_id = self._resolve_block_id(block_id)
         
         # Sprawdź czy to blok GrowthCraft
         if not self.is_growthcraft_block(block_id):
@@ -107,7 +145,7 @@ class GrowthcraftConverter:
             )
         
         # Konwertuj ID bloku
-        block_id_1182 = convert_block_id(block_id, metadata)
+        block_id_1182 = convert_block_id(resolved_id, metadata)
         
         # Jeśli nie ma NBT, zwróć tylko konwersję ID
         if not nbt:
@@ -118,8 +156,8 @@ class GrowthcraftConverter:
                 nbt_1182=None
             )
         
-        # Konwertuj NBT jeśli dostępne
-        nbt_result = self._convert_nbt(block_id, nbt, metadata)
+        # Konwertuj NBT jeśli dostępne (użyj rozwiązanego ID)
+        nbt_result = self._convert_nbt(resolved_id, nbt, metadata)
         
         if nbt_result.success:
             self.stats["converted"] += 1
@@ -172,6 +210,10 @@ class GrowthcraftConverter:
     
     def is_growthcraft_block(self, block_id: str) -> bool:
         """Sprawdza czy blok jest blokiem GrowthCraft"""
+        # Sprawdź bezpośrednie mapowanie TE ID
+        if block_id in self.TE_ID_TO_BLOCK_ID:
+            return True
+        # Sprawdź prefiksy
         return block_id.startswith((
             "grccellar:",
             "grcmilk:",
@@ -183,6 +225,8 @@ class GrowthcraftConverter:
             "grchops:",
             "grcrice:",
             "growthcraft:",  # Może być już w formacie 1.18.2
+            "grc.tileentity.",  # Format TE ID z mapy 1.7.10
+            "TileEntity",  # Standardowy format TE ID
         ))
     
     def is_growthcraft_item(self, item_id: str) -> bool:
@@ -198,6 +242,7 @@ class GrowthcraftConverter:
             "grchops:",
             "grcrice:",
             "growthcraft:",
+            "grc.item.",  # Format item ID z mapy
         ))
     
     def get_supported_blocks(self) -> List[str]:

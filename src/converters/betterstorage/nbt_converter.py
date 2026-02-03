@@ -87,12 +87,18 @@ class BetterStorageConverter:
         
         target_block, params = BLOCK_MAPPING[block_id]
         
+        # Normalizuj ID (container.betterstorage.xxx -> betterstorage:xxx)
+        normalized_id = block_id
+        if block_id.startswith('container.betterstorage.'):
+            normalized_id = 'betterstorage:' + block_id.split('.')[-1]
+        
         # Wybieramy odpowiedni konwerter na podstawie typu
         if 'crate' in block_id.lower():
             return self._convert_crate(nbt_data, x, y, z, warnings)
         
-        elif 'reinforcedChest' in block_id:
-            return self._convert_reinforced_chest(nbt_data, warnings)
+        elif 'reinforcedChest' in block_id or 'thaumiumChest' in block_id:
+            return self._convert_reinforced_chest(nbt_data, warnings, 
+                                                   material='thaumium' if 'thaumium' in block_id.lower() else None)
         
         elif 'reinforcedLocker' in block_id:
             return self._convert_reinforced_locker(nbt_data, warnings)
@@ -111,6 +117,13 @@ class BetterStorageConverter:
         
         elif 'enderBackpack' in block_id:
             return self._convert_ender_backpack(nbt_data, warnings)
+        
+        elif 'thaumcraftBackpack' in block_id or (normalized_id == 'betterstorage:backpack' and 'thaumcraft' in str(nbt_data).lower()):
+            # Thaumcraft Backpack -> Sophisticated Backpacks
+            return self._convert_backpack(nbt_data, warnings, thaumcraft=True)
+        
+        elif 'backpack' in block_id.lower():
+            return self._convert_backpack(nbt_data, warnings)
         
         elif 'present' in block_id.lower():
             return self._convert_present(nbt_data, warnings)
@@ -174,16 +187,21 @@ class BetterStorageConverter:
     def _convert_reinforced_chest(
         self, 
         nbt: Dict, 
-        warnings: List[str]
+        warnings: List[str],
+        material: str = None
     ) -> Dict[str, Any]:
         """
         Konwertuje Reinforced Chest na Iron Chests.
         
         UWAGA: Materiał jest TYLKO kosmetyczny!
         Pojemność zależy od configu (27/33/39), NIE od materiału.
+        
+        Args:
+            material: Opcjonalny materiał (np. 'thaumium' dla Thaumium Chest)
         """
         # Pobieramy materiał (informacyjnie)
-        material = nbt.get('Material', 'iron')
+        if material is None:
+            material = nbt.get('Material', 'iron')
         mat_info = get_material_info(material)
         
         if mat_info.get('warning'):
@@ -416,6 +434,49 @@ class BetterStorageConverter:
             'nbt': {},  # Vanilla armor stand nie ma Items
             'warnings': warnings,
             'overflow': converted_items  # Te itemy trzeba umieścić gdzie indziej
+        }
+    
+    def _convert_backpack(
+        self, 
+        nbt: Dict, 
+        warnings: List[str],
+        thaumcraft: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Konwertuje Backpack na Sophisticated Backpacks.
+        
+        UWAGA: W 1.18.2 Sophisticated Backpacks to osobny system!
+        
+        Args:
+            thaumcraft: Czy to Thaumcraft Backpack (tekstura Thaumium)
+        """
+        prefix = "Thaumcraft " if thaumcraft else ""
+        warnings.append(
+            f"{prefix}Backpack -> Sophisticated Backpacks: "
+            "wymaga osobnej konfiguracji w 1.18.2"
+        )
+        
+        # W 1.7.10 backpack to block entity z inventory
+        # W 1.18.2 Sophisticated Backpacks ma zupełnie inną strukturę NBT
+        # Zwracamy jako "zwykły" backpack z ostrzeżeniem
+        
+        items = nbt.get('Items', [])
+        converted_items = self._convert_item_list(items)
+        
+        # Sophisticated Backpacks używa innej struktury - tu tylko placeholder
+        new_nbt = {
+            'Items': converted_items,
+            'backpack_type': 'thaumium' if thaumcraft else 'regular',
+        }
+        
+        if thaumcraft:
+            warnings.append("Thaumcraft Backpack: wymaga recznej konfiguracji w 1.18.2")
+        
+        return {
+            'block_id': 'sophisticatedbackpacks:backpack',
+            'nbt': new_nbt,
+            'warnings': warnings,
+            'overflow': []
         }
     
     def _convert_ender_backpack(

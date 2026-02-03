@@ -44,6 +44,22 @@ class ChunkData:
                 result.append(section)
         return result
     
+    def _nbt_to_python(self, value: Any) -> Any:
+        """Rekurencyjnie konwertuje NBT na zwykłe typy Python."""
+        if isinstance(value, NBTTag):
+            if value.type == NBTTag.TAG_COMPOUND:
+                return {k: self._nbt_to_python(v) for k, v in value.value.items()}
+            elif value.type == NBTTag.TAG_LIST:
+                return [self._nbt_to_python(v) for v in value.value]
+            else:
+                return value.value
+        elif isinstance(value, dict):
+            return {k: self._nbt_to_python(v) for k, v in value.items()}
+        elif isinstance(value, list):
+            return [self._nbt_to_python(v) for v in value]
+        else:
+            return value
+    
     def get_tile_entities(self) -> List[Dict[str, Any]]:
         """Zwraca listę tile entities w chunku."""
         level = self.nbt.get('Level', {})
@@ -66,7 +82,8 @@ class ChunkData:
             if isinstance(entity, NBTTag):
                 entity = entity.value
             if isinstance(entity, dict):
-                result.append(entity)
+                # Rekurencyjnie przetwórz wszystkie wartości NBT
+                result.append(self._nbt_to_python(entity))
         return result
     
     def get_entities(self) -> List[Dict[str, Any]]:
@@ -359,7 +376,7 @@ class AnvilParser:
     def get_region_coordinates(self) -> Tuple[int, int]:
         """Wyciąga współrzędne regionu z nazwy pliku (r.X.Z.mca)."""
         import re
-        match = re.search(r'r\.(-?\d+)\.(-?\d+)\.mca', self.filepath)
+        match = re.search(r'r\.(-?\d+)\.(-?\d+)\.mca', str(self.filepath))
         if match:
             return int(match.group(1)), int(match.group(2))
         return (0, 0)

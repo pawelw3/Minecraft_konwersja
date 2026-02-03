@@ -67,6 +67,23 @@ class BetterStorageBatchConverter:
         'betterstorage:present',
         'betterstorage:lockableDoor',
         'betterstorage:flintBlock',
+        'betterstorage:thaumiumChest',  # Dodane - z Thaumcraft
+        'betterstorage:thaumcraftBackpack',  # Dodane - z Thaumcraft
+        # Formaty z mapy (container.betterstorage.*)
+        'container.betterstorage.crate',
+        'container.betterstorage.reinforcedChest',
+        'container.betterstorage.reinforcedLocker',
+        'container.betterstorage.locker',
+        'container.betterstorage.cardboardBox',
+        'container.betterstorage.craftingStation',
+        'container.betterstorage.armorStand',
+        'container.betterstorage.backpack',
+        'container.betterstorage.enderBackpack',
+        'container.betterstorage.present',
+        'container.betterstorage.lockableDoor',
+        'container.betterstorage.flintBlock',
+        'container.betterstorage.thaumiumChest',
+        'container.betterstorage.thaumcraftBackpack',
     }
     
     def __init__(

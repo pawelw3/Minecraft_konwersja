@@ -73,7 +73,12 @@ class BloodMagicConverter:
         self.orb_converter = BloodOrbConverter(name_to_uuid_mapping)
         
         # Mapowanie konwerterów dla poszczególnych TE
+        # UWAGA: Rzeczywiste TE ID z mapy to "containerAltar" i "containerMasterStone"
         self._te_converters = {
+            # Rzeczywiste TE ID z mapy 1.7.10
+            "containerAltar": self.altar_converter,
+            "containerMasterStone": self.ritual_converter,
+            # Fallback dla oczekiwanych ID
             "Altar": self.altar_converter,
             "MasterStone": self.ritual_converter,
         }

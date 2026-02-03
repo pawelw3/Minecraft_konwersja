@@ -65,13 +65,17 @@ class EnderStorageConverter:
             print(f"Nowe NBT: {result.nbt_1182}")
     """
     
-    # Mapowanie ID bloku -> Konwerter NBT
-    # Uwaga: W 1.7.10 jest jeden blok z metadata, więc mapujemy na podstawie metadata
+    # Mapowanie ID Tile Entity -> Konwerter NBT
+    # UWAGA: Na mapie 1.7.10 TE ID to "Ender Chest" i "Ender Tank" (ze spacja!)
+    # Nie "TileEnderChest"/"TileEnderTank" jak w kodzie źródłowym Java
     TE_CONVERTERS = {
-        # Ender Chest (metadata 0)
-        ("EnderStorage:blockEnderStorage", 0): EnderChestNBTConverter,
-        # Ender Tank (metadata 1)
-        ("EnderStorage:blockEnderStorage", 1): EnderTankNBTConverter,
+        # Ender Chest (na mapie: id="Ender Chest")
+        "Ender Chest": EnderChestNBTConverter,
+        # Ender Tank (na mapie: id="Ender Tank")
+        "Ender Tank": EnderTankNBTConverter,
+        # Dla kompatybilności z nazewnictwem w kodzie źródłowym
+        "TileEnderChest": EnderChestNBTConverter,
+        "TileEnderTank": EnderTankNBTConverter,
     }
     
     def __init__(self):
@@ -154,20 +158,21 @@ class EnderStorageConverter:
                     metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT używając odpowiedniego konwertera.
-        """
-        # Znajdź odpowiedni konwerter
-        converter_class = self.TE_CONVERTERS.get((block_id, metadata))
         
-        if not converter_class:
-            # Spróbuj znaleźć bez metadata (dla kompatybilności)
-            converter_class = self.TE_CONVERTERS.get((block_id, 0))
+        Wybiera konwerter na podstawie ID Tile Entity (nie block_id).
+        """
+        # Pobierz ID Tile Entity z NBT
+        te_id = nbt.get('id', '')
+        
+        # Znajdź odpowiedni konwerter na podstawie TE ID
+        converter_class = self.TE_CONVERTERS.get(te_id)
         
         if not converter_class:
             # Brak specyficznego konwertera - użyj tożsamości
-            self.warnings.append(f"Brak specyficznego konwertera dla {block_id}:{metadata}, używam tożsamości")
+            self.warnings.append(f"Brak specyficznego konwertera dla TE '{te_id}', używam tożsamości")
             from .nbt_converters.base_converter import IdentityEnderStorageConverter
             converter = IdentityEnderStorageConverter(
-                source_id=block_id,
+                source_id=te_id,
                 target_id=convert_block_id(block_id, metadata),
                 name="identity_fallback"
             )

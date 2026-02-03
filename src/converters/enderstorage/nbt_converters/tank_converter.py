@@ -50,7 +50,8 @@ class EnderTankNBTConverter(BaseEnderStorageNBTConverter):
     
     @property
     def source_te_id(self) -> str:
-        return "EnderStorage:tileEnderTank"
+        # Na mapie TE ID to "Ender Tank" (ze spacja), nie "TileEnderTank"
+        return "Ender Tank"
     
     @property
     def target_te_id(self) -> str:
@@ -59,7 +60,9 @@ class EnderTankNBTConverter(BaseEnderStorageNBTConverter):
     def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
                 metadata: int = 0) -> NBTConversionResult:
         """
-        Konwertuje NBT TileEnderTank z 1.7.10 do 1.18.2.
+        Konwertuje NBT 'Ender Tank' z 1.7.10 do 1.18.2.
+        
+        UWAGA: Na mapie 1.7.10 TE ID to 'Ender Tank' (ze spacja), nie 'TileEnderTank'.
         
         Args:
             nbt_1710: Słownik NBT z wersji 1.7.10
@@ -79,14 +82,21 @@ class EnderTankNBTConverter(BaseEnderStorageNBTConverter):
             owner_str = nbt_1710.get('owner', 'global')
             converted['Frequency'] = self._convert_frequency(freq_int, owner_str)
             
-            # Konwersja stanu ciśnieniowego
+            # Konwersja stanu cisnieniowego
+            # W 1.7.10: 'ir' (byte 0/1), w 1.18.2: 'ir' (boolean)
             pressure_state = {}
-            if 'invert_redstone' in nbt_1710:
+            if 'ir' in nbt_1710:
+                pressure_state['invert_redstone'] = bool(nbt_1710['ir'])
+            elif 'invert_redstone' in nbt_1710:
                 pressure_state['invert_redstone'] = nbt_1710['invert_redstone']
             else:
                 pressure_state['invert_redstone'] = False
             
             converted['pressure_state'] = pressure_state
+            
+            # Konwersja rotacji (opcjonalna)
+            if 'rot' in nbt_1710:
+                converted['rotation'] = nbt_1710['rot']
             
             # Dodaj id Tile Entity dla 1.18.2
             converted['id'] = self.target_te_id
@@ -98,5 +108,5 @@ class EnderTankNBTConverter(BaseEnderStorageNBTConverter):
             return self._create_result(converted, success=True)
             
         except Exception as e:
-            self._add_error(f"Error converting EnderTank NBT: {str(e)}")
+            self._add_error(f"Error converting Ender Tank NBT: {str(e)}")
             return self._create_result(success=False)

@@ -47,7 +47,8 @@ class EnderChestNBTConverter(BaseEnderStorageNBTConverter):
     
     @property
     def source_te_id(self) -> str:
-        return "EnderStorage:tileEnderChest"
+        # Na mapie TE ID to "Ender Chest" (ze spacja), nie "TileEnderChest"
+        return "Ender Chest"
     
     @property
     def target_te_id(self) -> str:
@@ -56,7 +57,9 @@ class EnderChestNBTConverter(BaseEnderStorageNBTConverter):
     def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
                 metadata: int = 0) -> NBTConversionResult:
         """
-        Konwertuje NBT TileEnderChest z 1.7.10 do 1.18.2.
+        Konwertuje NBT 'Ender Chest' z 1.7.10 do 1.18.2.
+        
+        UWAGA: Na mapie 1.7.10 TE ID to 'Ender Chest' (ze spacja), nie 'TileEnderChest'.
         
         Args:
             nbt_1710: Słownik NBT z wersji 1.7.10
@@ -76,17 +79,20 @@ class EnderChestNBTConverter(BaseEnderStorageNBTConverter):
             owner_str = nbt_1710.get('owner', 'global')
             converted['Frequency'] = self._convert_frequency(freq_int, owner_str)
             
-            # Konwersja rotacji (0-3)
-            if 'rotation' in nbt_1710:
+            # Konwersja rotacji (0-3) - w NBT to 'rot', nie 'rotation'
+            if 'rot' in nbt_1710:
+                converted['rotation'] = nbt_1710['rot']
+            elif 'rotation' in nbt_1710:
                 converted['rotation'] = nbt_1710['rotation']
             
-            # Konwersja inventory (Items)
+            # Konwersja inventory (Items) - wspoldzielone przez wszystkie skrzynie o tej samej freq
+            # W 1.7.10 Items sa w storage managerze, nie w NTE bloku
+            # Ale jesli sa w NBT, przekonwertuj
             if 'Items' in nbt_1710 and nbt_1710['Items']:
                 items = nbt_1710['Items']
                 if isinstance(items, list):
                     converted['Items'] = self._convert_inventory(items)
                 else:
-                    # Niekonieczny format - zapisz jak jest
                     converted['Items'] = items
             
             # Dodaj id Tile Entity dla 1.18.2
@@ -99,5 +105,5 @@ class EnderChestNBTConverter(BaseEnderStorageNBTConverter):
             return self._create_result(converted, success=True)
             
         except Exception as e:
-            self._add_error(f"Error converting EnderChest NBT: {str(e)}")
+            self._add_error(f"Error converting Ender Chest NBT: {str(e)}")
             return self._create_result(success=False)

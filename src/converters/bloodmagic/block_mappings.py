@@ -83,7 +83,14 @@ BLOOD_RUNE_META_MAPPING: Dict[int, str] = {
 }
 
 # Mapowanie Tile Entity IDs
+# UWAGA: TE ID na mapie 1.7.10 to "containerAltar" i "containerMasterStone"
+# (zgodnie z kodem źródłowym: WayofTime/alchemicalWizardry/common/block/BlockAltar.java)
 TE_ID_MAPPING: Dict[str, str] = {
+    # Rzeczywiste TE ID z mapy
+    "containerAltar": "bloodmagic:altar",
+    "containerMasterStone": "bloodmagic:master_ritual_stone",
+    "TileSoulJar": "bloodmagic:soul_snare",  # TODO: zweryfikować w 1.18.2
+    # Oczekiwane TE ID (fallback)
     "Altar": "bloodmagic:altar",
     "MasterStone": "bloodmagic:master_ritual_stone",
     "SoulForge": None,  # Usunięty

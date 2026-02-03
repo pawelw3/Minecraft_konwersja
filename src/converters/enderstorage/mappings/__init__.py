@@ -296,7 +296,13 @@ def get_all_enderstorage_items() -> List[str]:
 
 def is_enderstorage_block(block_id: str) -> bool:
     """Sprawdza czy blok jest blokiem EnderStorage"""
-    return block_id in BLOCK_MAPPINGS or block_id.startswith("EnderStorage:")
+    # Standardowe ID bloków
+    if block_id in BLOCK_MAPPINGS or block_id.startswith("EnderStorage:"):
+        return True
+    # TE ID używane na mapie (zamiast Block ID)
+    if block_id in ["Ender Chest", "Ender Tank"]:
+        return True
+    return False
 
 
 def is_enderstorage_item(item_id: str) -> bool:
