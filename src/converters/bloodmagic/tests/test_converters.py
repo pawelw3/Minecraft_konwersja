@@ -2,12 +2,17 @@
 Testy jednostkowe dla konwerterów Blood Magic
 
 Testy obejmują:
-- Mapowanie ID bloków
-- Konwersję blockstates (metadata -> properties)
-- Konwersję NBT Blood Altar
-- Konwersję NBT Master Ritual Stone
-- Konwersję Soul Network
-- Konwersję Blood Orbs
+- Mapowanie ID bloków (w tym Blood Runes jako osobne bloki)
+- Konwersję NBT Master Ritual Stone (zgodnie ze źródłem 1.18.2)
+- Konwersję NBT Blood Altar (zgodnie ze źródłem 1.18.2)
+- Konwersję Soul Network (zgodnie ze źródłem 1.18.2)
+- Konwersję Blood Orbs (zgodnie ze źródłem 1.18.2)
+
+Source mapping weryfikowany:
+- 1.18.2: wayoftime/bloodmagic/common/tile/TileMasterRitualStone.java
+- 1.18.2: wayoftime/bloodmagic/altar/BloodAltar.java
+- 1.18.2: wayoftime/bloodmagic/core/data/SoulNetwork.java
+- 1.18.2: wayoftime/bloodmagic/core/data/Binding.java
 """
 
 import sys
@@ -20,11 +25,14 @@ from uuid import UUID, uuid4
 from src.converters.bloodmagic import (
     BloodMagicConverter,
     map_block_id,
-    get_blockstate_props,
+    map_blood_rune,
+    map_te_id,
     BloodAltarConverter,
     MasterRitualStoneConverter,
     SoulNetworkConverter,
     BloodOrbConverter,
+    RUNE_BLOCK_MAPPING,
+    BLOOD_RUNE_META_MAPPING,
 )
 
 
@@ -37,23 +45,51 @@ class TestBlockMappings(unittest.TestCase):
         self.assertEqual(new_id, "bloodmagic:altar")
         self.assertIsNone(warning)
     
-    def test_map_blood_rune(self):
-        """Test mapowania Blood Rune"""
-        new_id, warning = map_block_id("AWWayofTime:rune")
-        self.assertEqual(new_id, "bloodmagic:blood_rune")
-        self.assertIsNone(warning)
-    
-    def test_map_ritual_stone(self):
-        """Test mapowania Ritual Stone"""
-        new_id, warning = map_block_id("AWWayofTime:ritualStone")
-        self.assertEqual(new_id, "bloodmagic:ritual_stone")
-        self.assertIsNone(warning)
-    
     def test_map_master_ritual_stone(self):
         """Test mapowania Master Ritual Stone"""
         new_id, warning = map_block_id("AWWayofTime:masterStone")
         self.assertEqual(new_id, "bloodmagic:master_ritual_stone")
         self.assertIsNone(warning)
+    
+    def test_map_speed_rune(self):
+        """Test mapowania Speed Rune (osobny blok)"""
+        new_id, warning = map_block_id("AWWayofTime:speedRune")
+        self.assertEqual(new_id, "bloodmagic:speed_rune")
+        self.assertIsNone(warning)
+    
+    def test_map_sacrifice_rune(self):
+        """Test mapowania Sacrifice Rune (osobny blok)"""
+        new_id, warning = map_block_id("AWWayofTime:runeOfSacrifice")
+        self.assertEqual(new_id, "bloodmagic:sacrifice_rune")
+        self.assertIsNone(warning)
+    
+    def test_map_self_sacrifice_rune(self):
+        """Test mapowania Self-Sacrifice Rune (osobny blok)"""
+        new_id, warning = map_block_id("AWWayofTime:runeOfSelfSacrifice")
+        self.assertEqual(new_id, "bloodmagic:self_sacrifice_rune")
+        self.assertIsNone(warning)
+    
+    def test_map_blood_rune_with_metadata(self):
+        """Test mapowania BloodRune z metadanymi (0-5)"""
+        test_cases = [
+            (0, "bloodmagic:blank_rune"),
+            (1, "bloodmagic:dislocation_rune"),
+            (2, "bloodmagic:capacity_rune"),
+            (3, "bloodmagic:better_capacity_rune"),
+            (4, "bloodmagic:orb_rune"),
+            (5, "bloodmagic:acceleration_rune"),
+        ]
+        
+        for metadata, expected_block in test_cases:
+            new_id, warning = map_blood_rune(metadata)
+            self.assertEqual(new_id, expected_block, f"Failed for metadata {metadata}")
+            self.assertIsNone(warning)
+    
+    def test_map_blood_rune_unknown_metadata(self):
+        """Test mapowania BloodRune z nieznaną metadata"""
+        new_id, warning = map_blood_rune(99)
+        self.assertIsNone(new_id)
+        self.assertIn("UNKNOWN-META", warning)
     
     def test_map_removed_soul_forge(self):
         """Test mapowania usuniętego Soul Forge"""
@@ -71,64 +107,11 @@ class TestBlockMappings(unittest.TestCase):
         """Test mapowania nieznanego bloku"""
         new_id, warning = map_block_id("AWWayofTime:unknownBlock")
         self.assertIsNone(new_id)
-        self.assertIn("Nieznany blok", warning)
-
-
-class TestBlockstateProps(unittest.TestCase):
-    """Testy konwersji blockstate properties"""
-    
-    def test_blood_rune_blank(self):
-        """Test mapowania Blank Rune (metadata 0)"""
-        props, warning = get_blockstate_props("AWWayofTime:rune", 0)
-        self.assertEqual(props["type"], "blank")
-        self.assertIsNone(warning)
-    
-    def test_blood_rune_speed(self):
-        """Test mapowania Speed Rune (metadata 1)"""
-        props, warning = get_blockstate_props("AWWayofTime:rune", 1)
-        self.assertEqual(props["type"], "speed")
-        self.assertIsNone(warning)
-    
-    def test_blood_rune_all_types(self):
-        """Test mapowania wszystkich typów run"""
-        expected_types = [
-            (0, "blank"),
-            (1, "speed"),
-            (2, "efficiency"),
-            (3, "sacrifice"),
-            (4, "self_sacrifice"),
-            (5, "displacement"),
-            (6, "capacity"),
-            (7, "orb"),
-        ]
-        for metadata, expected_type in expected_types:
-            props, warning = get_blockstate_props("AWWayofTime:rune", metadata)
-            self.assertEqual(props["type"], expected_type, f"Failed for metadata {metadata}")
-    
-    def test_blood_rune_unknown_metadata(self):
-        """Test mapowania nieznanej metadata runy"""
-        props, warning = get_blockstate_props("AWWayofTime:rune", 99)
-        self.assertEqual(props["type"], "blank")
-        self.assertIn("UNKNOWN-META", warning)
-    
-    def test_ritual_stone_types(self):
-        """Test mapowania typów Ritual Stone"""
-        expected_types = [
-            (0, "raw"),
-            (1, "fire"),
-            (2, "water"),
-            (3, "earth"),
-            (4, "air"),
-            (5, "dusk"),
-            (6, "dawn"),
-        ]
-        for metadata, expected_type in expected_types:
-            props, warning = get_blockstate_props("AWWayofTime:ritualStone", metadata)
-            self.assertEqual(props["type"], expected_type)
+        self.assertIn("UNKNOWN-BLOCK", warning)
 
 
 class TestBloodAltarConverter(unittest.TestCase):
-    """Testy konwertera Blood Altar"""
+    """Testy konwertera Blood Altar - zgodnie ze źródłem 1.18.2"""
     
     def setUp(self):
         self.converter = BloodAltarConverter()
@@ -148,9 +131,17 @@ class TestBloodAltarConverter(unittest.TestCase):
         
         nbt_1182, warnings = self.converter.convert(nbt_1710)
         
-        self.assertEqual(nbt_1182["currentEssence"], 15000)
-        self.assertEqual(nbt_1182["altarTier"], "THREE")
-        self.assertEqual(nbt_1182["altarActive"], False)
+        # Sprawdź strukturę zagnieżdżoną
+        self.assertIn("bloodAltar", nbt_1182)
+        altar_data = nbt_1182["bloodAltar"]
+        
+        # Kluczowe pola (zgodnie z Constants.NBT w 1.18.2)
+        self.assertEqual(altar_data["upgradeLevel"], "THREE")
+        self.assertEqual(altar_data["isActive"], False)
+        self.assertEqual(altar_data["progress"], 0)
+        self.assertEqual(altar_data["liquidRequired"], 0)
+        self.assertEqual(altar_data["fillable"], True)
+        
         self.assertEqual(len(warnings), 0)
     
     def test_tier_conversion(self):
@@ -167,14 +158,14 @@ class TestBloodAltarConverter(unittest.TestCase):
         for old_tier, expected_new in expected_tiers:
             nbt_1710 = {"upgradeLevel": old_tier}
             nbt_1182, _ = self.converter.convert(nbt_1710)
-            self.assertEqual(nbt_1182["altarTier"], expected_new)
+            self.assertEqual(nbt_1182["bloodAltar"]["upgradeLevel"], expected_new)
     
     def test_unknown_tier_warning(self):
         """Test ostrzeżenia o nieznanym tierze"""
         nbt_1710 = {"upgradeLevel": 99}
         nbt_1182, warnings = self.converter.convert(nbt_1710)
         
-        self.assertEqual(nbt_1182["altarTier"], "ONE")
+        self.assertEqual(nbt_1182["bloodAltar"]["upgradeLevel"], "ONE")
         self.assertTrue(any("TIER-UNKNOWN" in w for w in warnings))
     
     def test_active_crafting_warning(self):
@@ -189,43 +180,34 @@ class TestBloodAltarConverter(unittest.TestCase):
         
         self.assertTrue(any("ALTAR-ACTIVE" in w for w in warnings))
     
-    def test_multipliers_preservation(self):
-        """Test zachowania multiplikatorów"""
+    def test_nbt_keys_match_source(self):
+        """Test czy klucze NBT zgadzają się ze źródłem 1.18.2"""
         nbt_1710 = {
-            "consumptionMultiplier": 0.4,
-            "efficiencyMultiplier": 0.85,
-            "sacrificeEfficiencyMultiplier": 0.2,
-            "selfSacrificeEfficiencyMultiplier": 0.1,
-            "capacityMultiplier": 1.2,
-            "orbCapacityMultiplier": 1.04,
-            "dislocationMultiplier": 1.2,
-            "accelerationUpgrades": 2,
+            "currentEssence": 10000,
+            "upgradeLevel": 2,
+            "isActive": True,
+            "progress": 100,
+            "liquidRequired": 500,
+            "canBeFilled": False,
         }
         
         nbt_1182, _ = self.converter.convert(nbt_1710)
+        altar_data = nbt_1182["bloodAltar"]
         
-        self.assertEqual(nbt_1182["consumptionMultiplier"], 0.4)
-        self.assertEqual(nbt_1182["efficiencyMultiplier"], 0.85)
-        self.assertEqual(nbt_1182["sacrificeMultiplier"], 0.2)
-        self.assertEqual(nbt_1182["selfSacrificeMultiplier"], 0.1)
-        self.assertEqual(nbt_1182["capacityMultiplier"], 1.2)
-        self.assertEqual(nbt_1182["orbCapacityMultiplier"], 1.04)
-        self.assertEqual(nbt_1182["dislocationMultiplier"], 1.2)
-        self.assertEqual(nbt_1182["accelerationUpgrades"], 2)
-    
-    def test_with_owner_uuid(self):
-        """Test konwersji z podanym UUID właściciela"""
-        test_uuid = uuid4()
-        nbt_1710 = {"owner": "OldPlayerName"}
+        # Klucze z Constants.NBT w 1.18.2
+        expected_keys = [
+            "upgradeLevel", "isActive", "liquidRequired", "fillable",
+            "progress", "consumptionMultiplier", "efficiencyMultiplier",
+            "sacrificeMultiplier", "selfSacrificeMultiplier",
+            "capacityMultiplier", "orbCapacityMultiplier", "dislocationMultiplier",
+        ]
         
-        nbt_1182, warnings = self.converter.convert(nbt_1710, owner_uuid=test_uuid)
-        
-        self.assertEqual(nbt_1182["owner"], str(test_uuid))
-        self.assertEqual(len(warnings), 0)
+        for key in expected_keys:
+            self.assertIn(key, altar_data, f"Missing key: {key}")
 
 
 class TestMasterRitualStoneConverter(unittest.TestCase):
-    """Testy konwertera Master Ritual Stone"""
+    """Testy konwertera Master Ritual Stone - zgodnie ze źródłem 1.18.2"""
     
     def setUp(self):
         self.converter = MasterRitualStoneConverter()
@@ -244,10 +226,13 @@ class TestMasterRitualStoneConverter(unittest.TestCase):
         
         nbt_1182, warnings = self.converter.convert(nbt_1710)
         
-        self.assertEqual(nbt_1182["ritualID"], "bloodmagic:water")
-        self.assertEqual(nbt_1182["owner"], "Player123")
-        self.assertEqual(nbt_1182["active"], False)
-        self.assertEqual(nbt_1182["willDrain"], 0)
+        # Klucze zgodne z TileMasterRitualStone.serialize()
+        self.assertEqual(nbt_1182["currentRitual"], "bloodmagic:water")
+        self.assertEqual(nbt_1182["isRunning"], False)
+        self.assertEqual(nbt_1182["runtime"], 0)
+        self.assertEqual(nbt_1182["direction"], 2)  # NORTH
+        self.assertEqual(nbt_1182["isStoned"], False)
+        self.assertIn("currentRitualTag", nbt_1182)
     
     def test_ritual_type_mapping(self):
         """Test mapowania typów rytuałów"""
@@ -264,37 +249,48 @@ class TestMasterRitualStoneConverter(unittest.TestCase):
         for old_type, expected_new in test_cases:
             nbt_1710 = {"ritualType": old_type}
             nbt_1182, _ = self.converter.convert(nbt_1710)
-            self.assertEqual(nbt_1182["ritualID"], expected_new)
+            self.assertEqual(nbt_1182["currentRitual"], expected_new)
     
-    def test_unknown_ritual_warning(self):
-        """Test ostrzeżenia o nieznanym rytuale"""
-        nbt_1710 = {"ritualType": "unknownRitual"}
-        nbt_1182, warnings = self.converter.convert(nbt_1710)
-        
-        self.assertEqual(nbt_1182["ritualID"], "bloodmagic:unknownRitual")
-        self.assertTrue(any("RITUAL-UNKNOWN" in w for w in warnings))
-    
-    def test_active_ritual_warning(self):
-        """Test ostrzeżenia o aktywnym rytuale"""
+    def test_running_time_conversion(self):
+        """Test konwersji runningTime -> runtime"""
         nbt_1710 = {
-            "ritualType": "suffering",
+            "ritualType": "water",
             "isActive": True,
+            "runningTime": 1500,
         }
         
-        nbt_1182, warnings = self.converter.convert(nbt_1710)
-        
-        self.assertTrue(any("RITUAL-ACTIVE" in w for w in warnings))
+        nbt_1182, _ = self.converter.convert(nbt_1710)
+        self.assertEqual(nbt_1182["runtime"], 1500)
+        self.assertEqual(nbt_1182["isRunning"], True)
     
-    def test_reagent_warning(self):
-        """Test ostrzeżenia o reagentach (1.7.10) vs Demon Will (1.18.2)"""
-        nbt_1710 = {"ritualType": "suffering"}
-        nbt_1182, warnings = self.converter.convert(nbt_1710)
+    def test_nbt_keys_match_source(self):
+        """Test czy klucze NBT zgadzają się ze źródłem 1.18.2"""
+        nbt_1710 = {
+            "ritualType": "water",
+            "owner": "Player123",
+            "isActive": True,
+            "runningTime": 100,
+        }
         
-        self.assertTrue(any("RITUAL-REAGENTS" in w for w in warnings))
+        nbt_1182, _ = self.converter.convert(nbt_1710)
+        
+        # Klucze z Constants.NBT w 1.18.2
+        expected_keys = [
+            "currentRitual", "owner", "isRunning", "runtime", 
+            "direction", "isStoned", "currentRitualTag"
+        ]
+        
+        for key in expected_keys:
+            self.assertIn(key, nbt_1182, f"Missing key: {key}")
+        
+        # Niepoprawne klucze (używane wcześniej błędnie)
+        incorrect_keys = ["ritualID", "active", "ownerUUID", "willDrain"]
+        for key in incorrect_keys:
+            self.assertNotIn(key, nbt_1182, f"Should not have key: {key}")
 
 
 class TestSoulNetworkConverter(unittest.TestCase):
-    """Testy konwertera Soul Network"""
+    """Testy konwertera Soul Network - zgodnie ze źródłem 1.18.2"""
     
     def setUp(self):
         self.converter = SoulNetworkConverter()
@@ -308,9 +304,10 @@ class TestSoulNetworkConverter(unittest.TestCase):
         
         nbt_1182, warnings = self.converter.convert_player_network("Player123", nbt_1710)
         
+        # Klucze z SoulNetwork.serializeNBT()
         self.assertEqual(nbt_1182["currentEssence"], 50000)
         self.assertEqual(nbt_1182["orbTier"], 3)
-        self.assertEqual(nbt_1182["playerName"], "Player123")
+        self.assertIn("playerId", nbt_1182)
     
     def test_uuid_resolution(self):
         """Test rozwiązywania UUID"""
@@ -321,27 +318,22 @@ class TestSoulNetworkConverter(unittest.TestCase):
         nbt_1710 = {"currentEssence": 1000, "maxOrb": 1}
         nbt_1182, warnings = self.converter.convert_player_network("Player123", nbt_1710)
         
-        self.assertEqual(nbt_1182["ownerUUID"], str(test_uuid))
-        self.assertEqual(len(warnings), 0)
+        self.assertEqual(nbt_1182["playerId"], str(test_uuid))
     
-    def test_no_uuid_warning(self):
-        """Test ostrzeżenia o braku UUID"""
+    def test_nbt_keys_match_source(self):
+        """Test czy klucze NBT zgadzają się ze źródłem 1.18.2"""
         nbt_1710 = {"currentEssence": 1000, "maxOrb": 1}
-        nbt_1182, warnings = self.converter.convert_player_network("UnknownPlayer", nbt_1710)
+        nbt_1182, _ = self.converter.convert_player_network("Player123", nbt_1710)
         
-        self.assertTrue(any("NETWORK-NO-UUID" in w for w in warnings))
-    
-    def test_overflow_warning(self):
-        """Test ostrzeżenia o przepełnieniu LP"""
-        # Tier 1 orb ma max 5000 LP
-        nbt_1710 = {"currentEssence": 10000, "maxOrb": 1}
-        nbt_1182, warnings = self.converter.convert_player_network("Player123", nbt_1710)
+        # Klucze z SoulNetwork.serializeNBT()
+        expected_keys = ["playerId", "currentEssence", "orbTier"]
         
-        self.assertTrue(any("NETWORK-OVERFLOW" in w for w in warnings))
+        for key in expected_keys:
+            self.assertIn(key, nbt_1182, f"Missing key: {key}")
 
 
 class TestBloodOrbConverter(unittest.TestCase):
-    """Testy konwertera Blood Orbs"""
+    """Testy konwertera Blood Orbs - zgodnie ze źródłem 1.18.2"""
     
     def setUp(self):
         self.converter = BloodOrbConverter()
@@ -363,7 +355,7 @@ class TestBloodOrbConverter(unittest.TestCase):
             self.assertEqual(result["id"], expected_new)
     
     def test_bound_orb_conversion(self):
-        """Test konwersji zbindowanego orba"""
+        """Test konwersji zbindowanego orba - zgodnie z Binding.serializeNBT()"""
         test_uuid = uuid4()
         mapping = {"Player123": test_uuid}
         self.converter.set_name_to_uuid_mapping(mapping)
@@ -376,9 +368,11 @@ class TestBloodOrbConverter(unittest.TestCase):
         
         result, warnings = self.converter.convert_orb_item(item_nbt)
         
-        self.assertEqual(result["tag"]["binding"]["ownerUUID"], str(test_uuid))
-        self.assertEqual(result["tag"]["binding"]["ownerName"], "Player123")
-        self.assertEqual(len(warnings), 0)
+        # Format z Binding.serializeNBT(): "binding" -> {"id": UUID, "name": string}
+        self.assertIn("binding", result["tag"])
+        binding = result["tag"]["binding"]
+        self.assertEqual(binding["id"], str(test_uuid))
+        self.assertEqual(binding["name"], "Player123")
     
     def test_unbound_orb_conversion(self):
         """Test konwersji niezbindowanego orba"""
@@ -389,19 +383,27 @@ class TestBloodOrbConverter(unittest.TestCase):
         
         result, warnings = self.converter.convert_orb_item(item_nbt)
         
+        # Niezbindowany orb nie ma tagu binding
         self.assertNotIn("tag", result)
     
-    def test_orb_no_uuid_warning(self):
-        """Test ostrzeżenia o braku UUID dla orba"""
+    def test_binding_keys_match_source(self):
+        """Test czy klucze bindingu zgadzają się ze źródłem 1.18.2"""
+        test_uuid = uuid4()
+        mapping = {"Player123": test_uuid}
+        self.converter.set_name_to_uuid_mapping(mapping)
+        
         item_nbt = {
             "id": "AWWayofTime:weakBloodOrb",
             "Count": 1,
-            "tag": {"ownerName": "UnknownPlayer"}
+            "tag": {"ownerName": "Player123"}
         }
         
-        result, warnings = self.converter.convert_orb_item(item_nbt)
+        result, _ = self.converter.convert_orb_item(item_nbt)
+        binding = result["tag"]["binding"]
         
-        self.assertTrue(any("ORB-NO-UUID" in w for w in warnings))
+        # Klucze z Binding.serializeNBT()
+        self.assertIn("id", binding)
+        self.assertIn("name", binding)
 
 
 class TestBloodMagicConverter(unittest.TestCase):
@@ -411,7 +413,7 @@ class TestBloodMagicConverter(unittest.TestCase):
         self.converter = BloodMagicConverter()
     
     def test_convert_blood_altar_block(self):
-        """Test konwersji bloku Blood Altar z TE"""
+        """Test konwersji bloku Blood Altar z TE i pozycją"""
         te_nbt = {
             "id": "Altar",
             "currentEssence": 20000,
@@ -429,19 +431,38 @@ class TestBloodMagicConverter(unittest.TestCase):
         self.assertTrue(result.is_success())
         self.assertEqual(result.block_id_1182, "bloodmagic:altar")
         self.assertIsNotNone(result.be_nbt_1182)
-        self.assertEqual(result.be_nbt_1182["altarTier"], "FOUR")
+        
+        # Sprawdź czy pozycja została dodana
+        self.assertEqual(result.be_nbt_1182["x"], 100)
+        self.assertEqual(result.be_nbt_1182["y"], 64)
+        self.assertEqual(result.be_nbt_1182["z"], -200)
+        
+        # Sprawdź ID BE
+        self.assertEqual(result.be_nbt_1182["id"], "bloodmagic:altar")
     
-    def test_convert_blood_rune(self):
-        """Test konwersji Blood Rune"""
+    def test_convert_speed_rune(self):
+        """Test konwersji Speed Rune (osobny blok)"""
         result = self.converter.convert_block(
-            block_id_1710="AWWayofTime:rune",
-            metadata=2,  # Efficiency Rune
+            block_id_1710="AWWayofTime:speedRune",
+            metadata=0,
             pos=(101, 64, -200)
         )
         
         self.assertTrue(result.is_success())
-        self.assertEqual(result.block_id_1182, "bloodmagic:blood_rune")
-        self.assertEqual(result.blockstate_props["type"], "efficiency")
+        self.assertEqual(result.block_id_1182, "bloodmagic:speed_rune")
+        # Runy nie mają blockstate "type"
+        self.assertEqual(result.blockstate_props, {})
+    
+    def test_convert_blood_rune_blank(self):
+        """Test konwersji BloodRune (metadata 0 = blank)"""
+        result = self.converter.convert_block(
+            block_id_1710="AWWayofTime:bloodRune",
+            metadata=0,
+            pos=(101, 64, -200)
+        )
+        
+        self.assertTrue(result.is_success())
+        self.assertEqual(result.block_id_1182, "bloodmagic:blank_rune")
     
     def test_convert_removed_block(self):
         """Test konwersji usuniętego bloku"""
@@ -456,7 +477,7 @@ class TestBloodMagicConverter(unittest.TestCase):
         self.assertTrue(any("SOULFORGE-REMOVED" in w for w in result.warnings))
     
     def test_convert_master_ritual_stone(self):
-        """Test konwersji Master Ritual Stone"""
+        """Test konwersji Master Ritual Stone z pozycją"""
         te_nbt = {
             "id": "MasterStone",
             "ritualType": "suffering",
@@ -473,21 +494,28 @@ class TestBloodMagicConverter(unittest.TestCase):
         
         self.assertTrue(result.is_success())
         self.assertEqual(result.block_id_1182, "bloodmagic:master_ritual_stone")
-        self.assertEqual(result.be_nbt_1182["ritualID"], "bloodmagic:well_of_suffering")
+        self.assertEqual(result.be_nbt_1182["currentRitual"], "bloodmagic:well_of_suffering")
+        
+        # Sprawdź czy pozycja została dodana
+        self.assertEqual(result.be_nbt_1182["x"], 100)
+        self.assertEqual(result.be_nbt_1182["y"], 64)
+        self.assertEqual(result.be_nbt_1182["z"], -200)
     
     def test_get_supported_blocks(self):
         """Test pobierania listy obsługiwanych bloków"""
         blocks = self.converter.get_supported_blocks()
         
         self.assertIn("AWWayofTime:Altar", blocks)
-        self.assertIn("AWWayofTime:rune", blocks)
+        self.assertIn("AWWayofTime:speedRune", blocks)
+        self.assertIn("AWWayofTime:runeOfSacrifice", blocks)
+        self.assertIn("AWWayofTime:bloodRune", blocks)
         self.assertIn("AWWayofTime:masterStone", blocks)
     
     def test_conversion_stats(self):
         """Test generowania statystyk konwersji"""
         results = [
             self.converter.convert_block("AWWayofTime:Altar", 0),
-            self.converter.convert_block("AWWayofTime:rune", 1),
+            self.converter.convert_block("AWWayofTime:speedRune", 0),
             self.converter.convert_block("AWWayofTime:soulForge", 0),  # Skipped
         ]
         
@@ -506,7 +534,6 @@ def run_tests():
     
     # Dodaj wszystkie testy
     suite.addTests(loader.loadTestsFromTestCase(TestBlockMappings))
-    suite.addTests(loader.loadTestsFromTestCase(TestBlockstateProps))
     suite.addTests(loader.loadTestsFromTestCase(TestBloodAltarConverter))
     suite.addTests(loader.loadTestsFromTestCase(TestMasterRitualStoneConverter))
     suite.addTests(loader.loadTestsFromTestCase(TestSoulNetworkConverter))

@@ -1,24 +1,19 @@
 """
-Konwerter Soul Network - Blood Magic 1.7.10 -> 1.18.2
+Konwerter Soul Network i Blood Orbs - Blood Magic 1.7.10 -> 1.18.2
 
-Source mapping:
-- 1.7.10: WayofTime/alchemicalWizardry/api/soulNetwork/LifeEssenceNetwork.java
-  - Dane przechowywane w MapStorage (globalne dla świata)
-  - Klucz: "ownerName" (nazwa gracza jako string)
-  - Pola: currentEssence (int), maxOrb (int) - najwyższy użyty tier
-  
-- 1.18.2: wayoftime/bloodmagic/core/data/SoulNetwork.java
-  - Dane przechowywane w Capability (per-gracz)
-  - Klucz: UUID gracza
-  - Pola: currentEssence (int), orbTier (int)
-  
-- 1.18.2: wayoftime/bloodmagic/util/helper/NetworkHelper.java
-  - Zarządzanie sieciami graczy
+Source mapping Soul Network 1.18.2: wayoftime/bloodmagic/core/data/SoulNetwork.java
+- serializeNBT() - linie 263-270
+- deserializeNBT() - linie 272-278
+- Klucze: "playerId" (string UUID), "currentEssence" (int), "orbTier" (int)
 
-Konwersja:
-- ownerName (string) -> UUID (z mapowania nazwa->UUID z playerdata)
-- currentEssence -> currentEssence (bez zmian)
-- maxOrb (int) -> orbTier (int) (bez zmian, ten sam zakres 1-6)
+Source mapping Binding 1.18.2: wayoftime/bloodmagic/core/data/Binding.java
+- serializeNBT() - linie 30-37
+- deserializeNBT() - linie 40-44
+- Klucze: "id" (UUID tag), "name" (string)
+- W ItemStack tag: "binding" (compound)
+
+WAŻNE: Soul Network w 1.18.2 jest przechowywane w BMWorldSavedData (per świat),
+nie w NBT gracza. Konwerter zwraca format pośredni.
 """
 
 from typing import Dict, Any, Optional, Tuple, List
@@ -32,7 +27,7 @@ class SoulNetworkData:
     owner_name: str  # Nazwa gracza z 1.7.10
     owner_uuid: Optional[UUID]  # UUID w 1.18.2
     current_essence: int
-    max_orb_tier: int  # maxOrb z 1.7.10 / orbTier w 1.18.2
+    max_orb_tier: int  # maxOrb z 1.7.10 -> orbTier w 1.18.2
     warnings: List[str]
 
 
@@ -41,7 +36,11 @@ class SoulNetworkConverter:
     Konwerter Soul Network z 1.7.10 na 1.18.2
     
     Soul Network to globalny zbiornik LP dla każdego gracza.
-    Dane są przechowywane w NBT świata, nie w blokach.
+    W 1.18.2 dane są przechowywane w BMWorldSavedData.
+    
+    Source mapping:
+    - 1.7.10: WayofTime/alchemicalWizardry/api/soulNetwork/LifeEssenceNetwork.java
+    - 1.18.2: wayoftime/bloodmagic/core/data/SoulNetwork.java
     """
     
     # Mapowanie nazwy gracza na UUID (do uzupełnienia z playerdata)
@@ -79,24 +78,29 @@ class SoulNetworkConverter:
             
         Returns:
             Tuple (nbt_1182, warnings)
+            
+        Note:
+            Format wyjściowy to format pośredni. Właściwy zapis w 1.18.2
+            wymaga umieszczenia danych w BMWorldSavedData.
         """
         self.warnings = []
         result = {}
         
-        # Podstawowe pola
+        # Kluczowe pola
         result["currentEssence"] = nbt_1710.get("currentEssence", 0)
         result["orbTier"] = nbt_1710.get("maxOrb", 0)
-        result["playerName"] = owner_name  # Zachowana dla czytelności
         
         # Konwersja nazwy na UUID
         owner_uuid = self._resolve_uuid(owner_name)
         
         if owner_uuid:
-            result["ownerUUID"] = str(owner_uuid)
+            result["playerId"] = str(owner_uuid)
         else:
+            # Nie znaleziono UUID
+            result["playerId"] = owner_name  # Fallback
             self.warnings.append(
                 f"BM-W-NETWORK-NO-UUID: Nie znaleziono UUID dla gracza '{owner_name}' - "
-                f"Soul Network może nie działać poprawnie w 1.18.2"
+                f"Soul Network wymaga ręcznej konwersji"
             )
         
         # Sprawdź czy gracz ma LP w sieci
@@ -105,8 +109,7 @@ class SoulNetworkConverter:
             if result["currentEssence"] > max_capacity:
                 self.warnings.append(
                     f"BM-W-NETWORK-OVERFLOW: Gracz '{owner_name}' ma {result['currentEssence']} LP, "
-                    f"ale jego orb tier {result['orbTier']} pozwala na max {max_capacity} - "
-                    f"nadmiar może zostać utracony"
+                    f"ale orb tier {result['orbTier']} pozwala na max {max_capacity}"
                 )
         
         return result, self.warnings
@@ -138,7 +141,7 @@ class SoulNetworkConverter:
             if owner_uuid:
                 result[str(owner_uuid)] = nbt_1182
             else:
-                # Fallback na nazwę jeśli brak UUID
+                # Fallback na nazwę
                 result[owner_name] = nbt_1182
         
         return result, all_warnings
@@ -168,7 +171,7 @@ class SoulNetworkConverter:
         """
         Pobierz maksymalną pojemność dla danego tieru orba
         
-        Source: SoulNetworkHandler.getMaximumForOrbTier()
+        Source: SoulNetworkHandler.getMaximumForOrbTier() (1.7.10)
         
         Args:
             tier: Tier orba (1-6)
@@ -177,13 +180,13 @@ class SoulNetworkConverter:
             Maksymalna pojemność w LP
         """
         capacities = {
-            0: 0,  # Brak orba
-            1: 5000,  # Weak
-            2: 25000,  # Apprentice
-            3: 150000,  # Magician
-            4: 1000000,  # Master
-            5: 10000000,  # Archmage
-            6: 30000000,  # Transcendent (tylko 1.7.10, w 1.18.2 traktowany jako Archmage)
+            0: 0,
+            1: 5000,
+            2: 25000,
+            3: 150000,
+            4: 1000000,
+            5: 10000000,
+            6: 30000000,
         }
         return capacities.get(tier, 5000)
 
@@ -192,7 +195,12 @@ class BloodOrbConverter:
     """
     Konwerter Blood Orbs (item NBT) z 1.7.10 na 1.18.2
     
-    Blood Orbs przechowują binding do gracza w swoim NBT.
+    Source 1.18.2: wayoftime/bloodmagic/core/data/Binding.java
+    - Klucze NBT: "id" (UUID), "name" (string)
+    - W ItemStack tag: "binding" (compound)
+    
+    Source 1.7.10: IBloodOrb interfejs i implementacje
+    - Klucz NBT: "ownerName" (string)
     """
     
     # Mapowanie ID orbów
@@ -240,31 +248,27 @@ class BloodOrbConverter:
         old_owner = old_tag.get("ownerName", "")
         
         if old_owner:
-            # Orb jest zbindowany
+            # Orb jest zbindowany - konwertuj do formatu 1.18.2
             owner_uuid = self._resolve_uuid(old_owner)
             
             if owner_uuid:
+                # Format 1.18.2: "binding" -> {"id": UUID, "name": string}
                 result["tag"] = {
                     "binding": {
-                        "ownerUUID": str(owner_uuid),
-                        "ownerName": old_owner,
+                        "id": str(owner_uuid),  # UUID jako string
+                        "name": old_owner,
                     }
                 }
             else:
-                # Nie znaleziono UUID - zachowujemy starą nazwę
+                # Nie znaleziono UUID - zapisz tylko nazwę
                 result["tag"] = {
                     "binding": {
-                        "ownerName": old_owner,
+                        "name": old_owner,
                     }
                 }
                 self.warnings.append(
-                    f"BM-W-ORB-NO-UUID: Nie znaleziono UUID dla właściciela '{old_owner}' - "
-                    f"orb może wymagać ponownego zbindowania"
+                    f"BM-W-ORB-NO-UUID: Nie znaleziono UUID dla właściciela '{old_owner}'"
                 )
-        else:
-            # Orb niezbindowany - przenosimy pozostałe tagi
-            if old_tag:
-                result["tag"] = old_tag.copy()
         
         return result, self.warnings
     

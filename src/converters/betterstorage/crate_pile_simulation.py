@@ -8,11 +8,13 @@ Crate Pile to system magazynowania gdzie:
 """
 
 import os
-import struct
+import gzip
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, Any
-import gzip
+
+from .nbt_parser import parse_nbt_file, parse_nbt_bytes
+from .item_id_mapping import convert_crate_stack
 
 
 @dataclass
@@ -158,20 +160,31 @@ class CratePileLoader:
             with open(file_path, 'rb') as f:
                 raw_data = f.read()
             
-            # Próbujemy odczytać jako NBT
-            nbt_data = self._parse_nbt(raw_data)
+            # Sprawdzamy czy to gzip
+            if raw_data[:2] == b'\x1f\x8b':  # Magic number dla gzip
+                try:
+                    raw_data = gzip.decompress(raw_data)
+                except Exception:
+                    pass
+            
+            # Parsujemy NBT
+            nbt_data = parse_nbt_bytes(raw_data)
             
             if nbt_data is None:
                 return None
             
             # Ekstrahujemy dane
-            data = nbt_data.get('data', {})
+            # UWAGA: W prawdziwych plikach zamiast 'items' jest 'stacks'
+            # i używane są numeryczne ID zamiast string ID
+            # Struktura: {'data': {'stacks': [...], 'numCrates': N, 'map': {...}}}
+            inner_data = nbt_data.get('data', nbt_data)  # Fallback jeśli brak zagnieżdżenia
+            stacks = inner_data.get('stacks', [])
+            items = [convert_crate_stack(stack) for stack in stacks]
+            num_crates = inner_data.get('numCrates', 0)
             
-            items = data.get('items', [])
-            num_crates = data.get('numCrates', 0)
-            
-            # Region
-            region_data = data.get('region', {})
+            # Region może być w 'map' -> 'region' lub bezpośrednio w 'region'
+            map_data = inner_data.get('map', {})
+            region_data = map_data.get('region', inner_data.get('region', {}))
             region = None
             if region_data:
                 region = CratePileRegion(
@@ -193,46 +206,6 @@ class CratePileLoader:
         except Exception as e:
             print(f"Error reading {file_path}: {e}")
             return None
-    
-    def _parse_nbt(self, data: bytes) -> Optional[Dict]:
-        """
-        Prosty parser NBT (uncompressed lub gzip).
-        Dla pełnego parsera użyć zewnętrznej biblioteki nbtlib.
-        """
-        # Sprawdzamy czy to gzip
-        if data[:2] == b'\x1f\x8b':  # Magic number dla gzip
-            try:
-                data = gzip.decompress(data)
-            except Exception:
-                pass
-        
-        # Tutaj użylibyśmy pełnego parsera NBT
-        # Na razie zwracamy placeholder - w prawdziwej implementacji
-        # użylibyśmy biblioteki nbtlib lub podobnej
-        #
-        # Struktura oczekiwana:
-        # TAG_Compound("data"):
-        #   TAG_List("items"): lista ItemStack
-        #   TAG_Int("numCrates"): liczba crate'ów
-        #   TAG_Compound("region"): region
-        
-        # Placeholder - zwracamy pusty dict
-        # W prawdziwej implementacji parsujemy NBT
-        return self._mock_parse_nbt(data)
-    
-    def _mock_parse_nbt(self, data: bytes) -> Dict:
-        """
-        Mock dla parsowania NBT - używane w testach.
-        W produkcji użyć prawdziwego parsera.
-        """
-        # TODO: Zastąpić prawdziwym parserem NBT
-        return {
-            'data': {
-                'items': [],
-                'numCrates': 1,
-                'region': None
-            }
-        }
     
     def get_pile(self, pile_id: int) -> Optional[CratePileData]:
         """Pobiera dane pojedynczego pile (z cache lub z dysku)"""

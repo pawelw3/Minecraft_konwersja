@@ -32,29 +32,32 @@
   - Plik: N/A (brak kodu źródłowego w mod_src)
   - Opis: Na podstawie dokumentacji FTB Wiki - ołtarz przechowuje LP w swoim wewnętrznym buforze i przetwarza itemy w slotach wejściowych.
 
-### Blood Rune
-- **ID:** `AWWayofTime:rune`
+### Blood Rune (z metadanymi)
+- **ID:** `AWWayofTime:bloodRune`
 - **Typ:** Block (dekoracyjny + funkcjonalny)
-- **Metadata:** 0-7 (różne typy run)
-- **Opis działania:** Runy są elementem struktury ołtarza. Każdy typ runy daje inny efekt:
-  - 0: Blank Rune - podstawowa runa
-  - 1: Speed Rune - zwiększa szybkość transmutacji
-  - 2: Efficiency Rune - zwiększa efektywność LP
-  - 3: Sacrifice Rune - zwiększa LP z ofiar
-  - 4: Self-Sacrifice Rune - zwiększa LP z własnych obrażeń
-  - 5: Displacement Rune - zwiększa zasięg transferu LP
-  - 6: Capacity Rune - zwiększa pojemność ołtarza
-  - 7: Augmented Capacity Rune - znacznie zwiększa pojemność
-- **Dowody z internetu:**
-  - Źródło: https://ftb.fandom.com/wiki/Blood_Rune - "Runes are used to upgrade the Blood Altar. Each type provides a different bonus."
+- **Metadata:** 0-5 (różne typy run) - Source: BloodRune.java getRuneEffect()
+- **Opis działania:** Runy są elementem struktury ołtarza. W 1.7.10 metadata mapuje się na efekt runy:
+  - 0: Blank Rune → effect 0
+  - 1: Dislocation Rune → effect 5
+  - 2: Capacity Rune → effect 6  
+  - 3: Augmented Capacity Rune → effect 7
+  - 4: Orb Capacity Rune → effect 8
+  - 5: Acceleration Rune → effect 9
+- **WAŻNE:** W 1.18.2 każda runa to osobny blok (nie blockstate).
+
+### Osobne bloki run (Speed, Efficiency, Sacrifice, Self-Sacrifice)
+W 1.7.10 oprócz `bloodRune` z metadanymi, istnieją osobne bloki dla:
+- `AWWayofTime:speedRune` → `bloodmagic:speed_rune`
+- `AWWayofTime:efficiencyRune` → `bloodmagic:efficiency_rune`
+- `AWWayofTime:runeOfSacrifice` → `bloodmagic:sacrifice_rune`
+- `AWWayofTime:runeOfSelfSacrifice` → `bloodmagic:self_sacrifice_rune`
+
+W 1.18.2 wszystkie runy są osobnymi blokami (nie używają blockstate "type").
 
 ### Ritual Stone
 - **ID:** `AWWayofTime:ritualStone`
-- **Typ:** Block
-- **Metadata:** 0-3 (kierunek / typ)
-- **Opis działania:** Element struktury rytuałów. Ritual Stones są układane wokół Master Ritual Stone w specyficznych wzorach aby aktywować różne rytuały. Wzory rytuałów są predefiniowane i wymagają odpowiedniej liczby run.
-- **Dowody z internetu:**
-  - Źródło: https://ftb.fandom.com/wiki/Ritual_Stone - "Used to build ritual structures around a Master Ritual Stone."
+- **Typ:** Block (w 1.7.10 z metadanymi, w 1.18.2 osobne bloki lub warianty)
+- **Opis działania:** Element struktury rytuałów. Ritual Stones są układane wokół Master Ritual Stone w specyficznych wzorach aby aktywować różne rytuały.
 
 ### Master Ritual Stone
 - **ID:** `AWWayofTime:masterStone`
@@ -103,15 +106,10 @@
 
 ## 1.7.10 - Tile Entities
 
-### TileEntityAltar
-- **ID:** `Altar` (rejestracja: `AWWayofTime:Altar`)
-- **Opis działania:** Główne Tile Entity dla Blood Altar. Przechowuje:
-  - Aktualną ilość LP (Life Essence)
-  - Maksymalną pojemność LP (zależną od tieru i run)
-  - Slot itemu do transmutacji
-  - Postęp transmutacji
-  - Właściciela ołtarza (opcjonalnie)
-- **Struktura NBT:**
+### TileEntityAltar (1.7.10) / TileAltar (1.18.2)
+- **ID:** `Altar` (1.7.10) → `bloodmagic:altar` (1.18.2)
+- **Opis działania:** Główne Tile Entity dla Blood Altar.
+- **Struktura NBT 1.7.10:**
   ```nbt
   {
     "id": "Altar",
@@ -120,32 +118,54 @@
     "upgradeLevel": int,          // Tier ołtarza (1-5)
     "isActive": boolean,          // Czy transmutacja jest aktywna
     "progress": int,              // Postęp transmutacji
-    "liquidRequired": int,        // Wymagana ilość LP dla receptury
+    "liquidRequired": int,        // Wymagana ilość LP
     "canBeFilled": boolean,       // Czy można napełniać
-    "owner": string               // UUID właściciela (opcjonalnie)
+    "owner": string               // Nazwa właściciela (opcjonalnie)
   }
   ```
-- **Dowody z internetu:**
-  - Źródło: https://github.com/WayofTime/BloodMagic/issues/558 - dyskusja o strukturze NBT i LP
-  - Źródło: FTB Wiki - "The Blood Altar stores LP and item data in its NBT."
+- **Struktura NBT 1.18.2:** (Source: BloodAltar.java)
+  ```nbt
+  {
+    "id": "bloodmagic:altar",
+    "x": int, "y": int, "z": int,
+    "bloodAltar": {
+      "upgradeLevel": string,     // "ONE", "TWO", "THREE", "FOUR", "FIVE"
+      "isActive": boolean,
+      "liquidRequired": int,
+      "fillable": boolean,
+      "progress": int,
+      // ... (pozostałe multiplikatory)
+    }
+  }
+  ```
 
-### TileEntityMasterStone
-- **ID:** `MasterStone` (rejestracja: `AWWayofTime:masterStone`)
-- **Opis działania:** Tile Entity dla Master Ritual Stone. Przechowuje:
-  - Aktywowany rytuał (typ)
-  - Właściciela (gracza którego Soul Network jest używane)
-  - Status aktywacji
-  - Zużycie LP na tick/operację
-- **Struktura NBT:**
+### TileEntityMasterStone (1.7.10) / TileMasterRitualStone (1.18.2)
+- **ID:** `MasterStone` (1.7.10) → `bloodmagic:master_ritual_stone` (1.18.2)
+- **Opis działania:** Tile Entity dla Master Ritual Stone.
+- **Struktura NBT 1.7.10:**
   ```nbt
   {
     "id": "MasterStone",
     "x": int, "y": int, "z": int,
     "ritualType": string,         // Typ aktywowanego rytuału
-    "owner": string,              // UUID właściciela (Soul Network)
+    "owner": string,              // Nazwa właściciela
     "isActive": boolean,          // Czy rytuał jest aktywny
-    "cooldown": int,              // Cooldown między operacjami
+    "cooldown": int,              // Cooldown
     "runningTime": int            // Czas działania rytuału
+  }
+  ```
+- **Struktura NBT 1.18.2:** (Source: TileMasterRitualStone.java, Constants.NBT)
+  ```nbt
+  {
+    "id": "bloodmagic:master_ritual_stone",
+    "x": int, "y": int, "z": int,
+    "owner": string,              // UUID właściciela
+    "currentRitual": string,      // ID rytuału (np. "bloodmagic:water")
+    "isRunning": boolean,         // Czy rytuał działa
+    "runtime": int,               // Czas działania
+    "direction": int,             // Kierunek (0-5)
+    "isStoned": boolean,          // Czy zablokowany redstone
+    "currentRitualTag": {}        // Dodatkowe dane rytuału
   }
   ```
 
@@ -342,19 +362,37 @@
 
 ## Mapowanie ID
 
-### Bloki
+### Bloki (główne)
 
 | 1.7.10 ID | 1.18.2 ID | Nazwa |
 |-----------|-----------|-------|
 | `AWWayofTime:Altar` | `bloodmagic:altar` | Blood Altar |
-| `AWWayofTime:rune` | `bloodmagic:blood_rune` | Blood Rune |
-| `AWWayofTime:ritualStone` | `bloodmagic:ritual_stone` | Ritual Stone |
 | `AWWayofTime:masterStone` | `bloodmagic:master_ritual_stone` | Master Ritual Stone |
 | `AWWayofTime:imperfectRitualStone` | `bloodmagic:imperfect_ritual_stone` | Imperfect Ritual Stone |
 | `AWWayofTime:largeBloodStoneBrick` | `bloodmagic:large_bloodstone_brick` | Large Bloodstone Brick |
 | `AWWayofTime:bloodStoneBrick` | `bloodmagic:bloodstone_brick` | Bloodstone Brick |
 | `AWWayofTime:soulForge` | N/A (usunięty) | Soul Forge |
 | `AWWayofTime:demonPortal` | N/A (usunięty) | Demon Portal |
+
+### Blood Runes (osobne bloki w 1.7.10 i 1.18.2)
+
+| 1.7.10 ID | 1.18.2 ID | Typ runy |
+|-----------|-----------|----------|
+| `AWWayofTime:speedRune` | `bloodmagic:speed_rune` | Speed |
+| `AWWayofTime:efficiencyRune` | `bloodmagic:efficiency_rune` | Efficiency |
+| `AWWayofTime:runeOfSacrifice` | `bloodmagic:sacrifice_rune` | Sacrifice |
+| `AWWayofTime:runeOfSelfSacrifice` | `bloodmagic:self_sacrifice_rune` | Self-Sacrifice |
+
+### BloodRune (z metadanymi 0-5)
+
+| Metadata 1.7.10 | 1.18.2 ID | Typ runy |
+|-----------------|-----------|----------|
+| 0 | `bloodmagic:blank_rune` | Blank |
+| 1 | `bloodmagic:dislocation_rune` | Dislocation |
+| 2 | `bloodmagic:capacity_rune` | Capacity |
+| 3 | `bloodmagic:better_capacity_rune` | Augmented Capacity |
+| 4 | `bloodmagic:orb_rune` | Orb |
+| 5 | `bloodmagic:acceleration_rune` | Acceleration |
 
 ### Tile/Block Entities
 
@@ -370,7 +408,7 @@
 
 ## Struktury NBT
 
-### Kluczowe różnice NBT między wersjami
+### Kluczowe różnice NBT między wersjami (ZWERYFIKOWANE W KODZIE ŹRÓDŁOWYM)
 
 #### Blood Altar NBT
 
@@ -385,23 +423,46 @@
   "progress": 50,
   "liquidRequired": 2000,
   "canBeFilled": true,
-  "owner": "550e8400-e29b-41d4-a716-446655440000"
+  "owner": "PlayerName"
 }
 ```
 
-**1.18.2:**
+**1.18.2:** (Source: BloodAltar.java, Constants.NBT)
 ```nbt
 {
   "id": "bloodmagic:altar",
   "x": 100, "y": 64, "z": -200,
-  "currentEssence": 10000,
-  "upgradeLevel": 3,
-  "isActive": true,
-  "progress": 50,
-  "liquidRequired": 2000,
-  "canBeFilled": true,
-  "owner": "550e8400-e29b-41d4-a716-446655440000",
-  "ForgeData": {}
+  "bloodAltar": {
+    "upgradeLevel": "THREE",
+    "isActive": true,
+    "liquidRequired": 2000,
+    "fillable": true,
+    "progress": 50,
+    "consumptionMultiplier": 0.0,
+    "efficiencyMultiplier": 1.0,
+    "sacrificeMultiplier": 0.0,
+    "selfSacrificeMultiplier": 0.0,
+    "capacityMultiplier": 1.0,
+    "orbCapacityMultiplier": 1.0,
+    "dislocationMultiplier": 1.0,
+    "capacity": 10000,
+    "bufferCapacity": 1000,
+    "isUpgraded": true,
+    "consumptionRate": 5,
+    "drainRate": 5,
+    "isResultBlock": false,
+    "lockdownDuration": 0,
+    "accelerationUpgrades": 0,
+    "demonBloodDuration": 0,
+    "cooldownAfterCrafting": 60,
+    "chargeRate": 0,
+    "chargeFrequency": 20,
+    "totalCharge": 0,
+    "maxCharge": 0,
+    "currentTierDisplayed": "ONE",
+    "Empty": ""  // lub Amount: int gdy ma LP
+  },
+  "Amount": 10000  // Ilość LP (gdy > 0)
 }
 ```
 
@@ -413,26 +474,35 @@
   "id": "MasterStone",
   "x": 105, "y": 64, "z": -195,
   "ritualType": "water",
-  "owner": "550e8400-e29b-41d4-a716-446655440000",
+  "owner": "PlayerName",
   "isActive": true,
   "cooldown": 0,
   "runningTime": 1200
 }
 ```
 
-**1.18.2:**
+**1.18.2:** (Source: TileMasterRitualStone.java, Constants.NBT)
 ```nbt
 {
   "id": "bloodmagic:master_ritual_stone",
   "x": 105, "y": 64, "z": -195,
-  "ritualType": "water",
   "owner": "550e8400-e29b-41d4-a716-446655440000",
-  "isActive": true,
-  "cooldown": 0,
-  "runningTime": 1200,
-  "willDrain": 0
+  "currentRitual": "bloodmagic:water",
+  "isRunning": true,
+  "runtime": 1200,
+  "direction": 2,
+  "isStoned": false,
+  "currentRitualTag": {}
 }
 ```
+
+**Kluczowe zmiany:**
+- `ritualType` → `currentRitual` (ResourceLocation)
+- `isActive` → `isRunning`
+- `runningTime` → `runtime`
+- Właściciel przechowywany jako UUID (nie nazwa)
+- Dodano `direction` (int 0-5 dla Direction enum)
+- Dodano `isStoned` (czy zablokowany przez redstone)
 
 ---
 

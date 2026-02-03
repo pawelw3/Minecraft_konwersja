@@ -157,6 +157,9 @@ class BetterStorageConverter:
             # Używamy CratePileConverter
             result = self.crate_converter.convert_crate(x, y, z)
             result['warnings'] = warnings + result.get('warnings', [])
+            # Upewniamy się że mamy block_id (konwersja z target_block)
+            if 'target_block' in result and 'block_id' not in result:
+                result['block_id'] = result['target_block']
             return result
         else:
             # Brak loadera - nie możemy odczytać danych

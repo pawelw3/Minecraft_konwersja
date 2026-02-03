@@ -7,13 +7,20 @@ Source mapping:
 
 Ten moduł implementuje główny interfejs konwersji dla Blood Magic,
 korzystając z poszczególnych konwerterów specyficznych dla typów bloków/TE.
+
+WAŻNE: W 1.18.2 każda Blood Rune to osobny blok (nie blockstate).
 """
 
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional, Tuple, List
 from uuid import UUID
 
-from .block_mappings import map_block_id, get_blockstate_props, map_te_id
+from .block_mappings import (
+    map_block_id, 
+    map_blood_rune, 
+    map_te_id,
+    RUNE_BLOCK_MAPPING,
+)
 from .altar_converter import BloodAltarConverter
 from .ritual_converter import MasterRitualStoneConverter
 from .soul_network_converter import SoulNetworkConverter, BloodOrbConverter
@@ -48,6 +55,10 @@ class BloodMagicConverter:
     Główny konwerter dla moda Blood Magic
     
     Konwertuje bloki i Tile Entities z 1.7.10 na 1.18.2.
+    
+    Source mapping:
+    - 1.7.10: WayofTime/alchemicalWizardry/ModBlocks.java
+    - 1.18.2: wayoftime/bloodmagic/common/block/BloodMagicBlocks.java
     """
     
     def __init__(self, name_to_uuid_mapping: Optional[Dict[str, UUID]] = None):
@@ -87,7 +98,7 @@ class BloodMagicConverter:
             block_id_1710: ID bloku w 1.7.10 (np. "AWWayofTime:Altar")
             metadata: Wartość metadata 0-15
             te_nbt_1710: NBT TileEntity (jeśli blok ma TE)
-            pos: Pozycja (x, y, z) - opcjonalnie
+            pos: Pozycja (x, y, z) - opcjonalnie, ale zalecana dla BE
             owner_uuid: UUID właściciela (jeśli znany)
             
         Returns:
@@ -95,12 +106,33 @@ class BloodMagicConverter:
         """
         result = ConversionResult()
         
-        # 1. Mapowanie ID bloku
+        # 1. Obsługa run (osobne bloki w 1.7.10 i 1.18.2)
+        if block_id_1710 in RUNE_BLOCK_MAPPING:
+            result.block_id_1182 = RUNE_BLOCK_MAPPING[block_id_1710]
+            result.converted = True
+            return result
+        
+        # 2. Obsługa BloodRune (z metadanymi)
+        if block_id_1710 == "AWWayofTime:bloodRune":
+            new_block_id, warning = map_blood_rune(metadata)
+            if warning:
+                result.warnings.append(warning)
+            
+            if new_block_id is None:
+                result.errors.append(
+                    f"BM-E-RUNE-MAP-FAILED: Nie udało się zmapować BloodRune meta={metadata}"
+                )
+                return result
+            
+            result.block_id_1182 = new_block_id
+            result.converted = True
+            return result
+        
+        # 3. Mapowanie ID bloku (pozostałe bloki)
         new_block_id, warning = map_block_id(block_id_1710)
         
         if warning:
             if "REMOVED" in warning:
-                # Blok usunięty - pomijamy
                 result.warnings.append(warning)
                 result.skipped = True
                 return result
@@ -115,17 +147,11 @@ class BloodMagicConverter:
         
         result.block_id_1182 = new_block_id
         
-        # 2. Mapowanie blockstate (dla bloków z metadata)
-        blockstate_props, warning = get_blockstate_props(block_id_1710, metadata)
-        if warning:
-            result.warnings.append(warning)
-        result.blockstate_props = blockstate_props
-        
-        # 3. Konwersja Tile Entity (jeśli istnieje)
+        # 4. Konwersja Tile Entity (jeśli istnieje)
         if te_nbt_1710:
             te_id = te_nbt_1710.get("id", "")
             be_nbt, warnings = self._convert_tile_entity(
-                te_id, te_nbt_1710, owner_uuid
+                te_id, te_nbt_1710, owner_uuid, pos
             )
             result.warnings.extend(warnings)
             
@@ -147,7 +173,8 @@ class BloodMagicConverter:
         self,
         te_id: str,
         te_nbt: Dict[str, Any],
-        owner_uuid: Optional[UUID] = None
+        owner_uuid: Optional[UUID] = None,
+        pos: Optional[Tuple[int, int, int]] = None
     ) -> Tuple[Optional[Dict[str, Any]], List[str]]:
         """
         Konwertuj Tile Entity używając odpowiedniego konwertera
@@ -156,16 +183,30 @@ class BloodMagicConverter:
             te_id: ID TileEntity w 1.7.10
             te_nbt: NBT TileEntity
             owner_uuid: UUID właściciela
+            pos: Pozycja (x, y, z) - dodawana do NBT dla BE
             
         Returns:
             Tuple (be_nbt, warnings)
         """
+        all_warnings = []
+        
+        # Konwersja przez specyficzny konwerter
         if te_id in self._te_converters:
             converter = self._te_converters[te_id]
-            return converter.convert(te_nbt, owner_uuid)
+            be_nbt, warnings = converter.convert(te_nbt, owner_uuid)
+            all_warnings.extend(warnings)
+        else:
+            # Brak specyficznego konwertera
+            be_nbt = {}
+            all_warnings.append(f"BM-W-NO-TE-CONVERTER: Brak konwertera dla TE {te_id}")
         
-        # Brak specyficznego konwertera - zwracamy pusty dict
-        return None, [f"BM-W-NO-TE-CONVERTER: Brak konwertera dla TE {te_id}"]
+        # Dodaj pozycję do NBT (wymagane dla BlockEntity w 1.18.2)
+        if be_nbt and pos:
+            be_nbt["x"] = pos[0]
+            be_nbt["y"] = pos[1]
+            be_nbt["z"] = pos[2]
+        
+        return be_nbt, all_warnings
     
     def convert_soul_networks(
         self,
@@ -179,6 +220,10 @@ class BloodMagicConverter:
             
         Returns:
             Tuple (networks_1182, warnings)
+            
+        Note:
+            Format wyjściowy to format pośredni. Właściwy zapis w 1.18.2
+            wymaga umieszczenia danych w BMWorldSavedData.
         """
         return self.soul_network_converter.convert_all_networks(networks_1710)
     
@@ -200,7 +245,10 @@ class BloodMagicConverter:
     def get_supported_blocks(self) -> List[str]:
         """Zwróć listę obsługiwanych ID bloków 1.7.10"""
         from .block_mappings import BLOCK_ID_MAPPING
-        return list(BLOCK_ID_MAPPING.keys())
+        blocks = list(BLOCK_ID_MAPPING.keys())
+        blocks.extend(RUNE_BLOCK_MAPPING.keys())
+        blocks.append("AWWayofTime:bloodRune")
+        return blocks
     
     def get_conversion_stats(
         self,
