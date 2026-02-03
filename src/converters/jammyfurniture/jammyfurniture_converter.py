@@ -11,8 +11,8 @@ import logging
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
 
-from .jammy_furniture_mapping import (
-    BlockMapping, 
+from .jammyfurniture_mapping import (
+    BlockMapping,
     JAMMY_FURNITURE_MAPPINGS,
     get_mapping,
     generate_target_id

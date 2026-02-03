@@ -48,7 +48,7 @@ class BeeBoxNBTConverter(BaseGrowthcraftNBTConverter):
     
     @property
     def target_te_id(self) -> str:
-        return "growthcraft:bee_box"
+        return "growthcraft_apiary:bee_box"
     
     def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
                 metadata: int = 0) -> NBTConversionResult:
@@ -132,19 +132,13 @@ class BeeBoxNBTConverter(BaseGrowthcraftNBTConverter):
         for slot_data in items_list:
             if not slot_data:
                 continue
-            
+
             converted = self._convert_item_stack(slot_data)
             if converted:
                 slot = slot_data.get('Slot', 0)
                 converted['Slot'] = slot
-                
-                # Specjalna obsługa dla pszczół (slot 0)
-                if slot == 0:
-                    # Upewnij się że pszczoły mają tag BEE
-                    if 'tag' not in converted:
-                        converted['tag'] = {}
-                    converted['tag']['BEE'] = 1
-                
+                # W 1.18.2 sprawdzanie pszczół odbywa się przez Item Tags
+                # (GrowthcraftApiaryTags.Items.BEE), nie przez NBT tag
                 items.append(converted)
         
         return {

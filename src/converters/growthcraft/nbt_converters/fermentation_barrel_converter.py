@@ -42,7 +42,7 @@ class FermentationBarrelNBTConverter(BaseGrowthcraftNBTConverter):
     
     @property
     def target_te_id(self) -> str:
-        return "growthcraft:fermentation_barrel"
+        return "growthcraft_cellar:fermentation_barrel"
     
     def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
                 metadata: int = 0) -> NBTConversionResult:

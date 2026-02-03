@@ -14,13 +14,13 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import unittest
-from src.converters.jammy_furniture_converter import (
+from src.converters.jammyfurniture.jammyfurniture_converter import (
     JammyFurnitureConverter,
     ConversionResult,
     convert_jammy_block,
     get_converter,
 )
-from src.converters.jammy_furniture_mapping import (
+from src.converters.jammyfurniture.jammyfurniture_mapping import (
     BlockMapping,
     JAMMY_FURNITURE_MAPPINGS,
     get_mapping,

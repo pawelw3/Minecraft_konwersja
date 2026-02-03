@@ -64,9 +64,9 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft:fermentation_barrel")
+        self.assertEqual(result.block_id_1182, "growthcraft_cellar:fermentation_barrel")
         self.assertIsNotNone(result.nbt_1182)
-        self.assertEqual(result.nbt_1182["id"], "growthcraft:fermentation_barrel")
+        self.assertEqual(result.nbt_1182["id"], "growthcraft_cellar:fermentation_barrel")
     
     def test_convert_brew_kettle(self):
         """Test konwersji BrewKettle"""
@@ -83,7 +83,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft:brew_kettle")
+        self.assertEqual(result.block_id_1182, "growthcraft_cellar:brew_kettle")
     
     def test_convert_bee_box(self):
         """Test konwersji BeeBox"""
@@ -100,7 +100,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft:bee_box")
+        self.assertEqual(result.block_id_1182, "growthcraft_apiary:bee_box_oak")
     
     def test_convert_mixing_vat(self):
         """Test konwersji MixingVat (CheeseVat)"""
@@ -119,7 +119,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft:mixing_vat")
+        self.assertEqual(result.block_id_1182, "growthcraft_milk:mixing_vat")
         self.assertTrue(result.nbt_1182["IsActivated"])
     
     def test_convert_block_without_nbt(self):
@@ -131,7 +131,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft:fermentation_barrel")
+        self.assertEqual(result.block_id_1182, "growthcraft_cellar:fermentation_barrel")
         self.assertIsNone(result.nbt_1182)
     
     def test_convert_non_growthcraft_block(self):
@@ -196,9 +196,9 @@ class TestHelperFunctions(unittest.TestCase):
             metadata=0
         )
         
-        self.assertEqual(new_id, "growthcraft:fermentation_barrel")
+        self.assertEqual(new_id, "growthcraft_cellar:fermentation_barrel")
         self.assertIsNotNone(new_nbt)
-        self.assertEqual(new_nbt["id"], "growthcraft:fermentation_barrel")
+        self.assertEqual(new_nbt["id"], "growthcraft_cellar:fermentation_barrel")
     
     def test_get_converter_for_te(self):
         """Test funkcji get_converter_for_te"""
@@ -232,7 +232,7 @@ class TestInventoryConversion(unittest.TestCase):
         nbt_1182 = result.nbt_1182
         
         items = nbt_1182["inventory"]["Items"]
-        self.assertEqual(items[0]["id"], "growthcraft:yeast")
+        self.assertEqual(items[0]["id"], "growthcraft_cellar:yeast")
         self.assertEqual(items[0]["Count"], 5)
     
     def test_fluid_conversion_in_nbt(self):
@@ -246,7 +246,7 @@ class TestInventoryConversion(unittest.TestCase):
         nbt_1182 = result.nbt_1182
         
         fluid = nbt_1182["fluid_tank_input_0"]
-        self.assertEqual(fluid["FluidName"], "growthcraft:grape_juice")
+        self.assertEqual(fluid["FluidName"], "growthcraft_cellar:grape_juice")
 
 
 class TestEdgeCases(unittest.TestCase):

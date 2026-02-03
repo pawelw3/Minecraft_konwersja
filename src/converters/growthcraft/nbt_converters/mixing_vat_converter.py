@@ -61,7 +61,7 @@ class MixingVatNBTConverter(BaseGrowthcraftNBTConverter):
     
     @property
     def target_te_id(self) -> str:
-        return "growthcraft:mixing_vat"
+        return "growthcraft_milk:mixing_vat"
     
     def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
                 metadata: int = 0) -> NBTConversionResult:
@@ -154,7 +154,7 @@ class MixingVatNBTConverter(BaseGrowthcraftNBTConverter):
             
             # Narzędzie do pobrania wyniku
             converted["ResultActivationTool"] = {
-                "id": "growthcraft:cheese_cloth",
+                "id": "growthcraft_milk:cheese_cloth",
                 "Count": 1
             }
             

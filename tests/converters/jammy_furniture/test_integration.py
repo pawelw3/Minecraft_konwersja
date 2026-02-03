@@ -13,7 +13,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 
 import unittest
-from src.converters.jammy_furniture_converter import JammyFurnitureConverter
+from src.converters.jammyfurniture.jammyfurniture_converter import JammyFurnitureConverter
 from src.jammy_furniture.simulations.fridge_freezer_simulation import (
     FridgeFreezerSimulator,
     FridgeType,

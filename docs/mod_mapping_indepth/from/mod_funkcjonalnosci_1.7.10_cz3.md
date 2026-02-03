@@ -125,7 +125,7 @@ Z logów/konfiguracji i opisów spotyka się m.in.: Afterlife, Backups, Chat, Co
 
 ---
 
-## 5) ForgeRelocation + ForgeRelocationFMP
+## 5) ForgeRelocation + ForgeRelocationFMP - UWAGA - konwersja nie wymagana - ignoruj
 **Jary:**  
 - `ForgeRelocation-1.7.10-0.0.1.4-universal.jar` citeturn2search0  
 - `ForgeRelocationFMP-1.7.10-0.0.1.2-universal.jar` (plugin) citeturn3search0  
@@ -384,7 +384,7 @@ Przykład szczegółu: **Gas-Burning Generator** zużywa palny gaz (np. hydrogen
 
 ---
 
-## 16) MobiusCore 1.2.5 (1.7.10)
+## 16) MobiusCore 1.2.5 (1.7.10)  - UWAGA - konwersja nie wymagana - ignoruj
 **Jar:** `MobiusCore-1.2.5_1.7.10.jar`  
 **Typ:** biblioteka ProfMobius (dependency).
 

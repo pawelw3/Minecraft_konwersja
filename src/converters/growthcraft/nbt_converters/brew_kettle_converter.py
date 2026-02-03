@@ -46,7 +46,7 @@ class BrewKettleNBTConverter(BaseGrowthcraftNBTConverter):
     
     @property
     def target_te_id(self) -> str:
-        return "growthcraft:brew_kettle"
+        return "growthcraft_cellar:brew_kettle"
     
     def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
                 metadata: int = 0) -> NBTConversionResult:

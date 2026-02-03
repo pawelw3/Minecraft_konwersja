@@ -46,7 +46,7 @@ class TestFermentationBarrelConverter(unittest.TestCase):
         self.assertIsNotNone(result.converted_nbt)
         
         nbt_1182 = result.converted_nbt
-        self.assertEqual(nbt_1182["id"], "growthcraft:fermentation_barrel")
+        self.assertEqual(nbt_1182["id"], "growthcraft_cellar:fermentation_barrel")
         self.assertEqual(nbt_1182["CurrentProcessTicks"], 1200)
         self.assertIn("MaxProcessTicks", nbt_1182)
         self.assertIn("fluid_tank_input_0", nbt_1182)
@@ -67,7 +67,7 @@ class TestFermentationBarrelConverter(unittest.TestCase):
         nbt_1182 = result.converted_nbt
         
         fluid = nbt_1182["fluid_tank_input_0"]
-        self.assertEqual(fluid["FluidName"], "growthcraft:grape_juice")
+        self.assertEqual(fluid["FluidName"], "growthcraft_cellar:grape_juice")
         self.assertEqual(fluid["Amount"], 3000)
     
     def test_empty_barrel(self):
@@ -134,7 +134,7 @@ class TestBrewKettleConverter(unittest.TestCase):
         self.assertTrue(result.success)
         nbt_1182 = result.converted_nbt
         
-        self.assertEqual(nbt_1182["id"], "growthcraft:brew_kettle")
+        self.assertEqual(nbt_1182["id"], "growthcraft_cellar:brew_kettle")
         self.assertEqual(nbt_1182["CurrentProcessTicks"], 600)
         self.assertEqual(nbt_1182["MaxProcessTicks"], 1200)
         self.assertIn("fluid_tank_input_0", nbt_1182)
@@ -163,7 +163,7 @@ class TestBrewKettleConverter(unittest.TestCase):
         slot_2_item = next((i for i in items if i["Slot"] == 2), None)
         
         self.assertIsNotNone(slot_1_item)
-        self.assertEqual(slot_1_item["id"], "growthcraft:grain")
+        self.assertEqual(slot_1_item["id"], "growthcraft_cellar:grain")
         
         self.assertIsNotNone(slot_2_item)
         self.assertEqual(slot_2_item["id"], "minecraft:wheat")
@@ -212,7 +212,7 @@ class TestBeeBoxConverter(unittest.TestCase):
         self.assertTrue(result.success)
         nbt_1182 = result.converted_nbt
         
-        self.assertEqual(nbt_1182["id"], "growthcraft:bee_box")
+        self.assertEqual(nbt_1182["id"], "growthcraft_apiary:bee_box")
         self.assertEqual(nbt_1182["CurrentProcessTicks"], 0)
         self.assertIn("inventory", nbt_1182)
         
@@ -236,11 +236,9 @@ class TestBeeBoxConverter(unittest.TestCase):
         bee_item = next((i for i in items if i["Slot"] == 0), None)
         
         self.assertIsNotNone(bee_item)
-        self.assertEqual(bee_item["id"], "growthcraft:bee")
+        self.assertEqual(bee_item["id"], "growthcraft_apiary:bee")
         self.assertEqual(bee_item["Count"], 5)
-        # Pszczoły powinny mieć tag BEE
-        self.assertIn("tag", bee_item)
-        self.assertEqual(bee_item["tag"]["BEE"], 1)
+        # W 1.18.2 sprawdzanie pszczół odbywa się przez Item Tags, nie NBT
     
     def test_comb_conversion(self):
         """Test konwersji plastrów miodu"""
@@ -258,7 +256,7 @@ class TestBeeBoxConverter(unittest.TestCase):
         comb_item = next((i for i in items if i["Slot"] == 5), None)
         
         self.assertIsNotNone(comb_item)
-        self.assertEqual(comb_item["id"], "growthcraft:honey_comb_full")
+        self.assertEqual(comb_item["id"], "growthcraft_apiary:honey_comb_full")
 
 
 class TestMixingVatConverter(unittest.TestCase):
@@ -296,7 +294,7 @@ class TestMixingVatConverter(unittest.TestCase):
         self.assertTrue(result.success)
         nbt_1182 = result.converted_nbt
         
-        self.assertEqual(nbt_1182["id"], "growthcraft:mixing_vat")
+        self.assertEqual(nbt_1182["id"], "growthcraft_milk:mixing_vat")
         self.assertEqual(nbt_1182["CurrentProcessTicks"], 1200)
         self.assertEqual(nbt_1182["MaxProcessTicks"], 2400)
         self.assertTrue(nbt_1182["RequiresHeatSource"])
@@ -350,7 +348,7 @@ class TestMixingVatConverter(unittest.TestCase):
         self.assertIn("ReagentFluidTank", nbt_1182)
         
         input_tank = nbt_1182["InputFluidTank"]
-        self.assertEqual(input_tank["FluidName"], "growthcraft:milk")
+        self.assertEqual(input_tank["FluidName"], "growthcraft_milk:milk")
         self.assertEqual(input_tank["Amount"], 2000)
 
 
