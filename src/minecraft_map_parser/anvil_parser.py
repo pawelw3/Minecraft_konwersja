@@ -108,6 +108,137 @@ class ChunkData:
         if isinstance(biomes, NBTTag):
             return biomes.value
         return biomes
+    
+    def get_block_ids_from_sections(self) -> List[int]:
+        """
+        Zwraca listę wszystkich ID bloków z sekcji chunka.
+        
+        WAŻNE: W Minecraft 1.7.10 bloki o ID > 255 wymagają odczytu 
+        z tablicy Add/AddBlocks (dodatkowe 4 bity na blok).
+        
+        Format:
+        - Blocks: 4096 bajtów (8 bitów na blok, ID 0-255)
+        - Add/AddBlocks: 2048 bajtów (4 bity na blok, górne 4 bity ID 256-4095)
+        - Data: 2048 bajtów (metadata)
+        
+        Pełne ID = (Add[nibble] << 8) | Blocks[byte]
+        
+        Returns:
+            Lista pełnych ID bloków (0-4095) znalezionych w sekcjach
+        """
+        block_ids = set()
+        sections = self.get_sections()
+        
+        for section in sections:
+            if not isinstance(section, dict):
+                continue
+            
+            # Pobierz tablice
+            blocks = section.get('Blocks')
+            add = section.get('Add') or section.get('AddBlocks')  # Obie nazwy używane w różnych wersjach
+            
+            if blocks is None:
+                continue
+            
+            # Konwertuj z NBTTag jeśli potrzeba
+            if isinstance(blocks, NBTTag):
+                blocks = blocks.value
+            if isinstance(add, NBTTag):
+                add = add.value
+            
+            if not isinstance(blocks, (bytes, bytearray, list)):
+                continue
+            
+            # Przetwarzaj każdy blok w sekcji (4096 = 16x16x16)
+            for i in range(4096):
+                if i >= len(blocks):
+                    break
+                
+                # Dolne 8 bitów ID z tablicy Blocks
+                low = blocks[i] & 0xFF
+                
+                # Górne 4 bity ID z tablicy Add (jeśli istnieje)
+                high = 0
+                if add and i // 2 < len(add):
+                    # Każdy bajt w Add zawiera 2 nibbles (dwa bloki)
+                    # Parzyste i: dolny nibble, nieparzyste i: górny nibble
+                    if i % 2 == 0:
+                        high = add[i // 2] & 0x0F
+                    else:
+                        high = (add[i // 2] >> 4) & 0x0F
+                
+                # Pełne ID bloku (12 bitów)
+                full_id = (high << 8) | low
+                block_ids.add(full_id)
+        
+        return sorted(list(block_ids))
+    
+    def get_blocks_at_positions(self) -> Dict[Tuple[int, int, int], int]:
+        """
+        Zwraca mapę pozycji bloków do ich ID.
+        
+        Uwzględnia Add/AddBlocks dla bloków o ID > 255.
+        
+        Returns:
+            Słownik {(x, y, z): block_id, ...}
+        """
+        blocks_map = {}
+        sections = self.get_sections()
+        
+        for section in sections:
+            if not isinstance(section, dict):
+                continue
+            
+            # Pobierz Y sekcji (0-15 dla chunka, odpowiada 0-255 w świecie)
+            section_y = section.get('Y', 0)
+            if isinstance(section_y, NBTTag):
+                section_y = section_y.value
+            section_y = int(section_y) if section_y else 0
+            
+            blocks = section.get('Blocks')
+            add = section.get('Add') or section.get('AddBlocks')
+            
+            if blocks is None:
+                continue
+            
+            # Konwertuj z NBTTag jeśli potrzeba
+            if isinstance(blocks, NBTTag):
+                blocks = blocks.value
+            if isinstance(add, NBTTag):
+                add = add.value
+            
+            if not isinstance(blocks, (bytes, bytearray, list)):
+                continue
+            
+            # Przetwarzaj każdy blok w sekcji
+            # Layout: dla każdego Y w sekcji, potem Z, potem X
+            for y_in_section in range(16):
+                for z in range(16):
+                    for x in range(16):
+                        i = y_in_section * 256 + z * 16 + x
+                        
+                        if i >= len(blocks):
+                            break
+                        
+                        # Dolne 8 bitów ID
+                        low = blocks[i] & 0xFF
+                        
+                        # Górne 4 bity z Add
+                        high = 0
+                        if add and i // 2 < len(add):
+                            if i % 2 == 0:
+                                high = add[i // 2] & 0x0F
+                            else:
+                                high = (add[i // 2] >> 4) & 0x0F
+                        
+                        full_id = (high << 8) | low
+                        
+                        # Globalna wysokość Y w chunku
+                        global_y = section_y * 16 + y_in_section
+                        
+                        blocks_map[(x, global_y, z)] = full_id
+        
+        return blocks_map
 
 
 class AnvilParser:
