@@ -1,0 +1,36 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.classpath
+.project
+.settings/
+eclipse/
+*.launch
+
+# Minecraft
+run/
+saves/
+logs/
+crash-reports/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.swp
+*~
+
+# Visualizations (generated files)
+visualizations/*.png
+visualizations/*.jpg
+visualizations/*.jpeg
+visualizations/*.gif

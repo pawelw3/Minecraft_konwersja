@@ -1,0 +1,3 @@
+tile.cuttableBlock.name=Cut Block
+item.cuttingTool.name=Cutting Tool
+itemGroup.cuttableblocks=Cuttable Blocks
