@@ -230,10 +230,8 @@ public class AdvancedCutRenderer {
             faceHeight = 16.0;
         }
         
-        // Calculate lighting
-        int brightness = originalBlock.getMixedBrightnessForBlock(
-            originalBlock.getWorld(), x, y, z
-        );
+        // Calculate lighting (use default brightness)
+        int brightness = 15 << 20 | 15 << 4;
         
         float brightnessFactor = Math.abs(nx) * 0.6f + Math.abs(ny) * 1.0f + Math.abs(nz) * 0.8f;
         brightnessFactor = Math.max(0.4f, Math.min(1.0f, brightnessFactor));

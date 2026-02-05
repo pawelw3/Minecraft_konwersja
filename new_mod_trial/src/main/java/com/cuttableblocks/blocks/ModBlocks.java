@@ -11,8 +11,7 @@ public class ModBlocks {
     
     public static void registerBlocks() {
         blockCuttable = new BlockCuttable(Material.rock)
-            .setBlockName("cuttableBlock")
-            .setBlockTextureName("cuttableblocks:cuttable_block")
+            .setUnlocalizedName("cuttableBlock")
             .setCreativeTab(CreativeTabCuttableBlocks.tabCuttableBlocks);
         
         GameRegistry.registerBlock(blockCuttable, "cuttable_block");

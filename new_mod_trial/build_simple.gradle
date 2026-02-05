@@ -1,0 +1,85 @@
+// Prosty build.gradle bez ForgeGradle - używa tylko lokalnych bibliotek
+// Kompiluje bezpośrednio używając javac
+
+apply plugin: 'java'
+
+version = "1.0.0"
+group = "com.cuttableblocks"
+archivesBaseName = "CuttableBlocks"
+
+// Ścieżki do bibliotek z serwera
+ext.forgeVersion = '1.7.10-10.13.4.1614-1.7.10'
+ext.serverDir = '../headless_server/1.7.10'
+ext.libsDir = "${serverDir}/libraries"
+
+repositories {
+    flatDir {
+        dirs "${serverDir}", "${libsDir}"
+    }
+}
+
+dependencies {
+    // Forge
+    compile files("${serverDir}/forge-${forgeVersion}-universal.jar")
+    // Minecraft Server
+    compile files("${serverDir}/minecraft_server.1.7.10.jar")
+    // LaunchWrapper
+    compile files("${libsDir}/net/minecraft/launchwrapper/1.12/launchwrapper-1.12.jar")
+    // ASM
+    compile files("${libsDir}/org/ow2/asm/asm-all/5.0.3/asm-all-5.0.3.jar")
+    // Guava
+    compile files("${libsDir}/com/google/guava/guava/17.0/guava-17.0.jar")
+    // Gson
+    compile files("${libsDir}/com/google/code/gson/gson/2.2.4/gson-2.2.4.jar")
+    // Log4j
+    compile files("${libsDir}/org/apache/logging/log4j/log4j-api/2.0-beta9/log4j-api-2.0-beta9.jar")
+    compile files("${libsDir}/org/apache/logging/log4j/log4j-core/2.0-beta9/log4j-core-2.0-beta9.jar")
+}
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+        resources {
+            srcDir 'src/main/resources'
+        }
+    }
+}
+
+// Kompiluj bez deobfuskacji (OFF obfuskacja)
+compileJava {
+    sourceCompatibility = '1.8'
+    targetCompatibility = '1.8'
+    options.encoding = 'UTF-8'
+    
+    // Nie próbuj pobierać z internetu
+    options.compilerArgs += ['-proc:none']
+}
+
+jar {
+    manifest {
+        attributes(
+            'FMLCorePlugin': 'com.cuttableblocks.asm.CuttableBlocksLoadingPlugin',
+            'FMLCorePluginContainsFMLMod': 'true',
+            'Implementation-Title': 'CuttableBlocks',
+            'Implementation-Version': version,
+            'Implementation-Vendor': 'com.cuttableblocks'
+        )
+    }
+    
+    // Dodaj wszystkie klasy
+    from sourceSets.main.output
+    
+    // Dodaj zasoby
+    from sourceSets.main.resources
+}
+
+// Zadanie kopiowania do serwera
+task deploy(type: Copy) {
+    from jar
+    into "${serverDir}/mods"
+    rename { "CuttableBlocks-${version}.jar" }
+}
+
+deploy.dependsOn jar
