@@ -1,6 +1,88 @@
 ================================================================================
-FILE: blocks/BlockCuttable.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\blocks\BlockCuttable.java
+FILE: src/main/java/com/cuttableblocks/CuttableBlocksMod.java
+================================================================================
+
+package com.cuttableblocks;
+
+import com.cuttableblocks.blocks.ModBlocks;
+import com.cuttableblocks.client.ClientProxy;
+import com.cuttableblocks.common.CommonProxy;
+import com.cuttableblocks.items.ModItems;
+import com.cuttableblocks.tileentities.ModTileEntities;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.Mod.EventHandler;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+
+@Mod(
+    modid = CuttableBlocksMod.MODID,
+    name = CuttableBlocksMod.NAME,
+    version = CuttableBlocksMod.VERSION,
+    acceptedMinecraftVersions = "[1.7.10]"
+)
+public class CuttableBlocksMod {
+    
+    public static final String MODID = "cuttableblocks";
+    public static final String NAME = "Cuttable Blocks";
+    public static final String VERSION = "1.0.0";
+    
+    @Mod.Instance(MODID)
+    public static CuttableBlocksMod instance;
+    
+    @SidedProxy(
+        clientSide = "com.cuttableblocks.client.ClientProxy",
+        serverSide = "com.cuttableblocks.common.CommonProxy"
+    )
+    public static CommonProxy proxy;
+    
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        // Proxy preInit MUSI być przed rejestracją bloków - inicjalizuje renderId
+        // oraz ustawia tło CreativeTab (client-side only)
+        proxy.preInit();
+        
+        ModBlocks.registerBlocks();
+        ModItems.registerItems();
+        ModTileEntities.registerTileEntities();
+    }
+    
+    @EventHandler
+    public void init(FMLInitializationEvent event) {
+        proxy.init();
+    }
+    
+    @EventHandler
+    public void postInit(FMLPostInitializationEvent event) {
+        proxy.postInit();
+    }
+}
+
+================================================================================
+FILE: src/main/java/com/cuttableblocks/CreativeTabCuttableBlocks.java
+================================================================================
+
+package com.cuttableblocks;
+
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.init.Items;
+import net.minecraft.item.Item;
+
+public class CreativeTabCuttableBlocks {
+    
+    public static CreativeTabs tabCuttableBlocks = new CreativeTabs("cuttableblocks") {
+        @Override
+        public Item getTabIconItem() {
+            // Używamy apple jako ikony - to Item (nie Block), więc na pewno działa
+            // Blocks.stone może być null podczas wczesnej inicjalizacji
+            return Items.apple;
+        }
+    };
+}
+
+================================================================================
+FILE: src/main/java/com/cuttableblocks/blocks/BlockCuttable.java
 ================================================================================
 
 package com.cuttableblocks.blocks;
@@ -150,8 +232,7 @@ public class BlockCuttable extends BlockContainer {
 }
 
 ================================================================================
-FILE: blocks/ModBlocks.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\blocks\ModBlocks.java
+FILE: src/main/java/com/cuttableblocks/blocks/ModBlocks.java
 ================================================================================
 
 package com.cuttableblocks.blocks;
@@ -175,8 +256,7 @@ public class ModBlocks {
 }
 
 ================================================================================
-FILE: client/ClientProxy.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\ClientProxy.java
+FILE: src/main/java/com/cuttableblocks/client/ClientProxy.java
 ================================================================================
 
 package com.cuttableblocks.client;
@@ -216,8 +296,7 @@ public class ClientProxy extends CommonProxy {
 }
 
 ================================================================================
-FILE: client/CuttableBlockRenderer.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\CuttableBlockRenderer.java
+FILE: src/main/java/com/cuttableblocks/client/CuttableBlockRenderer.java
 ================================================================================
 
 package com.cuttableblocks.client;
@@ -285,8 +364,7 @@ public class CuttableBlockRenderer implements ISimpleBlockRenderingHandler {
 }
 
 ================================================================================
-FILE: client/render/AdvancedCutRenderer.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\render\AdvancedCutRenderer.java
+FILE: src/main/java/com/cuttableblocks/client/render/AdvancedCutRenderer.java
 ================================================================================
 
 package com.cuttableblocks.client.render;
@@ -299,6 +377,7 @@ import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -308,6 +387,7 @@ import java.util.List;
 public class AdvancedCutRenderer {
     
     private static final Tessellator tess = Tessellator.instance;
+    private static final double EPSILON = 1e-5;
     
     /**
      * Renders a block cut by a plane with proper face culling.
@@ -328,6 +408,10 @@ public class AdvancedCutRenderer {
         
         // Calculate plane intersection points with cube edges
         List<Vec3> intersections = calculateIntersections(nx, ny, nz);
+        
+        // Deduplicate intersection points (Step 3)
+        intersections = deduplicatePoints(intersections, EPSILON);
+        
         if (intersections.size() < 3) {
             // Not enough points to form a polygon, fallback to simple cut
             return false;
@@ -340,6 +424,33 @@ public class AdvancedCutRenderer {
         renderCutFace(x, y, z, intersections, nx, ny, nz, keepPositive, originalBlock, meta);
         
         return true;
+    }
+    
+    /**
+     * Deduplicate points that are within epsilon distance of each other.
+     * This prevents issues when plane hits a vertex or edge exactly.
+     */
+    private static List<Vec3> deduplicatePoints(List<Vec3> points, double eps) {
+        List<Vec3> unique = new ArrayList<>();
+        double epsSq = eps * eps;
+        
+        for (Vec3 p : points) {
+            boolean isDuplicate = false;
+            for (Vec3 u : unique) {
+                double dx = p.xCoord - u.xCoord;
+                double dy = p.yCoord - u.yCoord;
+                double dz = p.zCoord - u.zCoord;
+                double distSq = dx * dx + dy * dy + dz * dz;
+                if (distSq < epsSq) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            if (!isDuplicate) {
+                unique.add(p);
+            }
+        }
+        return unique;
     }
     
     /**
@@ -468,6 +579,11 @@ public class AdvancedCutRenderer {
      * For diagonal cut faces larger than 1x1, we use padding to maintain
      * texture quality - the texture stays at 1:1 scale in the center,
      * and edge pixels repeat outward.
+     * 
+     * Example: face is 22.6px wide (1.41 * 16), texture is 16px
+     * - We need 2 tiles (32px) to cover the face
+     * - Tiling is centered: face center aligns with texture center
+     * - UVs wrap around for seamless tiling
      */
     private static void renderCutFace(int x, int y, int z, List<Vec3> points,
                                       float nx, float ny, float nz, boolean keepPositive,
@@ -478,9 +594,12 @@ public class AdvancedCutRenderer {
         // Get icon from original block
         IIcon icon = originalBlock.getIcon(0, meta);
         
-        // Sort points to form a proper polygon
+        // Sort points to form a proper polygon using tangent/bitangent basis
         Vec3 center = calculateCentroid(points);
         List<Vec3> sortedPoints = sortPointsByAngle(points, center, nx, ny, nz);
+        
+        // Ensure correct winding order for visibility
+        sortedPoints = ensureCorrectWinding(sortedPoints, nx, ny, nz, keepPositive);
         
         // Calculate bounding box of the cut face
         double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
@@ -535,23 +654,37 @@ public class AdvancedCutRenderer {
         // - Diagonal: use TILED CENTERED (tiling centered on face)
         if (isDiagonal && (faceWidth > 16.0 || faceHeight > 16.0)) {
             // Use centered tiling for large diagonal faces
+            // Step 1: Use degenerated quads (A,B,C,C) instead of triangles (A,B,C)
             for (int i = 1; i < sortedPoints.size() - 1; i++) {
-                addVertexWithTiledCenteredUV(x, y, z, sortedPoints.get(0), icon, nx, ny, nz,
+                Vec3 a = sortedPoints.get(0);
+                Vec3 b = sortedPoints.get(i);
+                Vec3 c = sortedPoints.get(i + 1);
+                
+                addVertexWithTiledCenteredUV(x, y, z, a, icon, nx, ny, nz,
                                       faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithTiledCenteredUV(x, y, z, sortedPoints.get(i), icon, nx, ny, nz,
+                addVertexWithTiledCenteredUV(x, y, z, b, icon, nx, ny, nz,
                                       faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithTiledCenteredUV(x, y, z, sortedPoints.get(i + 1), icon, nx, ny, nz,
+                addVertexWithTiledCenteredUV(x, y, z, c, icon, nx, ny, nz,
                                       faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
+                addVertexWithTiledCenteredUV(x, y, z, c, icon, nx, ny, nz,
+                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ); // DUPE: domyka QUAD
             }
         } else {
             // Use standard clipped mapping for axis-aligned faces
+            // Step 1: Use degenerated quads (A,B,C,C) instead of triangles (A,B,C)
             for (int i = 1; i < sortedPoints.size() - 1; i++) {
-                addVertexWithClippedUV(x, y, z, sortedPoints.get(0), icon, nx, ny, nz,
+                Vec3 a = sortedPoints.get(0);
+                Vec3 b = sortedPoints.get(i);
+                Vec3 c = sortedPoints.get(i + 1);
+                
+                addVertexWithClippedUV(x, y, z, a, icon, nx, ny, nz,
                                        minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithClippedUV(x, y, z, sortedPoints.get(i), icon, nx, ny, nz,
+                addVertexWithClippedUV(x, y, z, b, icon, nx, ny, nz,
                                        minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithClippedUV(x, y, z, sortedPoints.get(i + 1), icon, nx, ny, nz,
+                addVertexWithClippedUV(x, y, z, c, icon, nx, ny, nz,
                                        minX, minY, minZ, maxX, maxY, maxZ);
+                addVertexWithClippedUV(x, y, z, c, icon, nx, ny, nz,
+                                       minX, minY, minZ, maxX, maxY, maxZ); // DUPE: domyka QUAD
             }
         }
     }
@@ -566,21 +699,114 @@ public class AdvancedCutRenderer {
         return Vec3.createVectorHelper(cx / points.size(), cy / points.size(), cz / points.size());
     }
     
+    /**
+     * Sort points by angle around the center on the plane surface.
+     * Uses tangent/bitangent basis for correct sorting on arbitrary planes.
+     */
     private static List<Vec3> sortPointsByAngle(List<Vec3> points, Vec3 center, 
                                                  float nx, float ny, float nz) {
-        // Project points onto plane and sort by angle around center
-        // Simplified: sort by position for now
-        List<Vec3> sorted = new ArrayList<>(points);
+        // Step 2: Build orthonormal basis on the plane
+        Vec3 n = Vec3.createVectorHelper(nx, ny, nz);
         
-        // Sort based on cross product with reference vector
-        // This ensures points are in correct order for triangle fan
-        sorted.sort((a, b) -> {
-            double angleA = Math.atan2(a.yCoord - center.yCoord, a.xCoord - center.xCoord);
-            double angleB = Math.atan2(b.yCoord - center.yCoord, b.xCoord - center.xCoord);
-            return Double.compare(angleA, angleB);
+        // Choose helper vector not parallel to normal
+        Vec3 helper;
+        if (Math.abs(ny) < 0.99) {
+            helper = Vec3.createVectorHelper(0, 1, 0);
+        } else {
+            helper = Vec3.createVectorHelper(1, 0, 0);
+        }
+        
+        // Calculate tangent and bitangent
+        Vec3 tangent = crossProduct(helper, n);
+        tangent = normalize(tangent);
+        
+        Vec3 bitangent = crossProduct(n, tangent);
+        bitangent = normalize(bitangent);
+        
+        // Sort points by angle using the tangent/bitangent basis
+        List<Vec3> sorted = new ArrayList<>(points);
+        final Vec3 t = tangent;
+        final Vec3 bit = bitangent;
+        
+        sorted.sort((p1, p2) -> {
+            // Project onto tangent/bitangent plane
+            double v1X = p1.xCoord - center.xCoord;
+            double v1Y = p1.yCoord - center.yCoord;
+            double v1Z = p1.zCoord - center.zCoord;
+            
+            double v2X = p2.xCoord - center.xCoord;
+            double v2Y = p2.yCoord - center.yCoord;
+            double v2Z = p2.zCoord - center.zCoord;
+            
+            double u1 = v1X * t.xCoord + v1Y * t.yCoord + v1Z * t.zCoord;
+            double w1 = v1X * bit.xCoord + v1Y * bit.yCoord + v1Z * bit.zCoord;
+            
+            double u2 = v2X * t.xCoord + v2Y * t.yCoord + v2Z * t.zCoord;
+            double w2 = v2X * bit.xCoord + v2Y * bit.yCoord + v2Z * bit.zCoord;
+            
+            double angle1 = Math.atan2(w1, u1);
+            double angle2 = Math.atan2(w2, u2);
+            
+            return Double.compare(angle1, angle2);
         });
         
         return sorted;
+    }
+    
+    /**
+     * Ensure correct winding order so that the polygon normal points outward.
+     * This prevents "transparent" faces due to backface culling.
+     */
+    private static List<Vec3> ensureCorrectWinding(List<Vec3> points, float nx, float ny, float nz, boolean keepPositive) {
+        if (points.size() < 3) return points;
+        
+        // Calculate polygon normal using first three points
+        Vec3 p0 = points.get(0);
+        Vec3 p1 = points.get(1);
+        Vec3 p2 = points.get(2);
+        
+        Vec3 v1 = Vec3.createVectorHelper(p1.xCoord - p0.xCoord, p1.yCoord - p0.yCoord, p1.zCoord - p0.zCoord);
+        Vec3 v2 = Vec3.createVectorHelper(p2.xCoord - p0.xCoord, p2.yCoord - p0.yCoord, p2.zCoord - p0.zCoord);
+        
+        Vec3 polyNormal = crossProduct(v1, v2);
+        polyNormal = normalize(polyNormal);
+        
+        // Check if polygon normal aligns with plane normal
+        double dot = polyNormal.xCoord * nx + polyNormal.yCoord * ny + polyNormal.zCoord * nz;
+        
+        // The cut face should face outward from the kept portion
+        // If keepPositive is true, the cut face should point in the direction of -normal
+        // (toward the discarded negative side, so the kept positive side sees the face)
+        boolean shouldReverse;
+        if (keepPositive) {
+            // Cut face should point toward negative side (away from kept positive side)
+            shouldReverse = dot > 0;
+        } else {
+            // Cut face should point toward positive side (away from kept negative side)
+            shouldReverse = dot < 0;
+        }
+        
+        if (shouldReverse) {
+            Collections.reverse(points);
+        }
+        
+        return points;
+    }
+    
+    private static Vec3 crossProduct(Vec3 a, Vec3 b) {
+        return Vec3.createVectorHelper(
+            a.yCoord * b.zCoord - a.zCoord * b.yCoord,
+            a.zCoord * b.xCoord - a.xCoord * b.zCoord,
+            a.xCoord * b.yCoord - a.yCoord * b.xCoord
+        );
+    }
+    
+    private static Vec3 normalize(Vec3 v) {
+        double len = Math.sqrt(v.xCoord * v.xCoord + v.yCoord * v.yCoord + v.zCoord * v.zCoord);
+        if (len < 1e-10) {
+            return Vec3.createVectorHelper(0, 0, 0);
+        }
+        return Vec3.createVectorHelper(v.xCoord / len, v.yCoord / len, v.zCoord / len);
     }
     
     private static void addVertexWithTiledUV(int x, int y, int z, Vec3 point, 
@@ -841,8 +1067,7 @@ public class AdvancedCutRenderer {
 }
 
 ================================================================================
-FILE: client/render/CutFaceRenderer.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\render\CutFaceRenderer.java
+FILE: src/main/java/com/cuttableblocks/client/render/CutFaceRenderer.java
 ================================================================================
 
 package com.cuttableblocks.client.render;
@@ -1058,8 +1283,7 @@ public class CutFaceRenderer {
 }
 
 ================================================================================
-FILE: client/render/RenderHelper.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\render\RenderHelper.java
+FILE: src/main/java/com/cuttableblocks/client/render/RenderHelper.java
 ================================================================================
 
 package com.cuttableblocks.client.render;
@@ -1401,8 +1625,7 @@ public class RenderHelper {
 }
 
 ================================================================================
-FILE: client/render/TextureMapper.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\render\TextureMapper.java
+FILE: src/main/java/com/cuttableblocks/client/render/TextureMapper.java
 ================================================================================
 
 package com.cuttableblocks.client.render;
@@ -1799,8 +2022,7 @@ public class TextureMapper {
 }
 
 ================================================================================
-FILE: common/CommonProxy.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\common\CommonProxy.java
+FILE: src/main/java/com/cuttableblocks/common/CommonProxy.java
 ================================================================================
 
 package com.cuttableblocks.common;
@@ -1821,91 +2043,7 @@ public class CommonProxy {
 }
 
 ================================================================================
-FILE: CreativeTabCuttableBlocks.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\CreativeTabCuttableBlocks.java
-================================================================================
-
-package com.cuttableblocks;
-
-import com.cuttableblocks.blocks.ModBlocks;
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.item.Item;
-
-public class CreativeTabCuttableBlocks {
-    
-    public static CreativeTabs tabCuttableBlocks = new CreativeTabs("cuttableblocks") {
-        @Override
-        public Item getTabIconItem() {
-            return Item.getItemFromBlock(ModBlocks.blockCuttable);
-        }
-    };
-}
-
-================================================================================
-FILE: CuttableBlocksMod.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\CuttableBlocksMod.java
-================================================================================
-
-package com.cuttableblocks;
-
-import com.cuttableblocks.blocks.ModBlocks;
-import com.cuttableblocks.client.ClientProxy;
-import com.cuttableblocks.common.CommonProxy;
-import com.cuttableblocks.items.ModItems;
-import com.cuttableblocks.tileentities.ModTileEntities;
-import cpw.mods.fml.common.Mod;
-import cpw.mods.fml.common.Mod.EventHandler;
-import cpw.mods.fml.common.SidedProxy;
-import cpw.mods.fml.common.event.FMLInitializationEvent;
-import cpw.mods.fml.common.event.FMLPostInitializationEvent;
-import cpw.mods.fml.common.event.FMLPreInitializationEvent;
-
-@Mod(
-    modid = CuttableBlocksMod.MODID,
-    name = CuttableBlocksMod.NAME,
-    version = CuttableBlocksMod.VERSION,
-    acceptedMinecraftVersions = "[1.7.10]"
-)
-public class CuttableBlocksMod {
-    
-    public static final String MODID = "cuttableblocks";
-    public static final String NAME = "Cuttable Blocks";
-    public static final String VERSION = "1.0.0";
-    
-    @Mod.Instance(MODID)
-    public static CuttableBlocksMod instance;
-    
-    @SidedProxy(
-        clientSide = "com.cuttableblocks.client.ClientProxy",
-        serverSide = "com.cuttableblocks.common.CommonProxy"
-    )
-    public static CommonProxy proxy;
-    
-    @EventHandler
-    public void preInit(FMLPreInitializationEvent event) {
-        // Proxy preInit MUSI być przed rejestracją bloków - inicjalizuje renderId
-        // oraz ustawia tło CreativeTab (client-side only)
-        proxy.preInit();
-        
-        ModBlocks.registerBlocks();
-        ModItems.registerItems();
-        ModTileEntities.registerTileEntities();
-    }
-    
-    @EventHandler
-    public void init(FMLInitializationEvent event) {
-        proxy.init();
-    }
-    
-    @EventHandler
-    public void postInit(FMLPostInitializationEvent event) {
-        proxy.postInit();
-    }
-}
-
-================================================================================
-FILE: items/ItemCuttingTool.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\items\ItemCuttingTool.java
+FILE: src/main/java/com/cuttableblocks/items/ItemCuttingTool.java
 ================================================================================
 
 package com.cuttableblocks.items;
@@ -1993,8 +2131,7 @@ public class ItemCuttingTool extends Item {
 }
 
 ================================================================================
-FILE: items/ModItems.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\items\ModItems.java
+FILE: src/main/java/com/cuttableblocks/items/ModItems.java
 ================================================================================
 
 package com.cuttableblocks.items;
@@ -2018,8 +2155,7 @@ public class ModItems {
 }
 
 ================================================================================
-FILE: tileentities/ModTileEntities.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\tileentities\ModTileEntities.java
+FILE: src/main/java/com/cuttableblocks/tileentities/ModTileEntities.java
 ================================================================================
 
 package com.cuttableblocks.tileentities;
@@ -2034,8 +2170,7 @@ public class ModTileEntities {
 }
 
 ================================================================================
-FILE: tileentities/TileEntityCuttable.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\tileentities\TileEntityCuttable.java
+FILE: src/main/java/com/cuttableblocks/tileentities/TileEntityCuttable.java
 ================================================================================
 
 package com.cuttableblocks.tileentities;
@@ -2149,8 +2284,7 @@ public class TileEntityCuttable extends TileEntity {
 }
 
 ================================================================================
-FILE: util/Plane.java
-RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\util\Plane.java
+FILE: src/main/java/com/cuttableblocks/util/Plane.java
 ================================================================================
 
 package com.cuttableblocks.util;
@@ -2283,5 +2417,5 @@ public class Plane {
 }
 
 ================================================================================
-END OF FILE
+END OF FILE - Total 16 Java files from new_mod_trial/src/main/java/
 ================================================================================
