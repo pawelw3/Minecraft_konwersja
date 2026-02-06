@@ -1,0 +1,280 @@
+---- Minecraft Crash Report ----
+// Uh... Did I do that?
+
+Time: 06.02.26 01:52
+Description: Rendering item
+
+java.lang.NullPointerException: Rendering item
+	at net.minecraft.item.ItemStack.func_94608_d(ItemStack.java:123)
+	at net.minecraftforge.client.ForgeHooksClient.renderInventoryItem(ForgeHooksClient.java:161)
+	at net.minecraft.client.renderer.entity.RenderItem.func_82406_b(RenderItem.java:563)
+	at net.minecraft.client.gui.inventory.GuiContainerCreative.func_147051_a(GuiContainerCreative.java:929)
+	at net.minecraft.client.gui.inventory.GuiContainerCreative.func_146976_a(GuiContainerCreative.java:760)
+	at net.minecraft.client.gui.inventory.GuiContainer.func_73863_a(GuiContainer.java:78)
+	at net.minecraft.client.renderer.InventoryEffectRenderer.func_73863_a(InventoryEffectRenderer.java:38)
+	at net.minecraft.client.gui.inventory.GuiContainerCreative.func_73863_a(GuiContainerCreative.java:638)
+	at net.minecraft.client.renderer.EntityRenderer.func_78480_b(EntityRenderer.java:1061)
+	at net.minecraft.client.Minecraft.func_71411_J(Minecraft.java:1001)
+	at net.minecraft.client.Minecraft.func_99999_d(Minecraft.java:898)
+	at net.minecraft.client.main.Main.main(SourceFile:148)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at net.minecraft.launchwrapper.Launch.launch(Launch.java:135)
+	at net.minecraft.launchwrapper.Launch.main(Launch.java:28)
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Stacktrace:
+	at net.minecraft.item.ItemStack.func_94608_d(ItemStack.java:123)
+	at net.minecraftforge.client.ForgeHooksClient.renderInventoryItem(ForgeHooksClient.java:161)
+	at net.minecraft.client.renderer.entity.RenderItem.func_82406_b(RenderItem.java:563)
+
+-- Item being rendered --
+Details:
+	Item Type: null
+	Item Aux: ~~ERROR~~ NullPointerException: null
+	Item NBT: null
+	Item Foil: ~~ERROR~~ NullPointerException: null
+Stacktrace:
+	at net.minecraft.client.gui.inventory.GuiContainerCreative.func_147051_a(GuiContainerCreative.java:929)
+	at net.minecraft.client.gui.inventory.GuiContainerCreative.func_146976_a(GuiContainerCreative.java:760)
+	at net.minecraft.client.gui.inventory.GuiContainer.func_73863_a(GuiContainer.java:78)
+	at net.minecraft.client.renderer.InventoryEffectRenderer.func_73863_a(InventoryEffectRenderer.java:38)
+	at net.minecraft.client.gui.inventory.GuiContainerCreative.func_73863_a(GuiContainerCreative.java:638)
+	at net.minecraft.client.renderer.EntityRenderer.func_78480_b(EntityRenderer.java:1061)
+
+-- Screen render details --
+Details:
+	Screen name: net.minecraft.client.gui.inventory.GuiContainerCreative
+	Mouse location: Scaled: (565, 143). Absolute: (1130, 731)
+	Screen size: Scaled: (960, 509). Absolute: (1920, 1017). Scale factor of 2
+
+-- Affected level --
+Details:
+	Level name: MpServer
+	All players: 1 total; [EntityClientPlayerMP['JanuszGasikot'/6667, l='MpServer', x=129,99, y=120,54, z=256,92]]
+	Chunk stats: MultiplayerChunkCache: 55, 55
+	Level seed: 0
+	Level generator: ID 00 - default, ver 1. Features enabled: false
+	Level generator options: 
+	Level spawn location: World: (153,64,287), Chunk: (at 9,4,15 in 9,17; contains blocks 144,0,272 to 159,255,287), Region: (0,0; contains chunks 0,0 to 31,31, blocks 0,0,0 to 511,255,511)
+	Level time: 28264 game time, 28264 day time
+	Level dimension: 0
+	Level storage version: 0x00000 - Unknown?
+	Level weather: Rain time: 0 (now: false), thunder time: 0 (now: false)
+	Level game mode: Game mode: creative (ID 1). Hardcore: false. Cheats: false
+	Forced entities: 288 total; [EntitySkeleton['Skeleton'/3594, l='MpServer', x=153,53, y=33,00, z=282,06], EntityItem['item.tile.railcraft.signal.box.controller'/4620, l='MpServer', x=169,47, y=58,13, z=252,38], EntityItem['item.tile.railcraft.signal.box.controller'/4621, l='MpServer', x=170,53, y=58,63, z=252,88], EntitySquid['Squid'/545, l='MpServer', x=114,03, y=59,72, z=223,81], EntitySquid['Squid'/548, l='MpServer', x=122,09, y=59,00, z=232,50], EntitySquid['Squid'/550, l='MpServer', x=119,56, y=60,72, z=231,50], EntityItem['item.item.witchery:seedsmandrake'/552, l='MpServer', x=116,88, y=93,13, z=249,97], EntityItem['item.item.witchery:seedsmandrake'/553, l='MpServer', x=116,38, y=90,13, z=252,13], EntityItem['item.item.witchery:seedssnowbell'/554, l='MpServer', x=123,88, y=106,13, z=253,00], EntityItem['item.item.seeds'/555, l='MpServer', x=122,16, y=104,13, z=255,66], EntityItem['item.item.witchery:seedsbelladonna'/556, l='MpServer', x=121,63, y=102,13, z=248,50], EntityItem['item.item.seeds'/557, l='MpServer', x=122,88, y=104,13, z=249,22], EntityItem['item.item.witchery:seedsmandrake'/558, l='MpServer', x=124,88, y=106,13, z=250,88], EntityItem['item.item.witchery:seedswolfsbane'/559, l='MpServer', x=125,25, y=107,13, z=254,63], EntityItem['item.item.witchery:seedsbelladonna'/560, l='MpServer', x=124,84, y=98,13, z=244,25], EntityItem['item.item.seeds'/561, l='MpServer', x=124,22, y=104,13, z=247,81], EntityItem['item.item.witchery:seedsmandrake'/562, l='MpServer', x=128,19, y=107,13, z=251,97], EntityItem['item.item.witchery:seedsmandrake'/563, l='MpServer', x=124,78, y=107,13, z=252,97], EntityItem['item.item.witchery:seedsartichoke'/564, l='MpServer', x=119,88, y=101,13, z=251,28], EntityItem['item.item.witchery:seedsbelladonna'/565, l='MpServer', x=121,66, y=104,13, z=251,06], EntityItem['item.item.seeds'/566, l='MpServer', x=123,41, y=106,13, z=251,69], EntitySkeleton['Skeleton'/4663, l='MpServer', x=147,69, y=13,00, z=267,69], EntityItem['item.item.witchery:seedsmandrake'/567, l='MpServer', x=125,53, y=106,13, z=249,34], EntityItem['item.item.witchery:seedsbelladonna'/568, l='MpServer', x=117,91, y=86,13, z=258,88], EntityItem['item.item.witchery:seedsmandrake'/569, l='MpServer', x=126,88, y=105,13, z=257,16], EntityItem['item.item.seeds'/570, l='MpServer', x=124,47, y=99,13, z=259,47], EntityItem['item.tile.railcraft.signal.box.receiver'/2107, l='MpServer', x=142,59, y=15,13, z=288,03], EntityItem['item.ic2.blockIronScaffold'/2108, l='MpServer', x=145,88, y=16,13, z=291,44], EntityItem['item.ic2.blockIronScaffold'/573, l='MpServer', x=126,22, y=59,63, z=281,88], EntityItem['item.ic2.blockIronScaffold'/574, l='MpServer', x=126,13, y=65,13, z=273,50], EntityCreeper['Creeper'/576, l='MpServer', x=124,03, y=25,00, z=289,63], EntityItem['item.ic2.blockIronScaffold'/577, l='MpServer', x=127,75, y=59,63, z=302,59], EntityItem['item.ic2.blockIronScaffold'/578, l='MpServer', x=127,94, y=59,63, z=301,25], EntityItem['item.ic2.blockIronScaffold'/579, l='MpServer', x=121,06, y=52,13, z=305,88], EntitySkeleton['Skeleton'/4680, l='MpServer', x=149,50, y=40,00, z=248,50], EntityItem['item.item.witchery:seedsmandrake'/2125, l='MpServer', x=68,16, y=114,13, z=263,75], EntityBat['Bat'/6741, l='MpServer', x=82,00, y=22,00, z=287,78], EntityZombie['Zombie'/5733, l='MpServer', x=171,50, y=22,00, z=196,50], EntityBat['Bat'/6758, l='MpServer', x=85,75, y=52,00, z=221,69], EntityItem['item.item.witchery:seedswolfsbane'/1640, l='MpServer', x=147,94, y=98,13, z=259,59], EntityCreeper['Creeper'/6763, l='MpServer', x=116,50, y=21,00, z=291,50], EntityCreeper['Creeper'/6764, l='MpServer', x=114,50, y=21,00, z=293,50], EntityZombie['Zombie'/5742, l='MpServer', x=115,47, y=22,00, z=299,03], EntityZombie['Zombie'/5744, l='MpServer', x=110,44, y=21,00, z=296,50], EntitySkeleton['Skeleton'/627, l='MpServer', x=139,50, y=31,00, z=219,50], EntityItem['item.ic2.blockIronScaffold'/628, l='MpServer', x=139,99, y=29,05, z=208,06], EntityZombie['Zombie'/6774, l='MpServer', x=139,50, y=29,00, z=209,50], EntityItem['item.item.rottenFlesh'/631, l='MpServer', x=141,50, y=40,13, z=237,47], EntitySkeleton['Skeleton'/6775, l='MpServer', x=164,50, y=47,00, z=221,50], EntitySquid['Squid'/632, l='MpServer', x=136,56, y=57,38, z=226,78], EntitySquid['Squid'/634, l='MpServer', x=126,03, y=59,38, z=227,97], EntityWitch['Witch'/635, l='MpServer', x=131,50, y=78,00, z=238,69], EntityItem['item.item.seeds'/636, l='MpServer', x=143,28, y=91,13, z=245,16], EntityBat['Bat'/5246, l='MpServer', x=99,56, y=53,10, z=197,66], EntityItem['item.item.seeds'/639, l='MpServer', x=135,19, y=103,13, z=253,38], EntityItem['item.item.seeds'/640, l='MpServer', x=129,91, y=103,13, z=245,84], EntityItem['item.item.witchery:seedsmandrake'/642, l='MpServer', x=130,19, y=105,13, z=247,88], EntityItem['item.item.witchery:seedsmandrake'/645, l='MpServer', x=128,63, y=96,13, z=243,59], EntityItem['item.item.seeds'/647, l='MpServer', x=138,38, y=102,13, z=249,13], EntityItem['item.item.seeds'/648, l='MpServer', x=135,88, y=105,13, z=248,31], EntityItem['item.ic2.blockIronScaffold'/650, l='MpServer', x=132,41, y=42,13, z=268,53], EntityItem['item.ic2.blockIronScaffold'/651, l='MpServer', x=132,34, y=42,13, z=267,28], EntityItem['item.ic2.blockIronScaffold'/652, l='MpServer', x=134,44, y=40,13, z=262,13], EntityZombie['Zombie'/6796, l='MpServer', x=104,50, y=36,00, z=300,50], EntityItem['item.ic2.blockIronScaffold'/653, l='MpServer', x=133,84, y=40,13, z=263,78], EntityZombie['Zombie'/6797, l='MpServer', x=104,50, y=36,00, z=299,50], EntityItem['item.ic2.blockIronScaffold'/654, l='MpServer', x=131,88, y=44,13, z=263,13], EntityItem['item.ic2.blockIronScaffold'/655, l='MpServer', x=131,13, y=44,13, z=263,88], EntityItem['item.ic2.blockIronScaffold'/656, l='MpServer', x=132,13, y=57,13, z=263,72], EntityItem['item.ic2.blockIronScaffold'/657, l='MpServer', x=134,03, y=57,13, z=263,88], EntityItem['item.ic2.blockIronScaffold'/658, l='MpServer', x=133,06, y=61,13, z=262,22], EntityItem['item.ic2.blockIronScaffold'/659, l='MpServer', x=133,06, y=61,13, z=263,06], EntityItem['item.ic2.blockIronScaffold'/662, l='MpServer', x=128,13, y=48,13, z=302,56], EntityBat['Bat'/5271, l='MpServer', x=158,69, y=23,00, z=289,41], EntityItem['item.ic2.blockIronScaffold'/663, l='MpServer', x=128,88, y=48,13, z=302,13], EntityItem['item.ic2.blockIronScaffold'/670, l='MpServer', x=146,13, y=29,13, z=193,88], EntityItem['item.ic2.blockIronScaffold'/671, l='MpServer', x=158,19, y=27,13, z=200,88], EntitySquid['Squid'/674, l='MpServer', x=145,53, y=58,34, z=195,81], EntitySquid['Squid'/676, l='MpServer', x=146,16, y=58,03, z=208,09], EntitySquid['Squid'/678, l='MpServer', x=152,19, y=58,69, z=204,34], EntityItem['item.ic2.blockIronScaffold'/3751, l='MpServer', x=104,88, y=33,07, z=295,88], EntityItem['item.ic2.blockIronScaffold'/682, l='MpServer', x=152,69, y=55,13, z=239,75], EntityItem['item.tile.railcraft.signal.box.controller'/683, l='MpServer', x=153,13, y=55,13, z=239,69], EntityCow['Cow'/684, l='MpServer', x=157,50, y=76,00, z=238,63], EntityItem['item.tile.goldenRail'/685, l='MpServer', x=149,59, y=77,13, z=238,03], EntityZombie['Zombie'/687, l='MpServer', x=154,50, y=16,00, z=252,50], EntityItem['item.ic2.blockIronScaffold'/1711, l='MpServer', x=79,31, y=41,13, z=269,59], EntityItem['item.ic2.blockIronScaffold'/3760, l='MpServer', x=104,13, y=33,07, z=295,13], EntityItem['item.tile.railcraft.signal.box.controller'/689, l='MpServer', x=151,13, y=56,13, z=241,88], EntityItem['item.tile.railcraft.signal.box.controller'/690, l='MpServer', x=153,44, y=55,13, z=240,84], EntityItem['item.tile.railcraft.signal.box.controller'/691, l='MpServer', x=151,28, y=56,13, z=240,13], EntityItem['item.ic2.blockIronScaffold'/1715, l='MpServer', x=175,63, y=12,13, z=280,34], EntityItem['item.tile.railcraft.signal.box.controller'/692, l='MpServer', x=151,88, y=56,13, z=240,97], EntityItem['item.ic2.blockIronScaffold'/693, l='MpServer', x=152,97, y=55,13, z=241,88], EntityItem['item.tile.goldenRail'/694, l='MpServer', x=151,88, y=81,13, z=240,88], EntityItem['item.ic2.blockIronScaffold'/696, l='MpServer', x=147,88, y=46,13, z=263,72], EntityItem['item.ic2.blockIronScaffold'/697, l='MpServer', x=147,13, y=46,13, z=263,28], EntityItem['item.item.seeds'/1721, l='MpServer', x=67,22, y=115,13, z=261,31], EntityItem['item.tile.extrautils:chandelier'/700, l='MpServer', x=159,44, y=69,13, z=268,13], EntityItem['item.tile.extrautils:chandelier'/701, l='MpServer', x=158,81, y=69,13, z=269,72], EntityItem['item.tile.extrautils:chandelier'/702, l='MpServer', x=158,22, y=68,13, z=270,53], EntityItem['item.tile.extrautils:endMarker'/1732, l='MpServer', x=150,28, y=37,13, z=224,81], EntityItem['item.tile.extrautils:chandelier'/710, l='MpServer', x=157,34, y=72,13, z=267,97], EntityItem['item.tile.extrautils:chandelier'/711, l='MpServer', x=158,88, y=75,13, z=266,44], EntityItem['item.tile.extrautils:chandelier'/719, l='MpServer', x=157,13, y=75,13, z=266,44], EntityItem['item.ic2.blockIronScaffold'/1745, l='MpServer', x=161,44, y=15,13, z=280,94], EntityItem['item.tile.extrautils:chandelier'/723, l='MpServer', x=159,56, y=72,13, z=268,09], EntityItem['item.tile.extrautils:chandelier'/725, l='MpServer', x=156,72, y=70,13, z=268,84], EntityItem['item.tile.railcraft.signal.box.receiver'/1749, l='MpServer', x=148,88, y=15,13, z=290,88], EntityItem['item.ic2.blockIronScaffold'/1750, l='MpServer', x=162,88, y=15,13, z=279,88], EntityItem['item.tile.extrautils:chandelier'/735, l='MpServer', x=155,81, y=75,13, z=267,13], EntityItem['item.tile.extrautils:chandelier'/740, l='MpServer', x=156,13, y=79,13, z=265,88], EntityItem['item.tile.extrautils:chandelier'/742, l='MpServer', x=159,69, y=77,13, z=265,84], EntityItem['item.tile.extrautils:chandelier'/743, l='MpServer', x=159,94, y=79,13, z=266,06], EntityItem['item.tile.extrautils:chandelier'/744, l='MpServer', x=158,53, y=78,13, z=265,13], EntityItem['item.tile.extrautils:chandelier'/745, l='MpServer', x=156,81, y=79,13, z=265,13], EntityItem['item.tile.extrautils:chandelier'/746, l='MpServer', x=155,13, y=81,13, z=265,13], EntitySkeleton['Skeleton'/5355, l='MpServer', x=110,50, y=21,00, z=297,50], EntityItem['item.tile.extrautils:chandelier'/748, l='MpServer', x=157,75, y=79,13, z=265,13], EntitySkeleton['Skeleton'/5356, l='MpServer', x=110,91, y=19,00, z=295,50], EntityItem['item.tile.extrautils:chandelier'/752, l='MpServer', x=158,13, y=75,13, z=266,22], EntityItem['item.tile.extrautils:chandelier'/755, l='MpServer', x=153,41, y=80,13, z=267,13], EntityItem['item.tile.extrautils:chandelier'/756, l='MpServer', x=154,56, y=78,13, z=267,13], EntityZombie['Zombie'/4854, l='MpServer', x=134,50, y=44,00, z=217,50], EntityBat['Bat'/4349, l='MpServer', x=141,75, y=19,00, z=251,75], EntityItem['item.tile.extrautils:chandelier'/765, l='MpServer', x=155,88, y=78,13, z=266,88], EntityItem['item.tile.extrautils:chandelier'/766, l='MpServer', x=157,38, y=72,13, z=267,13], EntityItem['item.tile.extrautils:chandelier'/768, l='MpServer', x=157,84, y=70,13, z=268,81], EntityItem['item.tile.extrautils:chandelier'/769, l='MpServer', x=154,47, y=82,13, z=265,88], EntityItem['item.tile.extrautils:chandelier'/771, l='MpServer', x=154,69, y=80,13, z=266,13], EntityItem['item.tile.extrautils:chandelier'/775, l='MpServer', x=158,03, y=69,13, z=270,47], EntityBat['Bat'/4873, l='MpServer', x=160,25, y=29,00, z=224,41], EntityItem['item.tile.extrautils:chandelier'/778, l='MpServer', x=158,41, y=72,13, z=267,75], EntityItem['item.tile.extrautils:chandelier'/779, l='MpServer', x=160,09, y=79,13, z=266,94], EntityItem['item.item.witchery:seedsbelladonna'/780, l='MpServer', x=146,28, y=98,13, z=258,13], EntityZombie['Zombie'/781, l='MpServer', x=155,50, y=40,00, z=274,50], EntityItem['item.ic2.blockIronScaffold'/782, l='MpServer', x=150,19, y=57,13, z=302,28], EntityItem['item.ic2.blockIronScaffold'/783, l='MpServer', x=152,88, y=58,13, z=302,81], EntityBat['Bat'/5910, l='MpServer', x=115,25, y=33,10, z=241,75], EntityCreeper['Creeper'/3862, l='MpServer', x=145,50, y=36,00, z=292,50], EntityBat['Bat'/5911, l='MpServer', x=118,75, y=31,00, z=240,25], EntityBat['Bat'/5913, l='MpServer', x=122,53, y=25,00, z=280,84], EntityZombie['Zombie'/4380, l='MpServer', x=131,59, y=19,00, z=225,06], EntityZombie['Zombie'/4381, l='MpServer', x=126,50, y=21,00, z=216,50], EntityItem['item.ic2.blockIronScaffold'/798, l='MpServer', x=160,88, y=20,13, z=216,91], EntityItem['item.ic2.blockIronScaffold'/799, l='MpServer', x=160,13, y=20,13, z=217,06], EntityCreeper['Creeper'/4385, l='MpServer', x=80,50, y=61,00, z=246,50], EntityItem['item.ic2.blockIronScaffold'/1318, l='MpServer', x=100,69, y=25,13, z=231,13], EntityCow['Cow'/807, l='MpServer', x=166,50, y=60,85, z=237,28], EntityItem['item.ic2.blockIronScaffold'/1319, l='MpServer', x=101,31, y=25,13, z=231,88], EntityItem['item.ic2.blockIronScaffold'/4391, l='MpServer', x=176,66, y=41,13, z=289,88], EntityCow['Cow'/808, l='MpServer', x=164,47, y=61,75, z=235,97], EntityCow['Cow'/809, l='MpServer', x=164,47, y=61,56, z=237,50], EntityItem['item.tile.railcraft.signal.box.controller'/810, l='MpServer', x=170,25, y=53,13, z=254,97], EntityItem['item.tile.railcraft.signal.box.controller'/811, l='MpServer', x=169,56, y=54,63, z=252,13], EntityItem['item.ic2.blockIronScaffold'/812, l='MpServer', x=168,56, y=60,63, z=249,56], EntityItem['item.tile.extrautils:chandelier'/814, l='MpServer', x=160,69, y=76,13, z=265,53], EntityItem['item.tile.extrautils:chandelier'/815, l='MpServer', x=163,81, y=71,13, z=267,81], EntityItem['item.tile.extrautils:chandelier'/816, l='MpServer', x=162,44, y=76,13, z=265,13], EntityItem['item.ic2.blockIronScaffold'/1329, l='MpServer', x=106,13, y=45,13, z=224,13], EntityItem['item.tile.extrautils:chandelier'/819, l='MpServer', x=162,72, y=68,13, z=269,34], EntityItem['item.tile.extrautils:chandelier'/822, l='MpServer', x=160,53, y=71,13, z=267,72], EntityItem['item.tile.extrautils:chandelier'/824, l='MpServer', x=162,56, y=71,63, z=267,44], EntityItem['item.ic2.blockIronScaffold'/1337, l='MpServer', x=100,88, y=48,63, z=205,13], EntityItem['item.ic2.blockIronScaffold'/1338, l='MpServer', x=100,88, y=48,63, z=203,13], EntityItem['item.tile.extrautils:chandelier'/828, l='MpServer', x=159,69, y=69,13, z=269,88], EntityItem['item.ic2.blockIronScaffold'/1340, l='MpServer', x=100,69, y=48,63, z=205,94], EntityItem['item.tile.extrautils:chandelier'/829, l='MpServer', x=161,72, y=68,13, z=269,13], EntityItem['item.ic2.blockIronScaffold'/1342, l='MpServer', x=100,38, y=48,63, z=206,88], EntityItem['item.tile.extrautils:chandelier'/832, l='MpServer', x=163,84, y=68,13, z=269,38], EntityItem['item.tile.extrautils:chandelier'/834, l='MpServer', x=160,88, y=69,13, z=268,38], EntityItem['item.tile.extrautils:chandelier'/835, l='MpServer', x=161,06, y=67,13, z=272,75], EntityItem['item.tile.extrautils:chandelier'/836, l='MpServer', x=161,41, y=68,13, z=270,47], EntityItem['item.tile.sapling.oak'/3913, l='MpServer', x=66,75, y=111,13, z=265,88], EntityItem['item.tile.extrautils:chandelier'/842, l='MpServer', x=161,50, y=76,13, z=268,16], EntityItem['item.item.seeds'/2892, l='MpServer', x=66,50, y=115,13, z=262,81], EntityItem['item.tile.extrautils:chandelier'/848, l='MpServer', x=161,47, y=76,13, z=265,41], EntityItem['item.tile.extrautils:chandelier'/850, l='MpServer', x=160,13, y=73,13, z=267,00], EntityItem['item.ic2.blockIronScaffold'/1363, l='MpServer', x=165,88, y=20,13, z=298,38], EntityItem['item.ic2.blockIronScaffold'/1364, l='MpServer', x=165,25, y=20,13, z=297,31], EntityItem['item.tile.extrautils:chandelier'/853, l='MpServer', x=162,53, y=73,63, z=266,13], EntityItem['item.tile.extrautils:chandelier'/855, l='MpServer', x=161,72, y=71,63, z=267,47], EntityItem['item.tile.extrautils:chandelier'/856, l='MpServer', x=160,13, y=82,13, z=263,19], EntityItem['item.tile.extrautils:chandelier'/857, l='MpServer', x=163,06, y=83,13, z=262,63], EntityItem['item.tile.extrautils:chandelier'/858, l='MpServer', x=162,47, y=82,13, z=263,59], EntityItem['item.tile.extrautils:chandelier'/859, l='MpServer', x=162,81, y=80,13, z=265,00], EntityCreeper['Creeper'/5979, l='MpServer', x=119,50, y=47,00, z=186,50], EntityItem['item.tile.extrautils:chandelier'/860, l='MpServer', x=162,66, y=80,13, z=264,13], EntityItem['item.ic2.blockIronScaffold'/1372, l='MpServer', x=100,13, y=49,13, z=225,31], EntityItem['item.tile.extrautils:chandelier'/861, l='MpServer', x=164,22, y=81,13, z=263,25], EntityItem['item.ic2.blockIronScaffold'/1373, l='MpServer', x=100,88, y=51,13, z=225,06], EntityItem['item.item.seeds'/2909, l='MpServer', x=69,19, y=112,13, z=260,81], EntityItem['item.tile.extrautils:chandelier'/862, l='MpServer', x=160,78, y=83,13, z=262,59], EntityItem['item.tile.mushroom'/863, l='MpServer', x=166,66, y=68,13, z=280,06], EntityItem['item.ic2.blockIronScaffold'/865, l='MpServer', x=161,59, y=23,13, z=290,88], EntityItem['item.ic2.blockIronScaffold'/866, l='MpServer', x=163,34, y=40,13, z=292,16], EntityItem['item.ic2.blockIronScaffold'/867, l='MpServer', x=163,84, y=39,13, z=290,56], EntityItem['item.item.seeds'/1380, l='MpServer', x=126,69, y=107,13, z=253,69], EntityItem['item.item.seeds'/1381, l='MpServer', x=66,72, y=113,13, z=259,22], EntityItem['item.item.seeds'/1382, l='MpServer', x=76,75, y=113,13, z=253,88], EntityItem['item.ic2.blockIronScaffold'/2923, l='MpServer', x=117,88, y=38,13, z=275,06], EntitySkeleton['Skeleton'/3437, l='MpServer', x=97,50, y=41,00, z=237,50], EntityItem['item.tile.extrautils:endMarker'/2926, l='MpServer', x=136,88, y=11,13, z=279,13], EntityItem['item.ic2.blockIronScaffold'/2928, l='MpServer', x=120,28, y=24,13, z=284,13], EntityBat['Bat'/6000, l='MpServer', x=166,22, y=20,00, z=297,75], EntityItem['item.ic2.blockIronScaffold'/2930, l='MpServer', x=119,69, y=25,13, z=286,06], EntityItem['item.tile.extrautils:endMarker'/2932, l='MpServer', x=135,88, y=10,13, z=278,06], EntityCreeper['Creeper'/6004, l='MpServer', x=98,50, y=37,81, z=291,31], EntityCreeper['Creeper'/3967, l='MpServer', x=80,50, y=48,00, z=225,50], EntityItem['item.ic2.blockIronScaffold'/387, l='MpServer', x=77,44, y=40,13, z=237,16], EntityItem['item.ic2.blockIronScaffold'/388, l='MpServer', x=78,88, y=40,13, z=236,09], EntityItem['item.ic2.blockIronScaffold'/389, l='MpServer', x=77,13, y=40,13, z=236,31], EntityItem['item.tile.sapling.oak'/3974, l='MpServer', x=169,88, y=71,13, z=267,66], EntityItem['item.ic2.blockIronScaffold'/390, l='MpServer', x=73,16, y=63,13, z=236,88], EntityZombie['Zombie'/4999, l='MpServer', x=160,50, y=42,00, z=203,50], EntityItem['item.ic2.blockIronScaffold'/391, l='MpServer', x=72,78, y=61,13, z=238,88], EntityItem['item.ic2.blockIronScaffold'/393, l='MpServer', x=66,31, y=67,63, z=234,13], EntityItem['item.item.seeds'/394, l='MpServer', x=73,00, y=113,13, z=255,03], EntitySkeleton['Skeleton'/6027, l='MpServer', x=186,50, y=32,00, z=228,50], EntitySkeleton['Skeleton'/395, l='MpServer', x=69,50, y=105,00, z=265,50], EntityItem['item.item.seeds'/396, l='MpServer', x=75,56, y=113,13, z=257,03], EntityItem['item.item.seeds'/397, l='MpServer', x=75,91, y=113,13, z=256,13], EntityItem['item.item.witchery:seedsmandrake'/398, l='MpServer', x=73,28, y=113,13, z=256,41], EntityItem['item.ic2.blockIronScaffold'/911, l='MpServer', x=177,25, y=38,13, z=210,72], EntityItem['item.item.witchery:seedswolfsbane'/399, l='MpServer', x=75,19, y=113,13, z=256,84], EntityItem['item.tile.railcraft.signal.box.controller'/912, l='MpServer', x=179,13, y=59,13, z=275,88], EntityItem['item.tile.railcraft.signal.box.controller'/913, l='MpServer', x=182,72, y=60,13, z=276,69], EntityItem['item.tile.railcraft.signal.box.controller'/914, l='MpServer', x=180,22, y=59,13, z=274,06], EntityItem['item.tile.railcraft.signal.box.controller'/915, l='MpServer', x=182,50, y=60,13, z=274,13], EntityItem['item.tile.railcraft.signal.box.controller'/916, l='MpServer', x=181,88, y=58,13, z=274,75], EntityItem['item.tile.railcraft.signal.box.controller'/917, l='MpServer', x=183,72, y=57,13, z=281,13], EntityItem['item.tile.railcraft.signal.box.controller'/918, l='MpServer', x=184,56, y=57,13, z=281,59], EntityItem['item.tile.railcraft.signal.box.controller'/919, l='MpServer', x=179,81, y=60,13, z=274,88], EntityCovenWitch['Coven Witch'/920, l='MpServer', x=183,50, y=68,00, z=299,03], EntityItem['item.ic2.blockIronScaffold'/921, l='MpServer', x=185,13, y=48,13, z=300,88], EntityItem['item.ic2.blockIronScaffold'/922, l='MpServer', x=185,13, y=48,13, z=299,22], EntityCreeper['Creeper'/4507, l='MpServer', x=144,50, y=40,00, z=201,50], EntityCreeper['Creeper'/4515, l='MpServer', x=94,50, y=56,00, z=284,50], EntitySkeleton['Skeleton'/6067, l='MpServer', x=66,50, y=62,00, z=236,50], EntityBat['Bat'/2996, l='MpServer', x=111,53, y=23,10, z=296,91], EntitySkeleton['Skeleton'/6068, l='MpServer', x=66,50, y=62,00, z=235,50], EntityItem['item.ic2.blockIronScaffold'/437, l='MpServer', x=86,88, y=43,13, z=217,13], EntitySkeleton['Skeleton'/6069, l='MpServer', x=67,50, y=62,00, z=243,50], EntityItem['item.ic2.blockIronScaffold'/438, l='MpServer', x=84,59, y=49,63, z=219,91], EntityItem['item.ic2.blockIronScaffold'/439, l='MpServer', x=94,88, y=56,13, z=217,81], EntityCow['Cow'/440, l='MpServer', x=91,50, y=73,00, z=218,19], EntityCow['Cow'/441, l='MpServer', x=94,50, y=74,00, z=221,50], EntityCow['Cow'/442, l='MpServer', x=93,38, y=70,00, z=212,50], EntityItem['item.ic2.blockIronScaffold'/443, l='MpServer', x=85,25, y=45,13, z=235,88], EntityItem['item.ic2.blockIronScaffold'/444, l='MpServer', x=86,81, y=40,13, z=236,31], EntityItem['item.ic2.blockIronScaffold'/445, l='MpServer', x=88,88, y=43,13, z=237,88], EntityItem['item.ic2.blockIronScaffold'/446, l='MpServer', x=87,88, y=40,13, z=237,88], EntityItem['item.ic2.blockIronScaffold'/447, l='MpServer', x=89,88, y=56,13, z=239,00], EntityItem['item.ic2.blockIronScaffold'/448, l='MpServer', x=80,50, y=71,13, z=251,13], EntityClientPlayerMP['JanuszGasikot'/6667, l='MpServer', x=129,99, y=120,54, z=256,92], EntityItem['item.ic2.blockIronScaffold'/449, l='MpServer', x=82,53, y=71,13, z=251,88], EntityItem['item.ic2.blockIronScaffold'/2498, l='MpServer', x=131,25, y=25,13, z=289,13], EntityItem['item.ic2.blockIronScaffold'/450, l='MpServer', x=82,13, y=60,13, z=245,88], EntityTrail['unknown'/23168162, l='MpServer', x=129,99, y=120,54, z=256,92], EntityItem['item.ic2.blockIronScaffold'/451, l='MpServer', x=82,13, y=60,13, z=245,13], EntityItem['item.ic2.blockIronScaffold'/454, l='MpServer', x=92,84, y=59,13, z=265,69], EntityItem['item.ic2.blockIronScaffold'/455, l='MpServer', x=93,47, y=60,13, z=265,94], EntityItem['item.ic2.blockIronScaffold'/456, l='MpServer', x=94,88, y=59,13, z=265,13], EntityItem['item.ic2.blockIronScaffold'/2504, l='MpServer', x=89,13, y=43,13, z=274,41], EntityItem['item.ic2.blockIronScaffold'/457, l='MpServer', x=81,88, y=78,13, z=267,19], EntityZombie['Zombie'/6090, l='MpServer', x=188,88, y=30,00, z=260,31], EntityItem['item.ic2.blockIronScaffold'/458, l='MpServer', x=94,00, y=49,13, z=286,16], EntityItem['item.ic2.blockIronScaffold'/459, l='MpServer', x=93,88, y=49,13, z=285,13], EntityItem['item.ic2.blockIronScaffold'/460, l='MpServer', x=93,13, y=49,13, z=285,63], EntitySkeleton['Skeleton'/4558, l='MpServer', x=88,50, y=88,00, z=252,50], EntityItem['item.ic2.blockIronScaffold'/487, l='MpServer', x=104,88, y=56,13, z=204,75], EntityBat['Bat'/5609, l='MpServer', x=154,25, y=44,00, z=195,00], EntityCow['Cow'/490, l='MpServer', x=103,53, y=71,00, z=222,63], EntityBat['Bat'/5610, l='MpServer', x=153,27, y=40,00, z=186,25], EntityItem['item.ic2.blockIronScaffold'/492, l='MpServer', x=101,09, y=34,13, z=225,13], EntityItem['item.ic2.blockIronScaffold'/494, l='MpServer', x=107,47, y=70,13, z=234,78], EntityZombie['Zombie'/3567, l='MpServer', x=115,50, y=46,00, z=226,50], EntityItem['item.ic2.blockIronScaffold'/496, l='MpServer', x=111,59, y=45,13, z=285,34], EntityItem['item.ic2.blockIronScaffold'/497, l='MpServer', x=109,53, y=46,13, z=284,13], EntityItem['item.ic2.blockIronScaffold'/498, l='MpServer', x=111,13, y=46,13, z=282,47], EntityItem['item.item.witchery:seedsbelladonna'/499, l='MpServer', x=97,47, y=103,13, z=287,50], EntityZombie['Zombie'/6131, l='MpServer', x=114,50, y=13,00, z=208,50], EntityZombie['Zombie'/6132, l='MpServer', x=111,50, y=13,00, z=210,50], EntityZombie['Zombie'/6133, l='MpServer', x=113,50, y=13,00, z=205,50], EntityItem['item.item.witchery:seedsmandrake'/501, l='MpServer', x=97,75, y=101,13, z=290,66], EntityZombie['Zombie'/3574, l='MpServer', x=100,50, y=29,00, z=276,50], EntityItem['item.item.seeds'/502, l='MpServer', x=96,16, y=103,13, z=288,84], EntityItem['item.item.witchery:seedsmandrake'/503, l='MpServer', x=100,17, y=100,01, z=287,97]]
+	Retry entities: 0 total; []
+	Server brand: fml,forge
+	Server type: Non-integrated multiplayer server
+Stacktrace:
+	at net.minecraft.client.Minecraft.func_71396_d(Minecraft.java:2444)
+	at net.minecraft.client.Minecraft.func_99999_d(Minecraft.java:919)
+	at net.minecraft.client.main.Main.main(SourceFile:148)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+	at java.lang.reflect.Method.invoke(Unknown Source)
+	at net.minecraft.launchwrapper.Launch.launch(Launch.java:135)
+	at net.minecraft.launchwrapper.Launch.main(Launch.java:28)
+
+-- System Details --
+Details:
+	Minecraft Version: 1.7.10
+	Operating System: Windows 10 (amd64) version 10.0
+	Java Version: 1.8.0_481, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode), Oracle Corporation
+	Memory: 3187405568 bytes (3039 MB) / 4207411200 bytes (4012 MB) up to 4207411200 bytes (4012 MB)
+	Mod Pack: Unknown / None
+	LiteLoader Mods: 1 loaded mod(s)
+          - Omniscience version 1.0.1
+	LaunchWrapper: 44 active transformer(s)
+          - Transformer: logisticspipes.asm.LogisticsPipesClassInjector
+          - Transformer: cpw.mods.fml.common.asm.transformers.PatchingTransformer
+          - Transformer: org.spongepowered.asm.mixin.transformer.MixinTransformer$Proxy
+          - Transformer: cpw.mods.fml.common.asm.transformers.MarkerTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.SideTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.EventSubscriptionTransformer
+          - Transformer: net.minecraftforge.classloading.FluidIdTransformer
+          - Transformer: appeng.transformer.asm.ASMIntegration
+          - Transformer: codechicken.lib.asm.ClassHeirachyManager
+          - Transformer: codechicken.core.asm.InterfaceDependancyTransformer
+          - Transformer: codechicken.core.asm.TweakTransformer
+          - Transformer: codechicken.core.asm.DelegatedTransformer
+          - Transformer: codechicken.core.asm.DefaultImplementationTransformer
+          - Transformer: mrtjp.relocation.asm.Transformer
+          - Transformer: logisticspipes.asm.LogisticsClassTransformer
+          - Transformer: mcp.mobius.mobiuscore.asm.CoreTransformer
+          - Transformer: codechicken.nei.asm.NEITransformer
+          - Transformer: thaumicenergistics.fml.ASMTransformer
+          - Transformer: thaumic.tinkerer.preloader.AccessTransformer
+          - Transformer: com.mumfrey.liteloader.transformers.event.EventProxyTransformer
+          - Transformer: com.mumfrey.liteloader.launch.LiteLoaderTransformer
+          - Transformer: com.mumfrey.liteloader.client.transformers.CrashReportTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.DeobfuscationTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.AccessTransformer
+          - Transformer: net.minecraftforge.transformers.ForgeAccessTransformer
+          - Transformer: appeng.transformer.asm.ASMTweaker
+          - Transformer: codechicken.core.asm.CodeChickenAccessTransformer
+          - Transformer: cofh.asm.CoFHAccessTransformer
+          - Transformer: logisticspipes.asm.LogisticsAccessTransformer
+          - Transformer: mcp.mobius.mobiuscore.asm.CoreAccessTransformer
+          - Transformer: thaumic.tinkerer.preloader.AccessTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.ModAccessTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.ItemStackTransformer
+          - Transformer: org.spongepowered.asm.mixin.transformer.MixinTransformer$Proxy
+          - Transformer: net.darkhax.bookshelf.asm.BookshelfTransformerManager
+          - Transformer: cofh.asm.CoFHClassTransformer
+          - Transformer: fastcraft.J
+          - Transformer: cpw.mods.fml.common.asm.transformers.TerminalTransformer
+          - Transformer: org.spongepowered.asm.mixin.transformer.MixinTransformer$Proxy
+          - Transformer: com.mumfrey.liteloader.client.transformers.LiteLoaderEventInjectionTransformer
+          - Transformer: net.easymfne.omniscience.OmniscienceEventTransformer
+          - Transformer: com.mumfrey.liteloader.client.transformers.MinecraftOverlayTransformer
+          - Transformer: com.mumfrey.liteloader.common.transformers.LiteLoaderPacketTransformer
+          - Transformer: cpw.mods.fml.common.asm.transformers.ModAPITransformer
+	JVM Flags: 3 total; -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -Xmx4096M -Xms4096M
+	AABB Pool Size: 0 (0 bytes; 0 MB) allocated, 0 (0 bytes; 0 MB) used
+	IntCache: cache: 0, tcache: 0, allocated: 15, tallocated: 95
+	FML: MCP v9.05 FML v7.10.99.99 Minecraft Forge 10.13.4.1614 105 mods loaded, 105 mods active
+	States: 'U' = Unloaded 'L' = Loaded 'C' = Constructed 'H' = Pre-initialized 'I' = Initialized 'J' = Post-initialized 'A' = Available 'D' = Disabled 'E' = Errored
+	UCHIJAAAAAA	mcp{9.05} [Minecraft Coder Pack] (minecraft.jar) 
+	UCHIJAAAAAA	FML{7.10.99.99} [Forge Mod Loader] (forge-1.7.10-10.13.4.1614-1.7.10.jar) 
+	UCHIJAAAAAA	Forge{10.13.4.1614} [Minecraft Forge] (forge-1.7.10-10.13.4.1614-1.7.10.jar) 
+	UCHIJAAAAAA	appliedenergistics2-core{rv3-beta-6} [Applied Energistics 2 Core] (minecraft.jar) 
+	UCHIJAAAAAA	CodeChickenCore{1.0.7.47} [CodeChicken Core] (minecraft.jar) 
+	UCHIJAAAAAA	MobiusCore{1.2.5} [MobiusCore] (minecraft.jar) 
+	UCHIJAAAAAA	NotEnoughItems{1.0.5.120} [Not Enough Items] (NotEnoughItems-1.7.10-1.0.5.120-universal.jar) 
+	UCHIJAAAAAA	ThE-core{1.0.0.1} [Thaumic Energistics Core] (minecraft.jar) 
+	UCHIJAAAAAA	ThaumicTinkerer-preloader{0.1} [Thaumic Tinkerer Core] (minecraft.jar) 
+	UCHIJAAAAAA	<CoFH ASM>{000} [CoFH ASM] (minecraft.jar) 
+	UCHIJAAAAAA	FastCraft{1.25} [FastCraft] (fastcraft-1.25.jar) 
+	UCHIJAAAAAA	bspkrsCore{6.15} [bspkrsCore] ([1.7.10]bspkrsCore-universal-6.15.jar) 
+	UCHIJAAAAAA	Treecapitator{1.7.10} [Treecapitator] ([1.7.10]Treecapitator-universal-2.0.4.jar) 
+	UCHIJAAAAAA	appliedenergistics2{rv3-beta-6} [Applied Energistics 2] (appliedenergistics2-rv3-beta-6.jar) 
+	UCHIJAAAAAA	armourersWorkshop{1.7.10-0.48.5} [Armourer's Workshop] (Armourers-Workshop-1.7.10-0.48.5.jar) 
+	UCHIJAAAAAA	CoFHCore{1.7.10R3.1.4} [CoFH Core] (CoFHCore-[1.7.10]3.1.4-329.jar) 
+	UCHIJAAAAAA	asielib{0.4.8} [asielib] (AsieLib-1.7.10-0.4.8.jar) 
+	UCHIJAAAAAA	Backpack{2.0.1} [Backpack] (backpack-2.0.1-1.7.x.jar) 
+	UCHIJAAAAAA	Baubles{1.0.1.10} [Baubles] (Baubles-1.7.10-1.0.1.10.jar) 
+	UCHIJAAAAAA	Thaumcraft{4.2.3.5} [Thaumcraft] (Thaumcraft-1.7.10-4.2.3.5.jar) 
+	UCHIJAAAAAA	betterstorage{0.9.2.107} [BetterStorage] (Better-Storage-Mod-1.7.10 (4).jar) 
+	UCHIJAAAAAA	BiblioCraft{1.11.7} [BiblioCraft] (BiblioCraftv1.11.7MC1.7.10.jar) 
+	UCHIJAAAAAA	ThermalFoundation{1.7.10R1.2.6} [Thermal Foundation] (ThermalFoundation-[1.7.10]1.2.6-118.jar) 
+	UCHIJAAAAAA	ThermalExpansion{1.7.10R4.1.5} [Thermal Expansion] (ThermalExpansion-[1.7.10]4.1.5-248.jar) 
+	UCHIJAAAAAA	BigReactors{0.4.3A} [Big Reactors] (BigReactors-0.4.3A.jar) 
+	UCHIJAAAAAA	AWWayofTime{v1.3.3} [Blood Magic: Alchemical Wizardry] (BloodMagic-1.7.10-1.3.3-17.jar) 
+	UCHIJAAAAAA	bookshelf{1.0.4.172} [Bookshelf] (Bookshelf-1.7.10-1.0.4.172.jar) 
+	UCHIJAAAAAA	BuildCraft|Core{7.1.23} [BuildCraft] (buildcraft-7.1.23.jar) 
+	UCHIJAAAAAA	BuildCraft|Transport{7.1.23} [BC Transport] (buildcraft-7.1.23.jar) 
+	UCHIJAAAAAA	BuildCraft|Factory{7.1.23} [BC Factory] (buildcraft-7.1.23.jar) 
+	UCHIJAAAAAA	BuildCraft|Silicon{7.1.23} [BC Silicon] (buildcraft-7.1.23.jar) 
+	UCHIJAAAAAA	BuildCraft|Robotics{7.1.23} [BC Robotics] (buildcraft-7.1.23.jar) 
+	UCHIJAAAAAA	BuildCraft|Energy{7.1.23} [BC Energy] (buildcraft-7.1.23.jar) 
+	UCHIJAAAAAA	BuildCraft|Builders{7.1.23} [BC Builders] (buildcraft-7.1.23.jar) 
+	UCHIJAAAAAA	IC2{2.2.827-experimental} [IndustrialCraft 2] (industrialcraft-2-2.2.827-experimental.jar) 
+	UCHIJAAAAAA	Forestry{4.2.16.64} [Forestry for Minecraft] (forestry_1.7.10-4.2.16.64.jar) 
+	UCHIJAAAAAA	BuildCraft|Compat{7.1.7} [BuildCraft Compat] (buildcraft-compat-7.1.7.jar) 
+	UCHIJAAAAAA	Railcraft{9.12.2.0} [Railcraft] (Railcraft_1.7.10-9.12.2.0.jar) 
+	UCHIJAAAAAA	ForgeMultipart{1.2.0.345} [Forge Multipart] (ForgeMultipart-1.7.10-1.2.0.345-universal.jar) 
+	UCHIJAAAAAA	chisel{2.9.5.11} [Chisel] (Chisel-2.9.5.11.jar) 
+	UCHIJAAAAAA	CarpentersBlocks{3.3.8.1} [Carpenter's Blocks] (Carpenter's Blocks v3.3.8.1 - MC 1.7.10.jar) 
+	UCHIJAAAAAA	ComputerCraft{1.75} [ComputerCraft] (ComputerCraft1.75.jar) 
+	UCHIJAAAAAA	craftguide{1.6.8.2} [CraftGuide] (CraftGuide-Mod-1.7.10.jar) 
+	UCHIJAAAAAA	customnpcs{1.7.10d} [CustomNpcs] (CustomNPCs_1.7.10d(29oct17).jar) 
+	UCHIJAAAAAA	cuttableblocks{1.0.0} [Cuttable Blocks] (CuttableBlocks-1.0.0.jar) 
+	UCHIJAAAAAA	eplus{4.0.0..73} [Enchanting Plus] (EnchantingPlus-1.7.10-4.0.0.74.jar) 
+	UCHIJAAAAAA	EnderStorage{1.4.7.38} [EnderStorage] (EnderStorage-1.7.10-1.4.7.38-universal.jar) 
+	UCHIJAAAAAA	ExtraUtilities{1.2.12} [Extra Utilities] (extrautilities-1.2.12.jar) 
+	UCHIJAAAAAA	ForgeEssentialsClient{1.4.4} [Forge Essentials Client Addon] (forgeessentials-1.7.10-1.4.4.1187-client.jar) 
+	UCHIJAAAAAA	GollumCoreLib{2.0.0} [Gollum Core Lib] (GollumCoreLib-2.0.0-1.7.10.jar) 
+	UCHIJAAAAAA	Growthcraft{1.7.10-2.7.2} [Growthcraft] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Cellar{1.7.10-2.7.2} [Growthcraft Cellar] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Apples{1.7.10-2.7.2} [Growthcraft Apples] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Bamboo{1.7.10-2.7.2} [Growthcraft Bamboo] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Bees{1.7.10-2.7.2} [Growthcraft Bees] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Fishtrap{1.7.10-2.7.2} [Growthcraft Fishtrap] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Grapes{1.7.10-2.7.2} [Growthcraft Grapes] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Hops{1.7.10-2.7.2} [Growthcraft Hops] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Milk{1.7.10-2.7.2} [Growthcraft Milk] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	Growthcraft|Rice{1.7.10-2.7.2} [Growthcraft Rice] (growthcraft-1.7.10-2.7.2-complete.jar) 
+	UCHIJAAAAAA	HelpFixer{1.0.7} [HelpFixer] (HelpFixer-1.0.7.jar) 
+	UCHIJAAAAAA	IC2NuclearControl{2.4.3a} [Nuclear Control 2] (IC2NuclearControl-2.4.3a.jar) 
+	UCHIJAAAAAA	iChunUtil{4.2.3} [iChunUtil] (iChunUtil-4.2.3.jar) 
+	UCHIJAAAAAA	JammyFurniture{5.0.0 [Build Smeagol]} [Jammy Furniture Mod] (Jammy-Furniture-Reborn-Mod-1.7.10.jar) 
+	UCHIJAAAAAA	LogisticsPipes{0.9.3.132} [Logistics Pipes] (logisticspipes-0.9.3.132.jar) 
+	UCHIJAAAAAA	Mekanism{9.1.1} [Mekanism] (Mekanism-1.7.10-9.1.1-clienthax.jar) 
+	UCHIJAAAAAA	MekanismGenerators{9.1.1} [MekanismGenerators] (MekanismGenerators-1.7.10-9.1.1-clienthax.jar) 
+	UCHIJAAAAAA	MekanismTools{9.1.1} [MekanismTools] (MekanismTools-1.7.10-9.1.1-clienthax.jar) 
+	UCHIJAAAAAA	cfm{3.4.8} [§9MrCrayfish's Furniture Mod] (MrCrayfishFurnitureModv3.4.8(1.7.10).jar) 
+	UCHIJAAAAAA	recipehandler{1.7.10} [NoMoreRecipeConflict] (NoMoreRecipeConflict-0.31.7.10.jar) 
+	UCHIJAAAAAA	openmodularturrets{2.2.11-245} [Open Modular Turrets] (OpenModularTurrets-1.7.10-2.2.11-245.jar) 
+	UCHIJAAAAAA	MapWriter{2.1.2} [MapWriter] (Opis-1.2.5_1.7.10.jar) 
+	UCHIJAAAAAA	Opis{1.2.5} [Opis] (Opis-1.2.5_1.7.10.jar) 
+	UCHIJAAAAAA	harvestcraft{1.7.10j} [Pam's HarvestCraft] (Pam's HarvestCraft 1.7.10Lb.jar) 
+	UCHIJAAAAAA	placeableitems{2.0.1} [Placeable Items Mod] (Placeable-Items-Mod-1.7.10.jar) 
+	UCHIJAAAAAA	PowerConverters{1.7.10_3.2.1} [Power Converters] (PowerConverters-1.7.10_3.2.1.jar) 
+	UCHIJAAAAAA	MrTJPCoreMod{1.1.0.33} [MrTJPCore] (MrTJPCore-1.7.10-1.1.0.33-universal.jar) 
+	UCHIJAAAAAA	ProjRed|Core{4.7.0pre12.95} [ProjectRed Core] (ProjectRed-1.7.10-4.7.0pre12.95-Base.jar) 
+	UCHIJAAAAAA	ProjRed|Transmission{4.7.0pre12.95} [ProjectRed Transmission] (ProjectRed-1.7.10-4.7.0pre12.95-Integration.jar) 
+	UCHIJAAAAAA	ProjRed|Transportation{4.7.0pre12.95} [ProjectRed Transportation] (ProjectRed-1.7.10-4.7.0pre12.95-Mechanical.jar) 
+	UCHIJAAAAAA	ProjRed|Exploration{4.7.0pre12.95} [ProjectRed Exploration] (ProjectRed-1.7.10-4.7.0pre12.95-World.jar) 
+	UCHIJAAAAAA	ProjRed|Compatibility{4.7.0pre12.95} [ProjectRed Compatibility] (ProjectRed-1.7.10-4.7.0pre12.95-Compat.jar) 
+	UCHIJAAAAAA	ProjRed|Integration{4.7.0pre12.95} [ProjectRed Integration] (ProjectRed-1.7.10-4.7.0pre12.95-Integration.jar) 
+	UCHIJAAAAAA	ProjRed|Fabrication{4.7.0pre12.95} [ProjectRed Fabrication] (ProjectRed-1.7.10-4.7.0pre12.95-Fabrication.jar) 
+	UCHIJAAAAAA	ProjRed|Illumination{4.7.0pre12.95} [ProjectRed Illumination] (ProjectRed-1.7.10-4.7.0pre12.95-Lighting.jar) 
+	UCHIJAAAAAA	ProjRed|Expansion{4.7.0pre12.95} [ProjectRed Expansion] (ProjectRed-1.7.10-4.7.0pre12.95-Mechanical.jar) 
+	UCHIJAAAAAA	ReiMinimap{1.7.10} [Rei's Minimap] (Reis-Minimap-Mod-1.7.10 (1).jar) 
+	UCHIJAAAAAA	libsandstone{1.0.0} [libsandstone] (Reliquary-1.7.10-1.2.1.483.jar) 
+	UCHIJAAAAAA	xreliquary{1.2} [Reliquary] (Reliquary-1.7.10-1.2.1.483.jar) 
+	UCHIJAAAAAA	statues{2.1.4} [Statues] (statues-1.7.10-2.1.4.jar) 
+	UCHIJAAAAAA	thaumcraftneiplugin{@VERSION@} [Thaumcraft NEI Plugin] (thaumcraftneiplugin-1.7.10-1.7a.jar) 
+	UCHIJAAAAAA	thaumicenergistics{1.0.0.5} [Thaumic Energistics] (thaumicenergistics-1.0.0.5.jar) 
+	UCHIJAAAAAA	ThaumicTinkerer{unspecified} [Thaumic Tinkerer] (ThaumicTinkerer-2.5-1.7.10-542.jar) 
+	UCHIJAAAAAA	ThaumicExploration{0.6.0} [Thaumic Exploration] (ThaumicExploration-1.7.10-1.1-55.jar) 
+	UCHIJAAAAAA	ThaumicHorizons{1.1.9} [Thaumic Horizons] (thaumichorizons-1.7.10-1.1.9.jar) 
+	UCHIJAAAAAA	ThermalDynamics{1.7.10R1.2.1} [Thermal Dynamics] (ThermalDynamics-[1.7.10]1.2.1-172.jar) 
+	UCHIJAAAAAA	tc{4.3.5_014} [Traincraft] (Traincraft-4.3.5_014.jar) 
+	UCHIJAAAAAA	uuidoffline{1.0} [UUIDOffline] (uuidoffline-1.0.jar) 
+	UCHIJAAAAAA	witchery{0.24.1} [Witchery] (witchery-1.7.10-0.24.1.jar) 
+	UCHIJAAAAAA	worldedit{6.1.1} [WorldEdit] (worldedit-forge-mc1.7.10-6.1.1-dist.jar) 
+	UCHIJAAAAAA	McMultipart{1.2.0.345} [Minecraft Multipart Plugin] (ForgeMultipart-1.7.10-1.2.0.345-universal.jar) 
+	UCHIJAAAAAA	ForgeRelocation{0.0.1.4} [ForgeRelocation] (ForgeRelocation-1.7.10-0.0.1.4-universal.jar) 
+	UCHIJAAAAAA	MCFrames{1.0} [MCFrames] (ForgeRelocation-1.7.10-0.0.1.4-universal.jar) 
+	UCHIJAAAAAA	RelocationFMP{0.0.1.2} [RelocationFMP] (ForgeRelocationFMP-1.7.10-0.0.1.2-universal.jar) 
+	UCHIJAAAAAA	ForgeMicroblock{1.2.0.345} [Forge Microblocks] (ForgeMultipart-1.7.10-1.2.0.345-universal.jar) 
+	GL info: ' Vendor: 'NVIDIA Corporation' Version: '4.6.0 NVIDIA 560.94' Renderer: 'NVIDIA GeForce GTX 970/PCIe/SSE2'
+	AE2 Version: beta rv3-beta-6 for Forge 10.13.4.1448
+	CoFHCore: -[1.7.10]3.1.4-329
+	ThermalFoundation: -[1.7.10]1.2.6-118
+	ThermalExpansion: -[1.7.10]4.1.5-248
+	ThermalDynamics: -[1.7.10]1.2.1-172
+	Chisel: Errors like "[FML]: Unable to lookup ..." are NOT the cause of this crash. You can safely ignore these errors. And update forge while you're at it.
+	AE2 Integration: IC2:ON, RotaryCraft:OFF, RC:ON, BuildCraftCore:ON, BuildCraftTransport:ON, BuildCraftBuilder:ON, RF:ON, RFItem:ON, MFR:OFF, DSU:ON, FZ:OFF, FMP:ON, RB:OFF, CLApi:OFF, Waila:OFF, InvTweaks:OFF, NEI:ON, CraftGuide:ON, Mekanism:ON, ImmibisMicroblocks:OFF, BetterStorage:OFF, OpenComputers:OFF, PneumaticCraft:OFF
+	Armourer's Workshop: 
+		Render Type: MODEL_ATTACHMENT
+		Texture Render: false
+		Baking Queue: 0
+		Request Queue: 0
+		Texture Painting: true
+		Multipass Skin Rendering: true
+	Launched Version: 1.7.10-Forge10.13.4.1614-1.7.10
+	LWJGL: 2.9.1
+	OpenGL: NVIDIA GeForce GTX 970/PCIe/SSE2 GL version 4.6.0 NVIDIA 560.94, NVIDIA Corporation
+	GL Caps: Using GL 1.3 multitexturing.
+Using framebuffer objects because OpenGL 3.0 is supported and separate blending is supported.
+Anisotropic filtering is supported and maximum anisotropy is 16.
+Shaders are available because OpenGL 2.1 is supported.
+
+	Is Modded: Definitely; Client brand changed to 'fml,forge'
+	Type: Client (map_client.txt)
+	Resource Packs: []
+	Current Language: English (US)
+	Profiler Position: N/A (disabled)
+	Vec3 Pool Size: 0 (0 bytes; 0 MB) allocated, 0 (0 bytes; 0 MB) used
+	Anisotropic Filtering: Off (1)
