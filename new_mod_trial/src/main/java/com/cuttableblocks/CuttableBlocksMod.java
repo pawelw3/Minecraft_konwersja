@@ -35,10 +35,8 @@ public class CuttableBlocksMod {
     
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        // Inicjalizacja CreativeTab (musi być przed rejestracją bloków/itemów)
-        CreativeTabCuttableBlocks.tabCuttableBlocks.setBackgroundImageName("item_search.png");
-        
         // Proxy preInit MUSI być przed rejestracją bloków - inicjalizuje renderId
+        // oraz ustawia tło CreativeTab (client-side only)
         proxy.preInit();
         
         ModBlocks.registerBlocks();

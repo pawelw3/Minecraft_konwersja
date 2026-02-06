@@ -1,0 +1,2287 @@
+================================================================================
+FILE: blocks/BlockCuttable.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\blocks\BlockCuttable.java
+================================================================================
+
+package com.cuttableblocks.blocks;
+
+import com.cuttableblocks.client.ClientProxy;
+import com.cuttableblocks.tileentities.TileEntityCuttable;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockContainer;
+import net.minecraft.block.material.Material;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.World;
+
+import java.util.ArrayList;
+
+public class BlockCuttable extends BlockContainer {
+    
+    public BlockCuttable(Material material) {
+        super(material);
+        this.setHardness(1.0f);
+        this.setResistance(5.0f);
+    }
+    
+    @Override
+    public TileEntity createNewTileEntity(World world, int metadata) {
+        return new TileEntityCuttable();
+    }
+    
+    @Override
+    public int getRenderType() {
+        return ClientProxy.cuttableRenderId;
+    }
+    
+    @Override
+    public boolean isOpaqueCube() {
+        return false;
+    }
+    
+    @Override
+    public boolean renderAsNormalBlock() {
+        return false;
+    }
+    
+    @Override
+    public void setBlockBoundsBasedOnState(IBlockAccess world, int x, int y, int z) {
+        // Calculate bounds based on the cut plane
+        TileEntity te = world.getTileEntity(x, y, z);
+        if (te instanceof TileEntityCuttable) {
+            TileEntityCuttable cutTE = (TileEntityCuttable) te;
+            setBoundsForCut(cutTE);
+            return;
+        }
+        // Default to full block
+        this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+    }
+    
+    private void setBoundsForCut(TileEntityCuttable te) {
+        float nx = te.getNormalX();
+        float ny = te.getNormalY();
+        float nz = te.getNormalZ();
+        boolean keepPositive = te.keepPositiveSide();
+        
+        float absNx = Math.abs(nx);
+        float absNy = Math.abs(ny);
+        float absNz = Math.abs(nz);
+        
+        // Axis-aligned cuts get precise bounds
+        if (absNy > 0.95f) {
+            // Horizontal cut
+            if (ny > 0 == keepPositive) {
+                this.setBlockBounds(0.0f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f); // Top half
+            } else {
+                this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 0.5f, 1.0f); // Bottom half
+            }
+        } else if (absNx > 0.95f) {
+            // Vertical X cut
+            if (nx > 0 == keepPositive) {
+                this.setBlockBounds(0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f); // East half
+            } else {
+                this.setBlockBounds(0.0f, 0.0f, 0.0f, 0.5f, 1.0f, 1.0f); // West half
+            }
+        } else if (absNz > 0.95f) {
+            // Vertical Z cut
+            if (nz > 0 == keepPositive) {
+                this.setBlockBounds(0.0f, 0.0f, 0.5f, 1.0f, 1.0f, 1.0f); // South half
+            } else {
+                this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.5f); // North half
+            }
+        } else {
+            // Diagonal cut - use full block for simplicity
+            this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+        }
+    }
+    
+    @Override
+    public ItemStack getPickBlock(MovingObjectPosition target, World world, int x, int y, int z) {
+        TileEntity te = world.getTileEntity(x, y, z);
+        if (te instanceof TileEntityCuttable) {
+            TileEntityCuttable cutTE = (TileEntityCuttable) te;
+            Block original = cutTE.getOriginalBlock();
+            int meta = cutTE.getOriginalMetadata();
+            if (original != null) {
+                return new ItemStack(original, 1, meta);
+            }
+        }
+        return super.getPickBlock(target, world, x, y, z);
+    }
+    
+    @Override
+    public ArrayList<ItemStack> getDrops(World world, int x, int y, int z, int metadata, int fortune) {
+        ArrayList<ItemStack> drops = new ArrayList<>();
+        
+        TileEntity te = world.getTileEntity(x, y, z);
+        if (te instanceof TileEntityCuttable) {
+            TileEntityCuttable cutTE = (TileEntityCuttable) te;
+            Block original = cutTE.getOriginalBlock();
+            int meta = cutTE.getOriginalMetadata();
+            if (original != null) {
+                drops.add(new ItemStack(original, 1, meta));
+                return drops;
+            }
+        }
+        
+        return super.getDrops(world, x, y, z, metadata, fortune);
+    }
+    
+    @Override
+    public boolean removedByPlayer(World world, EntityPlayer player, int x, int y, int z, boolean willHarvest) {
+        // Drop the original block when harvested
+        return super.removedByPlayer(world, player, x, y, z, willHarvest);
+    }
+    
+    @Override
+    public void addCollisionBoxesToList(World world, int x, int y, int z, 
+                                        net.minecraft.util.AxisAlignedBB mask, 
+                                        java.util.List list, Entity entity) {
+        // Set bounds based on cut before adding collision boxes
+        setBlockBoundsBasedOnState(world, x, y, z);
+        super.addCollisionBoxesToList(world, x, y, z, mask, list, entity);
+        // Reset to full block for safety
+        this.setBlockBounds(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+    }
+}
+
+================================================================================
+FILE: blocks/ModBlocks.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\blocks\ModBlocks.java
+================================================================================
+
+package com.cuttableblocks.blocks;
+
+import com.cuttableblocks.CreativeTabCuttableBlocks;
+import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+
+public class ModBlocks {
+    
+    public static Block blockCuttable;
+    
+    public static void registerBlocks() {
+        blockCuttable = new BlockCuttable(Material.rock)
+            .setUnlocalizedName("cuttableBlock")
+            .setCreativeTab(CreativeTabCuttableBlocks.tabCuttableBlocks);
+        
+        GameRegistry.registerBlock(blockCuttable, "cuttable_block");
+    }
+}
+
+================================================================================
+FILE: client/ClientProxy.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\ClientProxy.java
+================================================================================
+
+package com.cuttableblocks.client;
+
+import com.cuttableblocks.CreativeTabCuttableBlocks;
+import com.cuttableblocks.blocks.ModBlocks;
+import com.cuttableblocks.common.CommonProxy;
+import cpw.mods.fml.client.registry.RenderingRegistry;
+
+public class ClientProxy extends CommonProxy {
+    
+    public static int cuttableRenderId;
+    
+    @Override
+    public void preInit() {
+        super.preInit();
+        
+        // Set CreativeTab background image (client-side only)
+        CreativeTabCuttableBlocks.tabCuttableBlocks.setBackgroundImageName("item_search.png");
+        
+        // Register render ID early - needed during block registration
+        cuttableRenderId = RenderingRegistry.getNextAvailableRenderId();
+    }
+    
+    @Override
+    public void init() {
+        super.init();
+        
+        // Register the actual renderer
+        RenderingRegistry.registerBlockHandler(new CuttableBlockRenderer());
+    }
+    
+    @Override
+    public void postInit() {
+        super.postInit();
+    }
+}
+
+================================================================================
+FILE: client/CuttableBlockRenderer.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\CuttableBlockRenderer.java
+================================================================================
+
+package com.cuttableblocks.client;
+
+import com.cuttableblocks.client.render.RenderHelper;
+import com.cuttableblocks.tileentities.TileEntityCuttable;
+import cpw.mods.fml.client.registry.ISimpleBlockRenderingHandler;
+import net.minecraft.block.Block;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
+import org.lwjgl.opengl.GL11;
+
+public class CuttableBlockRenderer implements ISimpleBlockRenderingHandler {
+    
+    @Override
+    public void renderInventoryBlock(Block block, int metadata, int modelId, RenderBlocks renderer) {
+        // Render a simple cube for inventory
+        Tessellator tessellator = Tessellator.instance;
+        
+        GL11.glTranslatef(-0.5F, -0.5F, -0.5F);
+        
+        IIcon icon = block.getIcon(0, metadata);
+        
+        // Render all 6 faces
+        renderer.renderFaceYNeg(block, 0.0D, 0.0D, 0.0D, icon);
+        renderer.renderFaceYPos(block, 0.0D, 0.0D, 0.0D, icon);
+        renderer.renderFaceZNeg(block, 0.0D, 0.0D, 0.0D, icon);
+        renderer.renderFaceZPos(block, 0.0D, 0.0D, 0.0D, icon);
+        renderer.renderFaceXNeg(block, 0.0D, 0.0D, 0.0D, icon);
+        renderer.renderFaceXPos(block, 0.0D, 0.0D, 0.0D, icon);
+        
+        GL11.glTranslatef(0.5F, 0.5F, 0.5F);
+    }
+    
+    @Override
+    public boolean renderWorldBlock(IBlockAccess world, int x, int y, int z, 
+                                    Block block, int modelId, RenderBlocks renderer) {
+        
+        TileEntityCuttable te = (TileEntityCuttable) world.getTileEntity(x, y, z);
+        if (te == null) {
+            return false;
+        }
+        
+        Block originalBlock = te.getOriginalBlock();
+        if (originalBlock == null) {
+            // Fallback: render as standard block
+            return renderer.renderStandardBlock(block, x, y, z);
+        }
+        
+        // Use RenderHelper to render the cut block
+        return RenderHelper.renderCutBlock(renderer, block, x, y, z, te);
+    }
+    
+    @Override
+    public boolean shouldRender3DInInventory(int modelId) {
+        return true;
+    }
+    
+    @Override
+    public int getRenderId() {
+        return ClientProxy.cuttableRenderId;
+    }
+}
+
+================================================================================
+FILE: client/render/AdvancedCutRenderer.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\render\AdvancedCutRenderer.java
+================================================================================
+
+package com.cuttableblocks.client.render;
+
+import com.cuttableblocks.tileentities.TileEntityCuttable;
+import net.minecraft.block.Block;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Advanced renderer for cuttable blocks supporting arbitrary plane cuts.
+ * Renders a block cut by a plane passing through its center.
+ */
+public class AdvancedCutRenderer {
+    
+    private static final Tessellator tess = Tessellator.instance;
+    
+    /**
+     * Renders a block cut by a plane with proper face culling.
+     */
+    public static boolean renderAdvancedCut(RenderBlocks renderer, Block block, 
+                                            int x, int y, int z, TileEntityCuttable te) {
+        
+        Block originalBlock = te.getOriginalBlock();
+        if (originalBlock == null) {
+            return false;
+        }
+        
+        float nx = te.getNormalX();
+        float ny = te.getNormalY();
+        float nz = te.getNormalZ();
+        boolean keepPositive = te.keepPositiveSide();
+        int meta = te.getOriginalMetadata();
+        
+        // Calculate plane intersection points with cube edges
+        List<Vec3> intersections = calculateIntersections(nx, ny, nz);
+        if (intersections.size() < 3) {
+            // Not enough points to form a polygon, fallback to simple cut
+            return false;
+        }
+        
+        // Determine which cube faces are visible (not cut off)
+        renderVisibleFaces(renderer, originalBlock, x, y, z, meta, nx, ny, nz, keepPositive);
+        
+        // Render the cut face (the polygon created by the plane)
+        renderCutFace(x, y, z, intersections, nx, ny, nz, keepPositive, originalBlock, meta);
+        
+        return true;
+    }
+    
+    /**
+     * Calculate intersection points of the plane with cube edges.
+     * Plane equation: nx*(x-0.5) + ny*(y-0.5) + nz*(z-0.5) = 0
+     * Or: nx*x + ny*y + nz*z = 0.5*(nx + ny + nz)
+     */
+    private static List<Vec3> calculateIntersections(float nx, float ny, float nz) {
+        List<Vec3> points = new ArrayList<>();
+        float d = 0.5f * (nx + ny + nz);
+        
+        // Check all 12 edges of the unit cube [0,1]x[0,1]x[0,1]
+        
+        // Edges parallel to X axis (y=0/1, z=0/1)
+        checkEdgeX(points, nx, ny, nz, d, 0, 0);
+        checkEdgeX(points, nx, ny, nz, d, 0, 1);
+        checkEdgeX(points, nx, ny, nz, d, 1, 0);
+        checkEdgeX(points, nx, ny, nz, d, 1, 1);
+        
+        // Edges parallel to Y axis (x=0/1, z=0/1)
+        checkEdgeY(points, nx, ny, nz, d, 0, 0);
+        checkEdgeY(points, nx, ny, nz, d, 0, 1);
+        checkEdgeY(points, nx, ny, nz, d, 1, 0);
+        checkEdgeY(points, nx, ny, nz, d, 1, 1);
+        
+        // Edges parallel to Z axis (x=0/1, y=0/1)
+        checkEdgeZ(points, nx, ny, nz, d, 0, 0);
+        checkEdgeZ(points, nx, ny, nz, d, 0, 1);
+        checkEdgeZ(points, nx, ny, nz, d, 1, 0);
+        checkEdgeZ(points, nx, ny, nz, d, 1, 1);
+        
+        return points;
+    }
+    
+    private static void checkEdgeX(List<Vec3> points, float nx, float ny, float nz, 
+                                    float d, int y, int z) {
+        // Edge from (0,y,z) to (1,y,z), parametric: (t, y, z), t in [0,1]
+        // Plane equation: nx*t + ny*y + nz*z = d
+        if (Math.abs(nx) < 0.0001f) return;
+        
+        float t = (d - ny * y - nz * z) / nx;
+        if (t >= 0.0f && t <= 1.0f) {
+            points.add(Vec3.createVectorHelper(t, y, z));
+        }
+    }
+    
+    private static void checkEdgeY(List<Vec3> points, float nx, float ny, float nz,
+                                    float d, int x, int z) {
+        // Edge from (x,0,z) to (x,1,z), parametric: (x, t, z), t in [0,1]
+        if (Math.abs(ny) < 0.0001f) return;
+        
+        float t = (d - nx * x - nz * z) / ny;
+        if (t >= 0.0f && t <= 1.0f) {
+            points.add(Vec3.createVectorHelper(x, t, z));
+        }
+    }
+    
+    private static void checkEdgeZ(List<Vec3> points, float nx, float ny, float nz,
+                                    float d, int x, int y) {
+        // Edge from (x,y,0) to (x,y,1), parametric: (x, y, t), t in [0,1]
+        if (Math.abs(nz) < 0.0001f) return;
+        
+        float t = (d - nx * x - ny * y) / nz;
+        if (t >= 0.0f && t <= 1.0f) {
+            points.add(Vec3.createVectorHelper(x, y, t));
+        }
+    }
+    
+    /**
+     * Renders the visible portions of the original cube faces.
+     */
+    private static void renderVisibleFaces(RenderBlocks renderer, Block block,
+                                           int x, int y, int z, int meta,
+                                           float nx, float ny, float nz, 
+                                           boolean keepPositive) {
+        
+        // For each of the 6 cube faces, check if it should be rendered
+        // A face is rendered if its center is on the "keep" side of the plane
+        
+        double checkDist = keepPositive ? 0.001 : -0.001;
+        
+        // Bottom face (Y=0), center at (0.5, 0, 0.5)
+        if (isPointOnKeepSide(0.5, 0, 0.5, nx, ny, nz, keepPositive, checkDist)) {
+            renderBottomFace(renderer, block, x, y, z);
+        }
+        
+        // Top face (Y=1), center at (0.5, 1, 0.5)
+        if (isPointOnKeepSide(0.5, 1, 0.5, nx, ny, nz, keepPositive, checkDist)) {
+            renderTopFace(renderer, block, x, y, z);
+        }
+        
+        // North face (Z=0), center at (0.5, 0.5, 0)
+        if (isPointOnKeepSide(0.5, 0.5, 0, nx, ny, nz, keepPositive, checkDist)) {
+            renderNorthFace(renderer, block, x, y, z);
+        }
+        
+        // South face (Z=1), center at (0.5, 0.5, 1)
+        if (isPointOnKeepSide(0.5, 0.5, 1, nx, ny, nz, keepPositive, checkDist)) {
+            renderSouthFace(renderer, block, x, y, z);
+        }
+        
+        // West face (X=0), center at (0, 0.5, 0.5)
+        if (isPointOnKeepSide(0, 0.5, 0.5, nx, ny, nz, keepPositive, checkDist)) {
+            renderWestFace(renderer, block, x, y, z);
+        }
+        
+        // East face (X=1), center at (1, 0.5, 0.5)
+        if (isPointOnKeepSide(1, 0.5, 0.5, nx, ny, nz, keepPositive, checkDist)) {
+            renderEastFace(renderer, block, x, y, z);
+        }
+    }
+    
+    /**
+     * Check if a point is on the "keep" side of the plane.
+     */
+    private static boolean isPointOnKeepSide(double px, double py, double pz,
+                                              float nx, float ny, float nz,
+                                              boolean keepPositive, double epsilon) {
+        float d = 0.5f * (nx + ny + nz);
+        double dist = nx * px + ny * py + nz * pz - d;
+        return keepPositive ? (dist > -epsilon) : (dist < epsilon);
+    }
+    
+    /**
+     * Render the cut face (polygon) with PADDED texture (clamp-to-edge).
+     * For diagonal cut faces larger than 1x1, we use padding to maintain
+     * texture quality - the texture stays at 1:1 scale in the center,
+     * and edge pixels repeat outward.
+     */
+    private static void renderCutFace(int x, int y, int z, List<Vec3> points,
+                                      float nx, float ny, float nz, boolean keepPositive,
+                                      Block originalBlock, int meta) {
+        
+        if (points.size() < 3) return;
+        
+        // Get icon from original block
+        IIcon icon = originalBlock.getIcon(0, meta);
+        
+        // Sort points to form a proper polygon
+        Vec3 center = calculateCentroid(points);
+        List<Vec3> sortedPoints = sortPointsByAngle(points, center, nx, ny, nz);
+        
+        // Calculate bounding box of the cut face
+        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
+        
+        for (Vec3 p : points) {
+            minX = Math.min(minX, p.xCoord);
+            minY = Math.min(minY, p.yCoord);
+            minZ = Math.min(minZ, p.zCoord);
+            maxX = Math.max(maxX, p.xCoord);
+            maxY = Math.max(maxY, p.yCoord);
+            maxZ = Math.max(maxZ, p.zCoord);
+        }
+        
+        // Determine if this is an axis-aligned or diagonal face
+        double dx = maxX - minX;
+        double dy = maxY - minY;
+        double dz = maxZ - minZ;
+        boolean isXFace = dx < 0.01;
+        boolean isYFace = dy < 0.01;
+        boolean isZFace = dz < 0.01;
+        boolean isDiagonal = !isXFace && !isYFace && !isZFace;
+        
+        // Calculate face size in texture units (16 = 1 full texture)
+        double faceWidth, faceHeight;
+        if (isXFace) {
+            faceWidth = dy * 16.0;
+            faceHeight = dz * 16.0;
+        } else if (isYFace) {
+            faceWidth = dx * 16.0;
+            faceHeight = dz * 16.0;
+        } else if (isZFace) {
+            faceWidth = dx * 16.0;
+            faceHeight = dy * 16.0;
+        } else {
+            // Diagonal face
+            faceWidth = Math.sqrt(dx*dx + dy*dy + dz*dz) * 16.0;
+            faceHeight = 16.0;
+        }
+        
+        // Calculate lighting (use default brightness)
+        int brightness = 15 << 20 | 15 << 4;
+        
+        float brightnessFactor = Math.abs(nx) * 0.6f + Math.abs(ny) * 1.0f + Math.abs(nz) * 0.8f;
+        brightnessFactor = Math.max(0.4f, Math.min(1.0f, brightnessFactor));
+        
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(brightnessFactor, brightnessFactor, brightnessFactor);
+        
+        // Choose UV mapping based on face type:
+        // - Axis-aligned: use CLIPPED (show portion of texture)
+        // - Diagonal: use TILED CENTERED (tiling centered on face)
+        if (isDiagonal && (faceWidth > 16.0 || faceHeight > 16.0)) {
+            // Use centered tiling for large diagonal faces
+            for (int i = 1; i < sortedPoints.size() - 1; i++) {
+                addVertexWithTiledCenteredUV(x, y, z, sortedPoints.get(0), icon, nx, ny, nz,
+                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
+                addVertexWithTiledCenteredUV(x, y, z, sortedPoints.get(i), icon, nx, ny, nz,
+                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
+                addVertexWithTiledCenteredUV(x, y, z, sortedPoints.get(i + 1), icon, nx, ny, nz,
+                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
+            }
+        } else {
+            // Use standard clipped mapping for axis-aligned faces
+            for (int i = 1; i < sortedPoints.size() - 1; i++) {
+                addVertexWithClippedUV(x, y, z, sortedPoints.get(0), icon, nx, ny, nz,
+                                       minX, minY, minZ, maxX, maxY, maxZ);
+                addVertexWithClippedUV(x, y, z, sortedPoints.get(i), icon, nx, ny, nz,
+                                       minX, minY, minZ, maxX, maxY, maxZ);
+                addVertexWithClippedUV(x, y, z, sortedPoints.get(i + 1), icon, nx, ny, nz,
+                                       minX, minY, minZ, maxX, maxY, maxZ);
+            }
+        }
+    }
+    
+    private static Vec3 calculateCentroid(List<Vec3> points) {
+        double cx = 0, cy = 0, cz = 0;
+        for (Vec3 p : points) {
+            cx += p.xCoord;
+            cy += p.yCoord;
+            cz += p.zCoord;
+        }
+        return Vec3.createVectorHelper(cx / points.size(), cy / points.size(), cz / points.size());
+    }
+    
+    private static List<Vec3> sortPointsByAngle(List<Vec3> points, Vec3 center, 
+                                                 float nx, float ny, float nz) {
+        // Project points onto plane and sort by angle around center
+        // Simplified: sort by position for now
+        List<Vec3> sorted = new ArrayList<>(points);
+        
+        // Sort based on cross product with reference vector
+        // This ensures points are in correct order for triangle fan
+        sorted.sort((a, b) -> {
+            double angleA = Math.atan2(a.yCoord - center.yCoord, a.xCoord - center.xCoord);
+            double angleB = Math.atan2(b.yCoord - center.yCoord, b.xCoord - center.xCoord);
+            return Double.compare(angleA, angleB);
+        });
+        
+        return sorted;
+    }
+    
+    private static void addVertexWithTiledUV(int x, int y, int z, Vec3 point, 
+                                              IIcon icon, float nx, float ny, float nz,
+                                              double faceWidth, double faceHeight,
+                                              double minX, double minY, double minZ,
+                                              double maxX, double maxY, double maxZ) {
+        // Calculate normalized position within the face bounds
+        double uNorm, vNorm;
+        
+        boolean isXFace = (maxX - minX) < 0.01;
+        boolean isYFace = (maxY - minY) < 0.01;
+        boolean isZFace = (maxZ - minZ) < 0.01;
+        
+        if (isXFace) {
+            uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+        } else if (isYFace) {
+            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+        } else if (isZFace) {
+            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+            vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+        } else {
+            // Diagonal - project onto dominant plane
+            if (Math.abs(nx) > Math.abs(ny) && Math.abs(nx) > Math.abs(nz)) {
+                uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+            } else if (Math.abs(ny) > Math.abs(nz)) {
+                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+            } else {
+                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+                vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+            }
+        }
+        
+        // Scale by face size to get texture coordinates
+        // This tiles the texture instead of stretching it
+        double uScaled = uNorm * (faceWidth / 16.0);
+        double vScaled = vNorm * (faceHeight / 16.0);
+        
+        // Wrap coordinates for tiling (0-1 range)
+        double uWrapped = uScaled - Math.floor(uScaled);
+        double vWrapped = vScaled - Math.floor(vScaled);
+        
+        // Get actual texture coordinates
+        double uMin = icon.getMinU();
+        double uMax = icon.getMaxU();
+        double vMin = icon.getMinV();
+        double vMax = icon.getMaxV();
+        
+        double uCoord = uMin + (uMax - uMin) * uWrapped;
+        double vCoord = vMin + (vMax - vMin) * vWrapped;
+        
+        tess.addVertexWithUV(
+            x + point.xCoord, 
+            y + point.yCoord, 
+            z + point.zCoord,
+            uCoord, vCoord
+        );
+    }
+    
+    /**
+     * Adds vertex with TILED UV coordinates centered on the face.
+     * Creates a tiling pattern that covers the face area, but only
+     * renders the fragment corresponding to the actual polygon.
+     * The tiling is centered on the face center.
+     * 
+     * Example: face is 22.6px wide (1.41 * 16), texture is 16px
+     * - We need 2 tiles (32px) to cover the face
+     * - Tiling is centered: face center aligns with texture center
+     * - UVs wrap around for seamless tiling
+     */
+    private static void addVertexWithTiledCenteredUV(int x, int y, int z, Vec3 point,
+                                                      IIcon icon, float nx, float ny, float nz,
+                                                      double faceWidth, double faceHeight,
+                                                      double minX, double minY, double minZ,
+                                                      double maxX, double maxY, double maxZ) {
+        
+        double cx = (minX + maxX) / 2.0;
+        double cy = (minY + maxY) / 2.0;
+        double cz = (minZ + maxZ) / 2.0;
+        
+        // Determine dominant axis for projection
+        boolean isXFace = (maxX - minX) < 0.01;
+        boolean isYFace = (maxY - minY) < 0.01;
+        boolean isZFace = (maxZ - minZ) < 0.01;
+        
+        // Calculate local coordinates relative to face center (-0.5 to 0.5 range)
+        double uLocal, vLocal;
+        if (isXFace) {
+            uLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
+            vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
+        } else if (isYFace) {
+            uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
+            vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
+        } else if (isZFace) {
+            uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
+            vLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
+        } else {
+            // Diagonal face - project based on dominant normal component
+            if (Math.abs(nx) > Math.abs(ny) && Math.abs(nx) > Math.abs(nz)) {
+                uLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
+                vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
+            } else if (Math.abs(ny) > Math.abs(nz)) {
+                uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
+                vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
+            } else {
+                uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
+                vLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
+            }
+        }
+        
+        // Convert to texture pixel coordinates
+        // Face center (0) maps to texture center (8px = 0.5 in UV)
+        // Face extends by faceWidth/2 pixels on each side
+        double uPixelOffset = uLocal * (faceWidth / 2.0);
+        double vPixelOffset = vLocal * (faceHeight / 2.0);
+        
+        // Convert to UV coordinates within a single texture tile
+        // Center is at 8px, so we add 8 and wrap around 16
+        double uPixel = 8.0 + uPixelOffset;
+        double vPixel = 8.0 + vPixelOffset;
+        
+        // Wrap to 0-16 range for seamless tiling
+        double uWrapped = ((uPixel % 16.0) + 16.0) % 16.0;
+        double vWrapped = ((vPixel % 16.0) + 16.0) % 16.0;
+        
+        // Convert to actual UV coordinates
+        double uFinal = icon.getInterpolatedU(uWrapped);
+        double vFinal = icon.getInterpolatedV(vWrapped);
+        
+        tess.addVertexWithUV(
+            x + point.xCoord,
+            y + point.yCoord,
+            z + point.zCoord,
+            uFinal, vFinal
+        );
+    }
+    
+    /**
+     * Adds vertex with CLIPPED UV coordinates.
+     * Shows only the portion of texture corresponding to the face size.
+     */
+    private static void addVertexWithClippedUV(int x, int y, int z, Vec3 point,
+                                                IIcon icon, float nx, float ny, float nz,
+                                                double minX, double minY, double minZ,
+                                                double maxX, double maxY, double maxZ) {
+        
+        boolean isXFace = (maxX - minX) < 0.01;
+        boolean isYFace = (maxY - minY) < 0.01;
+        boolean isZFace = (maxZ - minZ) < 0.01;
+        
+        double uNorm, vNorm;
+        if (isXFace) {
+            uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+        } else if (isYFace) {
+            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+        } else if (isZFace) {
+            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+            vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+        } else {
+            // Diagonal - use simple projection
+            if (Math.abs(nx) > Math.abs(ny) && Math.abs(nx) > Math.abs(nz)) {
+                uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+            } else if (Math.abs(ny) > Math.abs(nz)) {
+                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+            } else {
+                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+                vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+            }
+        }
+        
+        double uMin = icon.getMinU();
+        double uMax = icon.getMaxU();
+        double vMin = icon.getMinV();
+        double vMax = icon.getMaxV();
+        
+        double uCoord = uMin + (uMax - uMin) * uNorm;
+        double vCoord = vMin + (vMax - vMin) * vNorm;
+        
+        tess.addVertexWithUV(
+            x + point.xCoord,
+            y + point.yCoord,
+            z + point.zCoord,
+            uCoord, vCoord
+        );
+    }
+    
+    // Legacy method for simple UV mapping (used by other parts of the code)
+    private static void addVertexWithUV(int x, int y, int z, Vec3 point, 
+                                        IIcon icon, float nx, float ny, float nz) {
+        // Map 3D point to 2D UV coordinates
+        double u, v;
+        
+        if (Math.abs(ny) > Math.abs(nx) && Math.abs(ny) > Math.abs(nz)) {
+            u = point.xCoord;
+            v = point.zCoord;
+        } else if (Math.abs(nx) > Math.abs(nz)) {
+            u = point.zCoord;
+            v = point.yCoord;
+        } else {
+            u = point.xCoord;
+            v = point.yCoord;
+        }
+        
+        double uMin = icon.getMinU();
+        double uMax = icon.getMaxU();
+        double vMin = icon.getMinV();
+        double vMax = icon.getMaxV();
+        
+        double uCoord = uMin + (uMax - uMin) * u;
+        double vCoord = vMin + (vMax - vMin) * v;
+        
+        tess.addVertexWithUV(
+            x + point.xCoord, 
+            y + point.yCoord, 
+            z + point.zCoord,
+            uCoord, vCoord
+        );
+    }
+    
+    // Face rendering methods using original block's icons
+    private static void renderBottomFace(RenderBlocks rb, Block block, int x, int y, int z) {
+        IIcon icon = block.getIcon(0, 0);
+        rb.renderFaceYNeg(block, x, y, z, icon);
+    }
+    
+    private static void renderTopFace(RenderBlocks rb, Block block, int x, int y, int z) {
+        IIcon icon = block.getIcon(1, 0);
+        rb.renderFaceYPos(block, x, y, z, icon);
+    }
+    
+    private static void renderNorthFace(RenderBlocks rb, Block block, int x, int y, int z) {
+        IIcon icon = block.getIcon(2, 0);
+        rb.renderFaceZNeg(block, x, y, z, icon);
+    }
+    
+    private static void renderSouthFace(RenderBlocks rb, Block block, int x, int y, int z) {
+        IIcon icon = block.getIcon(3, 0);
+        rb.renderFaceZPos(block, x, y, z, icon);
+    }
+    
+    private static void renderWestFace(RenderBlocks rb, Block block, int x, int y, int z) {
+        IIcon icon = block.getIcon(4, 0);
+        rb.renderFaceXNeg(block, x, y, z, icon);
+    }
+    
+    private static void renderEastFace(RenderBlocks rb, Block block, int x, int y, int z) {
+        IIcon icon = block.getIcon(5, 0);
+        rb.renderFaceXPos(block, x, y, z, icon);
+    }
+}
+
+================================================================================
+FILE: client/render/CutFaceRenderer.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\render\CutFaceRenderer.java
+================================================================================
+
+package com.cuttableblocks.client.render;
+
+import com.cuttableblocks.tileentities.TileEntityCuttable;
+import net.minecraft.block.Block;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.Vec3;
+import java.util.ArrayList;
+
+import java.util.List;
+
+/**
+ * Renders cut faces with proper texture padding to avoid stretching.
+ * 
+ * The cut face may be larger than 1x1 block size (e.g., diagonal cut has size sqrt(2) x 1).
+ * Instead of stretching the texture or tiling it, we use padding:
+ * - The center 1x1 area shows the original texture
+ * - The surrounding areas show repeated edge pixels (padding)
+ * 
+ * This preserves the pixel density of the texture across all faces.
+ */
+public class CutFaceRenderer {
+    
+    private static final Tessellator tess = Tessellator.instance;
+    
+    /**
+     * Renders a cut face with padding to avoid texture stretching.
+     * 
+     * @param x Block X position
+     * @param y Block Y position
+     * @param z Block Z position
+     * @param points Intersection points defining the cut face polygon
+     * @param nx Normal X
+     * @param ny Normal Y
+     * @param nz Normal Z
+     * @param originalBlock The original block for texture
+     * @param meta Block metadata
+     */
+    public static void renderCutFaceWithPadding(int x, int y, int z, List<Vec3> points,
+                                                 float nx, float ny, float nz,
+                                                 Block originalBlock, int meta) {
+        
+        if (points.size() < 3) return;
+        
+        IIcon icon = originalBlock.getIcon(0, meta);
+        
+        // Calculate bounding box of the cut face
+        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
+        
+        for (Vec3 p : points) {
+            minX = Math.min(minX, p.xCoord);
+            minY = Math.min(minY, p.yCoord);
+            minZ = Math.min(minZ, p.zCoord);
+            maxX = Math.max(maxX, p.xCoord);
+            maxY = Math.max(maxY, p.yCoord);
+            maxZ = Math.max(maxZ, p.zCoord);
+        }
+        
+        // Calculate face size in world units
+        double faceWidth, faceHeight;
+        boolean isXFace = (maxX - minX) < 0.01;
+        boolean isYFace = (maxY - minY) < 0.01;
+        boolean isZFace = (maxZ - minZ) < 0.01;
+        
+        if (isXFace) {
+            faceWidth = maxY - minY;
+            faceHeight = maxZ - minZ;
+        } else if (isYFace) {
+            faceWidth = maxX - minX;
+            faceHeight = maxZ - minZ;
+        } else if (isZFace) {
+            faceWidth = maxX - minX;
+            faceHeight = maxY - minY;
+        } else {
+            // Diagonal face - calculate actual size
+            faceWidth = Math.sqrt((maxX-minX)*(maxX-minX) + (maxY-minY)*(maxY-minY));
+            faceHeight = Math.sqrt((maxZ-minZ)*(maxZ-minZ));
+        }
+        
+        // Sort points for rendering
+        Vec3 center = calculateCentroid(points);
+        List<Vec3> sortedPoints = sortPointsByAngle(points, center, nx, ny, nz);
+        
+        // Render the polygon with padded UV mapping
+        for (int i = 1; i < sortedPoints.size() - 1; i++) {
+            addVertexWithPaddedUV(x, y, z, sortedPoints.get(0), icon, 
+                                   faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ,
+                                   isXFace, isYFace, isZFace);
+            addVertexWithPaddedUV(x, y, z, sortedPoints.get(i), icon,
+                                   faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ,
+                                   isXFace, isYFace, isZFace);
+            addVertexWithPaddedUV(x, y, z, sortedPoints.get(i + 1), icon,
+                                   faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ,
+                                   isXFace, isYFace, isZFace);
+        }
+    }
+    
+    /**
+     * Maps a vertex to UV coordinates with padding.
+     * 
+     * UV mapping:
+     * - If the vertex is within the central 1x1 area: use normal UV (0-1)
+     * - If outside: clamp UV to edges (padding with edge pixels)
+     */
+    private static void addVertexWithPaddedUV(int x, int y, int z, Vec3 point, IIcon icon,
+                                               double faceWidth, double faceHeight,
+                                               double minX, double minY, double minZ,
+                                               double maxX, double maxY, double maxZ,
+                                               boolean isXFace, boolean isYFace, boolean isZFace) {
+        
+        // Calculate normalized position within face bounds (0-1)
+        double uNorm, vNorm;
+        
+        if (isXFace) {
+            uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+        } else if (isYFace) {
+            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+        } else if (isZFace) {
+            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+            vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+        } else {
+            // Diagonal - project to get UV
+            if (Math.abs(maxX - minX) > Math.abs(maxY - minY)) {
+                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
+            } else {
+                uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+            }
+            if (Math.abs(maxZ - minZ) > 0.01) {
+                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
+            } else {
+                vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
+            }
+        }
+        
+        // Convert to texture coordinates with PADDING
+        // The face may be larger than 1x1, so we need to map:
+        // - Center 1x1 area: normal texture (0-1)
+        // - Outside areas: padding with edge pixels
+        
+        double texU, texV;
+        
+        // Scale UV based on face size relative to 1x1 block
+        // If face is 1.5 wide, uNorm=0 is at -0.25, uNorm=1 is at 1.25 in texture space
+        double uInTexSpace = (uNorm - 0.5) * faceWidth + 0.5;
+        double vInTexSpace = (vNorm - 0.5) * faceHeight + 0.5;
+        
+        // Clamp to 0-1 range (this creates padding with edge pixels)
+        texU = clamp(uInTexSpace, 0.0, 1.0);
+        texV = clamp(vInTexSpace, 0.0, 1.0);
+        
+        // Get actual texture coordinates
+        double uActual = icon.getInterpolatedU(texU * 16.0);
+        double vActual = icon.getInterpolatedV(texV * 16.0);
+        
+        tess.addVertexWithUV(x + point.xCoord, y + point.yCoord, z + point.zCoord, uActual, vActual);
+    }
+    
+    /**
+     * Clamps a value between min and max.
+     */
+    private static double clamp(double value, double min, double max) {
+        return Math.max(min, Math.min(max, value));
+    }
+    
+    /**
+     * Calculates centroid of a list of points.
+     */
+    private static Vec3 calculateCentroid(List<Vec3> points) {
+        double cx = 0, cy = 0, cz = 0;
+        for (Vec3 p : points) {
+            cx += p.xCoord;
+            cy += p.yCoord;
+            cz += p.zCoord;
+        }
+        return Vec3.createVectorHelper(cx / points.size(), cy / points.size(), cz / points.size());
+    }
+    
+    /**
+     * Sorts points by angle around the center for proper polygon rendering.
+     */
+    private static List<Vec3> sortPointsByAngle(List<Vec3> points, Vec3 center, 
+                                                 float nx, float ny, float nz) {
+        List<Vec3> sorted = new ArrayList<>(points);
+        
+        // Sort based on angle around center
+        sorted.sort((a, b) -> {
+            double angleA, angleB;
+            
+            if (Math.abs(ny) > Math.abs(nx) && Math.abs(ny) > Math.abs(nz)) {
+                // Project to XZ plane
+                angleA = Math.atan2(a.zCoord - center.zCoord, a.xCoord - center.xCoord);
+                angleB = Math.atan2(b.zCoord - center.zCoord, b.xCoord - center.xCoord);
+            } else if (Math.abs(nx) > Math.abs(nz)) {
+                // Project to YZ plane
+                angleA = Math.atan2(a.zCoord - center.zCoord, a.yCoord - center.yCoord);
+                angleB = Math.atan2(b.zCoord - center.zCoord, b.yCoord - center.yCoord);
+            } else {
+                // Project to XY plane
+                angleA = Math.atan2(a.yCoord - center.yCoord, a.xCoord - center.xCoord);
+                angleB = Math.atan2(b.yCoord - center.yCoord, b.xCoord - center.xCoord);
+            }
+            
+            return Double.compare(angleA, angleB);
+        });
+        
+        return sorted;
+    }
+}
+
+================================================================================
+FILE: client/render/RenderHelper.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\render\RenderHelper.java
+================================================================================
+
+package com.cuttableblocks.client.render;
+
+import com.cuttableblocks.tileentities.TileEntityCuttable;
+import net.minecraft.block.Block;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.util.IIcon;
+import net.minecraft.world.IBlockAccess;
+
+/**
+ * Helper class for rendering cuttable blocks.
+ * Based on rendering techniques from Carpenter's Blocks.
+ * 
+ * Implements 16x16 grid snapping for cut planes - planes are rounded to
+ * points on block edges divided into 16 equal segments (matching Minecraft's
+ * 16x16 texture pixels). This ensures consistent texture mapping and reduces
+ * z-fighting artifacts.
+ */
+public class RenderHelper {
+    
+    public static final int GRID_SEGMENTS = 16;
+    
+    private static final Tessellator tessellator = Tessellator.instance;
+    
+    /**
+     * Renders a cut block with the given plane parameters.
+     * 
+     * @param renderer The RenderBlocks instance
+     * @param block The block being rendered (BlockCuttable)
+     * @param x Block X position
+     * @param y Block Y position  
+     * @param z Block Z position
+     * @param te The TileEntity containing cut data
+     * @return true if rendered successfully
+     */
+    public static boolean renderCutBlock(RenderBlocks renderer, Block block, 
+                                         int x, int y, int z, TileEntityCuttable te) {
+        
+        Block originalBlock = te.getOriginalBlock();
+        if (originalBlock == null) {
+            return false;
+        }
+        
+        float nx = te.getNormalX();
+        float ny = te.getNormalY();
+        float nz = te.getNormalZ();
+        
+        // Check if cut is axis-aligned (simplified) or diagonal (advanced)
+        float absNx = Math.abs(nx);
+        float absNy = Math.abs(ny);
+        float absNz = Math.abs(nz);
+        
+        boolean isAxisAligned = (absNx > 0.95f || absNy > 0.95f || absNz > 0.95f) ||
+                                (absNx < 0.05f && absNy < 0.05f) ||
+                                (absNx < 0.05f && absNz < 0.05f) ||
+                                (absNy < 0.05f && absNz < 0.05f);
+        
+        if (isAxisAligned) {
+            // Use simple rendering for axis-aligned cuts
+            return renderAxisAlignedCut(renderer, block, x, y, z, te);
+        } else {
+            // Use advanced rendering for diagonal cuts
+            return AdvancedCutRenderer.renderAdvancedCut(renderer, block, x, y, z, te);
+        }
+    }
+    
+    /**
+     * Renders an axis-aligned cut (simpler and more efficient).
+     */
+    private static boolean renderAxisAlignedCut(RenderBlocks renderer, Block block,
+                                                 int x, int y, int z, TileEntityCuttable te) {
+        
+        Block originalBlock = te.getOriginalBlock();
+        int originalMeta = te.getOriginalMetadata();
+        float nx = te.getNormalX();
+        float ny = te.getNormalY();
+        float nz = te.getNormalZ();
+        boolean keepPositive = te.keepPositiveSide();
+        
+        float absNx = Math.abs(nx);
+        float absNy = Math.abs(ny);
+        float absNz = Math.abs(nz);
+        
+        // Save original block bounds
+        double prevMinX = renderer.renderMinX;
+        double prevMinY = renderer.renderMinY;
+        double prevMinZ = renderer.renderMinZ;
+        double prevMaxX = renderer.renderMaxX;
+        double prevMaxY = renderer.renderMaxY;
+        double prevMaxZ = renderer.renderMaxZ;
+        
+        // Render based on dominant normal direction
+        if (absNy > absNx && absNy > absNz) {
+            // Dominant Y - horizontal cut
+            renderHorizontalCut(renderer, originalBlock, x, y, z, originalMeta, ny > 0 == keepPositive);
+        } else if (absNx > absNz) {
+            // Dominant X - vertical cut along X
+            renderVerticalXCut(renderer, originalBlock, x, y, z, originalMeta, nx > 0 == keepPositive);
+        } else {
+            // Dominant Z - vertical cut along Z
+            renderVerticalZCut(renderer, originalBlock, x, y, z, originalMeta, nz > 0 == keepPositive);
+        }
+        
+        // Restore block bounds
+        renderer.setRenderBounds(prevMinX, prevMinY, prevMinZ, prevMaxX, prevMaxY, prevMaxZ);
+        
+        return true;
+    }
+    
+    /**
+     * Renders a horizontal cut (top or bottom half) with proper texture mapping.
+     * Textures are NOT stretched - we show only the appropriate portion.
+     */
+    private static void renderHorizontalCut(RenderBlocks renderer, Block block, 
+                                            int x, int y, int z, int meta, boolean topHalf) {
+        Tessellator tess = Tessellator.instance;
+        
+        // Get textures for all faces
+        IIcon iconTop = block.getIcon(1, meta);
+        IIcon iconBottom = block.getIcon(0, meta);
+        IIcon iconSide = block.getIcon(2, meta); // North/South side
+        
+        double yMin = topHalf ? 0.5 : 0.0;
+        double yMax = topHalf ? 1.0 : 0.5;
+        
+        // Top face (Y+) - full texture
+        if (topHalf) {
+            tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconTop.getMinU(), iconTop.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconTop.getMaxU(), iconTop.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconTop.getMaxU(), iconTop.getMinV());
+            tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconTop.getMinU(), iconTop.getMinV());
+        }
+        
+        // Bottom face (Y-) - full texture
+        if (!topHalf) {
+            tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconBottom.getMinU(), iconBottom.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconBottom.getMaxU(), iconBottom.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconBottom.getMaxU(), iconBottom.getMaxV());
+            tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconBottom.getMinU(), iconBottom.getMaxV());
+        }
+        
+        // Side faces - show only half of texture (clipped, not stretched!)
+        double vMin = iconSide.getMinV();
+        double vMax = iconSide.getMaxV();
+        double vMid = iconSide.getInterpolatedV(topHalf ? 8.0 : 8.0); // Middle of texture
+        
+        double vTop = topHalf ? vMax : vMid;
+        double vBottom = topHalf ? vMid : vMin;
+        
+        // North face (Z-)
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
+        
+        // South face (Z+)
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMinU(), vTop);
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMinU(), vBottom);
+        
+        // West face (X-)
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
+        
+        // East face (X+)
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
+        
+        // Cut face (horizontal plane at Y=0.5) - tile texture with padding
+        if (true) { // Always render cut face
+            IIcon cutIcon = block.getIcon(1, meta);
+            // Use tiled texture for cut face
+            double u0 = cutIcon.getMinU();
+            double u1 = cutIcon.getMaxU();
+            double v0 = cutIcon.getMinV();
+            double v1 = cutIcon.getMaxV();
+            
+            tess.addVertexWithUV(x + 0.0, y + 0.5, z + 1.0, u0, v1);
+            tess.addVertexWithUV(x + 1.0, y + 0.5, z + 1.0, u1, v1);
+            tess.addVertexWithUV(x + 1.0, y + 0.5, z + 0.0, u1, v0);
+            tess.addVertexWithUV(x + 0.0, y + 0.5, z + 0.0, u0, v0);
+        }
+    }
+    
+    /**
+     * Renders a vertical cut along X axis (east or west half) with proper textures.
+     */
+    private static void renderVerticalXCut(RenderBlocks renderer, Block block,
+                                           int x, int y, int z, int meta, boolean eastHalf) {
+        Tessellator tess = Tessellator.instance;
+        
+        IIcon iconSide = block.getIcon(2, meta);
+        IIcon iconTop = block.getIcon(1, meta);
+        IIcon iconBottom = block.getIcon(0, meta);
+        
+        double xMin = eastHalf ? 0.5 : 0.0;
+        double xMax = eastHalf ? 1.0 : 0.5;
+        
+        // West/East face - full texture on the solid side
+        if (!eastHalf) {
+            // West face visible
+            tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, iconSide.getMinU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, iconSide.getMinU(), iconSide.getMinV());
+        } else {
+            // East face visible
+            tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, iconSide.getMinU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, iconSide.getMinU(), iconSide.getMinV());
+        }
+        
+        // Top/Bottom - show half texture (clipped)
+        double uMin = iconTop.getMinU();
+        double uMax = iconTop.getMaxU();
+        double uMid = iconTop.getInterpolatedU(eastHalf ? 8.0 : 8.0);
+        
+        double uLeft = eastHalf ? uMid : uMin;
+        double uRight = eastHalf ? uMax : uMid;
+        
+        // Top face
+        tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, uLeft, iconTop.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, uRight, iconTop.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconTop.getMinV());
+        tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, uLeft, iconTop.getMinV());
+        
+        // Bottom face
+        tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, uLeft, iconBottom.getMinV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconBottom.getMinV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, uRight, iconBottom.getMaxV());
+        tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, uLeft, iconBottom.getMaxV());
+        
+        // North/South faces - half texture
+        tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, uLeft, iconSide.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconSide.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconSide.getMinV());
+        tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, uLeft, iconSide.getMinV());
+        
+        tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, uLeft, iconSide.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, uRight, iconSide.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, uRight, iconSide.getMinV());
+        tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, uLeft, iconSide.getMinV());
+        
+        // Cut face at X=0.5 - tile texture
+        IIcon cutIcon = block.getIcon(4, meta);
+        tess.addVertexWithUV(x + 0.5, y + 0.0, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
+        tess.addVertexWithUV(x + 0.5, y + 1.0, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
+        tess.addVertexWithUV(x + 0.5, y + 1.0, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
+        tess.addVertexWithUV(x + 0.5, y + 0.0, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
+    }
+    
+    /**
+     * Renders a vertical cut along Z axis (south or north half) with proper textures.
+     */
+    private static void renderVerticalZCut(RenderBlocks renderer, Block block,
+                                           int x, int y, int z, int meta, boolean southHalf) {
+        Tessellator tess = Tessellator.instance;
+        
+        IIcon iconSide = block.getIcon(2, meta);
+        IIcon iconTop = block.getIcon(1, meta);
+        IIcon iconBottom = block.getIcon(0, meta);
+        
+        double zMin = southHalf ? 0.5 : 0.0;
+        double zMax = southHalf ? 1.0 : 0.5;
+        
+        // North/South face - full texture
+        if (!southHalf) {
+            tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
+        } else {
+            tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMinU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconSide.getMinU(), iconSide.getMaxV());
+        }
+        
+        // Top/Bottom - half texture
+        double uMin = iconTop.getMinU();
+        double uMax = iconTop.getMaxU();
+        double uMid = iconTop.getInterpolatedU(8.0);
+        double uLeft = southHalf ? uMid : uMin;
+        double uRight = southHalf ? uMax : uMid;
+        
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, uLeft, iconTop.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, uRight, iconTop.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, uRight, iconTop.getMinV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, uLeft, iconTop.getMinV());
+        
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, uLeft, iconBottom.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, uRight, iconBottom.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, uRight, iconBottom.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, uLeft, iconBottom.getMaxV());
+        
+        // West/East faces - half texture
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
+        
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
+        
+        // Cut face at Z=0.5 - tile texture
+        IIcon cutIcon = block.getIcon(2, meta);
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + 0.5, cutIcon.getMinU(), cutIcon.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + 0.5, cutIcon.getMinU(), cutIcon.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + 0.5, cutIcon.getMaxU(), cutIcon.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + 0.5, cutIcon.getMaxU(), cutIcon.getMaxV());
+    }
+    
+    /**
+     * Renders the "cut face" - the diagonal face created by the plane.
+     * This is more complex and requires custom vertex drawing.
+     */
+    public static void renderCutFace(RenderBlocks renderer, Block block,
+                                     int x, int y, int z, TileEntityCuttable te) {
+        
+        // Get the original block's icons
+        IIcon icon = block.getIcon(0, 0);
+        
+        // Calculate intersection points of plane with cube edges
+        // This would create a polygon that represents the cut surface
+        
+        // For simplified version, we skip the diagonal face rendering
+        // In full implementation, this would draw a polygon with proper UV mapping
+    }
+}
+
+================================================================================
+FILE: client/render/TextureMapper.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\client\render\TextureMapper.java
+================================================================================
+
+package com.cuttableblocks.client.render;
+
+import com.cuttableblocks.tileentities.TileEntityCuttable;
+import net.minecraft.block.Block;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.util.IIcon;
+import net.minecraft.util.Vec3;
+
+import java.util.List;
+
+/**
+ * Handles proper texture mapping for cut blocks.
+ * Ensures textures are not stretched but clipped/tiled appropriately.
+ */
+public class TextureMapper {
+    
+    private static final Tessellator tess = Tessellator.instance;
+    
+    /**
+     * Renders a face with proper texture mapping - no stretching!
+     * For rectangular faces: shows appropriate portion of texture
+     * For cut faces: tiles texture or uses padding
+     */
+    public static void renderTexturedFace(RenderBlocks renderer, Block block, 
+                                           List<Vec3> vertices, int faceIndex,
+                                           int x, int y, int z, TileEntityCuttable te) {
+        
+        if (vertices.size() < 3) return;
+        
+        Block originalBlock = te.getOriginalBlock();
+        int meta = te.getOriginalMetadata();
+        
+        if (originalBlock == null) return;
+        
+        // Get texture from original block
+        IIcon icon = originalBlock.getIcon(faceIndex, meta);
+        
+        // Calculate bounding box of the face
+        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
+        
+        for (Vec3 v : vertices) {
+            minX = Math.min(minX, v.xCoord);
+            minY = Math.min(minY, v.yCoord);
+            minZ = Math.min(minZ, v.zCoord);
+            maxX = Math.max(maxX, v.xCoord);
+            maxY = Math.max(maxY, v.yCoord);
+            maxZ = Math.max(maxZ, v.zCoord);
+        }
+        
+        double width = maxX - minX;
+        double height = maxY - minY;
+        double depth = maxZ - minZ;
+        
+        // Determine dominant axis for UV mapping
+        boolean isXFace = width < 0.01;  // Face is perpendicular to X
+        boolean isYFace = height < 0.01; // Face is perpendicular to Y  
+        boolean isZFace = depth < 0.01;  // Face is perpendicular to Z
+        
+        // For each vertex, calculate proper UV coordinates
+        for (int i = 0; i < vertices.size(); i++) {
+            Vec3 v = vertices.get(i);
+            double u, vCoord;
+            
+            if (isXFace) {
+                // X face: map YZ to UV
+                u = (v.yCoord - minY) / Math.max(height, 0.001);
+                vCoord = (v.zCoord - minZ) / Math.max(depth, 0.001);
+            } else if (isYFace) {
+                // Y face: map XZ to UV
+                u = (v.xCoord - minX) / Math.max(width, 0.001);
+                vCoord = (v.zCoord - minZ) / Math.max(depth, 0.001);
+            } else if (isZFace) {
+                // Z face: map XY to UV
+                u = (v.xCoord - minX) / Math.max(width, 0.001);
+                vCoord = (v.yCoord - minY) / Math.max(height, 0.001);
+            } else {
+                // Diagonal face - use local coordinates
+                u = getUForDiagonal(v, minX, minY, minZ, maxX, maxY, maxZ);
+                vCoord = getVForDiagonal(v, minX, minY, minZ, maxX, maxY, maxZ);
+            }
+            
+            // Apply texture coordinates
+            double uActual = icon.getInterpolatedU(u * 16.0);
+            double vActual = icon.getInterpolatedV(vCoord * 16.0);
+            
+            tess.addVertexWithUV(v.xCoord, v.yCoord, v.zCoord, uActual, vActual);
+        }
+    }
+    
+    /**
+     * Renders a face with REPEATING texture (tiling) instead of stretching.
+     * Used for large cut faces to avoid stretched textures.
+     */
+    public static void renderTiledFace(RenderBlocks renderer, Block block,
+                                        List<Vec3> vertices, int faceIndex,
+                                        int x, int y, int z, TileEntityCuttable te) {
+        
+        if (vertices.size() < 3) return;
+        
+        Block originalBlock = te.getOriginalBlock();
+        int meta = te.getOriginalMetadata();
+        
+        if (originalBlock == null) return;
+        
+        IIcon icon = originalBlock.getIcon(faceIndex, meta);
+        
+        // Calculate bounding box
+        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
+        
+        for (Vec3 v : vertices) {
+            minX = Math.min(minX, v.xCoord);
+            minY = Math.min(minY, v.yCoord);
+            minZ = Math.min(minZ, v.zCoord);
+            maxX = Math.max(maxX, v.xCoord);
+            maxY = Math.max(maxY, v.yCoord);
+            maxZ = Math.max(maxZ, v.zCoord);
+        }
+        
+        double width = maxX - minX;
+        double height = maxY - minY;
+        double depth = maxZ - minZ;
+        
+        // Determine face size in texture units (16 = 1 full texture)
+        double faceSizeU, faceSizeV;
+        boolean isXFace = width < 0.01;
+        boolean isYFace = height < 0.01;
+        boolean isZFace = depth < 0.01;
+        
+        if (isXFace) {
+            faceSizeU = height * 16.0;
+            faceSizeV = depth * 16.0;
+        } else if (isYFace) {
+            faceSizeU = width * 16.0;
+            faceSizeV = depth * 16.0;
+        } else if (isZFace) {
+            faceSizeU = width * 16.0;
+            faceSizeV = height * 16.0;
+        } else {
+            // Diagonal - estimate size
+            faceSizeU = Math.sqrt(width*width + height*height + depth*depth) * 16.0;
+            faceSizeV = 16.0;
+        }
+        
+        // For each vertex, calculate UV with tiling
+        for (Vec3 v : vertices) {
+            double u, vCoord;
+            
+            if (isXFace) {
+                u = (v.yCoord - minY) / Math.max(height, 0.001) * (faceSizeU / 16.0);
+                vCoord = (v.zCoord - minZ) / Math.max(depth, 0.001) * (faceSizeV / 16.0);
+            } else if (isYFace) {
+                u = (v.xCoord - minX) / Math.max(width, 0.001) * (faceSizeU / 16.0);
+                vCoord = (v.zCoord - minZ) / Math.max(depth, 0.001) * (faceSizeV / 16.0);
+            } else if (isZFace) {
+                u = (v.xCoord - minX) / Math.max(width, 0.001) * (faceSizeU / 16.0);
+                vCoord = (v.yCoord - minY) / Math.max(height, 0.001) * (faceSizeV / 16.0);
+            } else {
+                u = getUForDiagonal(v, minX, minY, minZ, maxX, maxY, maxZ) * (faceSizeU / 16.0);
+                vCoord = getVForDiagonal(v, minX, minY, minZ, maxX, maxY, maxZ) * (faceSizeV / 16.0);
+            }
+            
+            // Wrap UV coordinates for tiling (modulo 1.0)
+            double uWrapped = u - Math.floor(u);
+            double vWrapped = vCoord - Math.floor(vCoord);
+            
+            double uActual = icon.getInterpolatedU(uWrapped * 16.0);
+            double vActual = icon.getInterpolatedV(vWrapped * 16.0);
+            
+            tess.addVertexWithUV(v.xCoord, v.yCoord, v.zCoord, uActual, vActual);
+        }
+    }
+    
+    /**
+     * Renders a face with CENTERED TILING for large cut faces.
+     * Creates a tiling pattern centered on the face - the texture
+     * repeats in a grid, and we sample only the fragment needed
+     * for our polygon. The tiling is centered on the face center.
+     * 
+     * Example: face is 22.6px wide (1.41 * 16), texture is 16px
+     * - We need 2 tiles (32px) to cover the face
+     * - Tiling is centered: face center aligns with texture center (8px)
+     * - UVs wrap around for seamless tiling
+     * 
+     * @param vertices List of vertices defining the polygon
+     * @param faceIndex Face index (0-5) for texture selection
+     * @param x,y,z Block position
+     * @param te TileEntity with original block info
+     */
+    public static void renderTiledCenteredFace(RenderBlocks renderer, Block block,
+                                                List<Vec3> vertices, int faceIndex,
+                                                int x, int y, int z, TileEntityCuttable te) {
+        
+        if (vertices.size() < 3) return;
+        
+        Block originalBlock = te.getOriginalBlock();
+        int meta = te.getOriginalMetadata();
+        
+        if (originalBlock == null) return;
+        
+        IIcon icon = originalBlock.getIcon(faceIndex, meta);
+        
+        // Calculate bounding box
+        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
+        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
+        
+        for (Vec3 v : vertices) {
+            minX = Math.min(minX, v.xCoord);
+            minY = Math.min(minY, v.yCoord);
+            minZ = Math.min(minZ, v.zCoord);
+            maxX = Math.max(maxX, v.xCoord);
+            maxY = Math.max(maxY, v.yCoord);
+            maxZ = Math.max(maxZ, v.zCoord);
+        }
+        
+        double width = maxX - minX;
+        double height = maxY - minY;
+        double depth = maxZ - minZ;
+        
+        // Determine face dimensions for UV mapping
+        boolean isXFace = width < 0.01;
+        boolean isYFace = height < 0.01;
+        boolean isZFace = depth < 0.01;
+        
+        double faceSizeU, faceSizeV;
+        if (isXFace) {
+            faceSizeU = height * 16.0;
+            faceSizeV = depth * 16.0;
+        } else if (isYFace) {
+            faceSizeU = width * 16.0;
+            faceSizeV = depth * 16.0;
+        } else if (isZFace) {
+            faceSizeU = width * 16.0;
+            faceSizeV = height * 16.0;
+        } else {
+            // Diagonal face - use actual dimensions
+            faceSizeU = Math.sqrt(width*width + height*height) * 16.0;
+            faceSizeV = depth * 16.0;
+        }
+        
+        // Face center for coordinate calculations
+        double cx = (minX + maxX) / 2.0;
+        double cy = (minY + maxY) / 2.0;
+        double cz = (minZ + maxZ) / 2.0;
+        
+        // Render each vertex with centered tiling UVs
+        for (Vec3 v : vertices) {
+            // Calculate local coordinates relative to face center (-0.5 to 0.5 range)
+            double uLocal, vLocal;
+            
+            if (isXFace) {
+                uLocal = (v.yCoord - cy) / Math.max(height, 0.001);
+                vLocal = (v.zCoord - cz) / Math.max(depth, 0.001);
+            } else if (isYFace) {
+                uLocal = (v.xCoord - cx) / Math.max(width, 0.001);
+                vLocal = (v.zCoord - cz) / Math.max(depth, 0.001);
+            } else if (isZFace) {
+                uLocal = (v.xCoord - cx) / Math.max(width, 0.001);
+                vLocal = (v.yCoord - cy) / Math.max(height, 0.001);
+            } else {
+                // Diagonal - project to local coordinates
+                double uProj = getUForDiagonal(v, minX, minY, minZ, maxX, maxY, maxZ);
+                double vProj = getVForDiagonal(v, minX, minY, minZ, maxX, maxY, maxZ);
+                uLocal = uProj - 0.5;
+                vLocal = vProj - 0.5;
+            }
+            
+            // Convert to texture pixel coordinates
+            // Face center (0) maps to texture center (8px)
+            // Face extends by faceSize/2 pixels on each side
+            double uPixelOffset = uLocal * (faceSizeU / 2.0);
+            double vPixelOffset = vLocal * (faceSizeV / 2.0);
+            
+            // Center is at 8px, so we add 8 and wrap around 16
+            double uPixel = 8.0 + uPixelOffset;
+            double vPixel = 8.0 + vPixelOffset;
+            
+            // Wrap to 0-16 range for seamless tiling
+            double uWrapped = ((uPixel % 16.0) + 16.0) % 16.0;
+            double vWrapped = ((vPixel % 16.0) + 16.0) % 16.0;
+            
+            // Convert to actual UV coordinates
+            double uFinal = icon.getInterpolatedU(uWrapped);
+            double vFinal = icon.getInterpolatedV(vWrapped);
+            
+            tess.addVertexWithUV(v.xCoord, v.yCoord, v.zCoord, uFinal, vFinal);
+        }
+    }
+    
+    /**
+     * Renders a partial face showing only a portion of the texture (no stretching).
+     * For half-blocks etc.
+     */
+    public static void renderClippedFace(RenderBlocks renderer, Block block,
+                                          double minX, double minY, double minZ,
+                                          double maxX, double maxY, double maxZ,
+                                          int faceIndex, int x, int y, int z, 
+                                          TileEntityCuttable te) {
+        
+        Block originalBlock = te.getOriginalBlock();
+        int meta = te.getOriginalMetadata();
+        
+        if (originalBlock == null) return;
+        
+        IIcon icon = originalBlock.getIcon(faceIndex, meta);
+        
+        // Calculate which portion of texture to show
+        double uMin, uMax, vMin, vMax;
+        
+        // For a partial block, show corresponding portion of texture
+        // e.g., top half of block = top half of texture
+        uMin = (minX - x) * 16.0;
+        uMax = (maxX - x) * 16.0;
+        vMin = (minZ - z) * 16.0;
+        vMax = (maxZ - z) * 16.0;
+        
+        // Use RenderBlocks to draw with clipped texture coordinates
+        renderer.setRenderBounds(minX - x, minY - y, minZ - z, 
+                                  maxX - x, maxY - y, maxZ - z);
+        
+        // Draw with custom UV mapping
+        drawFaceWithCustomUV(renderer, block, x, y, z, icon, 
+                             uMin, uMax, vMin, vMax, faceIndex);
+    }
+    
+    private static void drawFaceWithCustomUV(RenderBlocks renderer, Block block,
+                                              int x, int y, int z, IIcon icon,
+                                              double uMin, double uMax, 
+                                              double vMin, double vMax, int face) {
+        
+        double u1 = icon.getInterpolatedU(uMin);
+        double u2 = icon.getInterpolatedU(uMax);
+        double v1 = icon.getInterpolatedV(vMin);
+        double v2 = icon.getInterpolatedV(vMax);
+        
+        // Use standard RenderBlocks methods but with custom bounds
+        switch (face) {
+            case 0: // Bottom (Y-)
+                renderer.renderFaceYNeg(block, x, y, z, icon);
+                break;
+            case 1: // Top (Y+)
+                renderer.renderFaceYPos(block, x, y, z, icon);
+                break;
+            case 2: // North (Z-)
+                renderer.renderFaceZNeg(block, x, y, z, icon);
+                break;
+            case 3: // South (Z+)
+                renderer.renderFaceZPos(block, x, y, z, icon);
+                break;
+            case 4: // West (X-)
+                renderer.renderFaceXNeg(block, x, y, z, icon);
+                break;
+            case 5: // East (X+)
+                renderer.renderFaceXPos(block, x, y, z, icon);
+                break;
+        }
+    }
+    
+    private static double getUForDiagonal(Vec3 v, double minX, double minY, double minZ,
+                                           double maxX, double maxY, double maxZ) {
+        // Project onto plane and calculate local U coordinate
+        double rangeX = maxX - minX;
+        double rangeY = maxY - minY;
+        double rangeZ = maxZ - minZ;
+        
+        if (rangeX > rangeY && rangeX > rangeZ) {
+            return (v.xCoord - minX) / rangeX;
+        } else if (rangeY > rangeZ) {
+            return (v.yCoord - minY) / rangeY;
+        } else {
+            return (v.zCoord - minZ) / rangeZ;
+        }
+    }
+    
+    private static double getVForDiagonal(Vec3 v, double minX, double minY, double minZ,
+                                           double maxX, double maxY, double maxZ) {
+        // Second dimension for diagonal faces
+        double rangeX = maxX - minX;
+        double rangeY = maxY - minY;
+        double rangeZ = maxZ - minZ;
+        
+        if (rangeX < rangeY && rangeX < rangeZ) {
+            return (v.xCoord - minX) / Math.max(rangeX, 0.001);
+        } else if (rangeY < rangeZ) {
+            return (v.zCoord - minZ) / Math.max(rangeZ, 0.001);
+        } else {
+            return (v.yCoord - minY) / Math.max(rangeY, 0.001);
+        }
+    }
+}
+
+================================================================================
+FILE: common/CommonProxy.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\common\CommonProxy.java
+================================================================================
+
+package com.cuttableblocks.common;
+
+public class CommonProxy {
+    
+    public void preInit() {
+        // Common pre-initialization code
+    }
+    
+    public void init() {
+        // Common initialization code
+    }
+    
+    public void postInit() {
+        // Common post-initialization code
+    }
+}
+
+================================================================================
+FILE: CreativeTabCuttableBlocks.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\CreativeTabCuttableBlocks.java
+================================================================================
+
+package com.cuttableblocks;
+
+import com.cuttableblocks.blocks.ModBlocks;
+import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.item.Item;
+
+public class CreativeTabCuttableBlocks {
+    
+    public static CreativeTabs tabCuttableBlocks = new CreativeTabs("cuttableblocks") {
+        @Override
+        public Item getTabIconItem() {
+            return Item.getItemFromBlock(ModBlocks.blockCuttable);
+        }
+    };
+}
+
+================================================================================
+FILE: CuttableBlocksMod.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\CuttableBlocksMod.java
+================================================================================
+
+package com.cuttableblocks;
+
+import com.cuttableblocks.blocks.ModBlocks;
+import com.cuttableblocks.client.ClientProxy;
+import com.cuttableblocks.common.CommonProxy;
+import com.cuttableblocks.items.ModItems;
+import com.cuttableblocks.tileentities.ModTileEntities;
+import cpw.mods.fml.common.Mod;
+import cpw.mods.fml.common.Mod.EventHandler;
+import cpw.mods.fml.common.SidedProxy;
+import cpw.mods.fml.common.event.FMLInitializationEvent;
+import cpw.mods.fml.common.event.FMLPostInitializationEvent;
+import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+
+@Mod(
+    modid = CuttableBlocksMod.MODID,
+    name = CuttableBlocksMod.NAME,
+    version = CuttableBlocksMod.VERSION,
+    acceptedMinecraftVersions = "[1.7.10]"
+)
+public class CuttableBlocksMod {
+    
+    public static final String MODID = "cuttableblocks";
+    public static final String NAME = "Cuttable Blocks";
+    public static final String VERSION = "1.0.0";
+    
+    @Mod.Instance(MODID)
+    public static CuttableBlocksMod instance;
+    
+    @SidedProxy(
+        clientSide = "com.cuttableblocks.client.ClientProxy",
+        serverSide = "com.cuttableblocks.common.CommonProxy"
+    )
+    public static CommonProxy proxy;
+    
+    @EventHandler
+    public void preInit(FMLPreInitializationEvent event) {
+        // Proxy preInit MUSI być przed rejestracją bloków - inicjalizuje renderId
+        // oraz ustawia tło CreativeTab (client-side only)
+        proxy.preInit();
+        
+        ModBlocks.registerBlocks();
+        ModItems.registerItems();
+        ModTileEntities.registerTileEntities();
+    }
+    
+    @EventHandler
+    public void init(FMLInitializationEvent event) {
+        proxy.init();
+    }
+    
+    @EventHandler
+    public void postInit(FMLPostInitializationEvent event) {
+        proxy.postInit();
+    }
+}
+
+================================================================================
+FILE: items/ItemCuttingTool.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\items\ItemCuttingTool.java
+================================================================================
+
+package com.cuttableblocks.items;
+
+import com.cuttableblocks.blocks.ModBlocks;
+import com.cuttableblocks.tileentities.TileEntityCuttable;
+import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
+
+public class ItemCuttingTool extends Item {
+    
+    public ItemCuttingTool() {
+        this.setMaxStackSize(1);
+        this.setFull3D();
+    }
+    
+    @Override
+    public boolean onItemUse(ItemStack stack, EntityPlayer player, World world, 
+                             int x, int y, int z, int side, 
+                             float hitX, float hitY, float hitZ) {
+        
+        if (world.isRemote) {
+            return true;
+        }
+        
+        Block targetBlock = world.getBlock(x, y, z);
+        int targetMeta = world.getBlockMetadata(x, y, z);
+        
+        // Cannot cut air, bedrock, or already cut blocks
+        if (targetBlock == Blocks.air || targetBlock == Blocks.bedrock 
+            || targetBlock == ModBlocks.blockCuttable) {
+            return false;
+        }
+        
+        // Get player's look vector
+        Vec3 lookVec = player.getLookVec();
+        
+        // Normalize the vector
+        double len = Math.sqrt(lookVec.xCoord * lookVec.xCoord 
+                             + lookVec.yCoord * lookVec.yCoord 
+                             + lookVec.zCoord * lookVec.zCoord);
+        
+        if (len < 0.0001) {
+            return false;
+        }
+        
+        float nx = (float)(lookVec.xCoord / len);
+        float ny = (float)(lookVec.yCoord / len);
+        float nz = (float)(lookVec.zCoord / len);
+        
+        // Determine which side to keep based on player position relative to block center
+        double playerToCenterX = player.posX - (x + 0.5);
+        double playerToCenterY = player.posY + player.getEyeHeight() - (y + 0.5);
+        double playerToCenterZ = player.posZ - (z + 0.5);
+        
+        // Dot product: positive means player is on the positive side of the plane
+        double dotProduct = playerToCenterX * nx + playerToCenterY * ny + playerToCenterZ * nz;
+        boolean keepPositive = dotProduct > 0;
+        
+        // Debug message
+        player.addChatMessage(new ChatComponentText(
+            String.format("Cutting with normal (%.2f, %.2f, %.2f), keeping %s side",
+                nx, ny, nz, keepPositive ? "positive" : "negative")
+        ));
+        
+        // Replace with cuttable block
+        world.setBlock(x, y, z, ModBlocks.blockCuttable, 0, 3);
+        
+        // Set the tile entity data
+        TileEntityCuttable te = (TileEntityCuttable) world.getTileEntity(x, y, z);
+        if (te != null) {
+            te.setCutData(targetBlock, targetMeta, nx, ny, nz, keepPositive);
+        }
+        
+        world.markBlockForUpdate(x, y, z);
+        
+        return true;
+    }
+}
+
+================================================================================
+FILE: items/ModItems.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\items\ModItems.java
+================================================================================
+
+package com.cuttableblocks.items;
+
+import com.cuttableblocks.CreativeTabCuttableBlocks;
+import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.item.Item;
+
+public class ModItems {
+    
+    public static Item cuttingTool;
+    
+    public static void registerItems() {
+        cuttingTool = new ItemCuttingTool()
+            .setUnlocalizedName("cuttingTool")
+            .setTextureName("cuttableblocks:cutting_tool")
+            .setCreativeTab(CreativeTabCuttableBlocks.tabCuttableBlocks);
+        
+        GameRegistry.registerItem(cuttingTool, "cutting_tool");
+    }
+}
+
+================================================================================
+FILE: tileentities/ModTileEntities.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\tileentities\ModTileEntities.java
+================================================================================
+
+package com.cuttableblocks.tileentities;
+
+import cpw.mods.fml.common.registry.GameRegistry;
+
+public class ModTileEntities {
+    
+    public static void registerTileEntities() {
+        GameRegistry.registerTileEntity(TileEntityCuttable.class, "CuttableTE");
+    }
+}
+
+================================================================================
+FILE: tileentities/TileEntityCuttable.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\tileentities\TileEntityCuttable.java
+================================================================================
+
+package com.cuttableblocks.tileentities;
+
+import net.minecraft.block.Block;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.NetworkManager;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
+import net.minecraft.tileentity.TileEntity;
+
+public class TileEntityCuttable extends TileEntity {
+    
+    private Block originalBlock;
+    private int originalMetadata;
+    private float normalX, normalY, normalZ;
+    private boolean keepPositiveSide;
+    
+    public TileEntityCuttable() {
+        this.originalBlock = null;
+        this.originalMetadata = 0;
+        this.normalX = 0.0f;
+        this.normalY = 1.0f;
+        this.normalZ = 0.0f;
+        this.keepPositiveSide = true;
+    }
+    
+    public void setCutData(Block block, int meta, float nx, float ny, float nz, boolean keepPositive) {
+        this.originalBlock = block;
+        this.originalMetadata = meta;
+        this.normalX = nx;
+        this.normalY = ny;
+        this.normalZ = nz;
+        this.keepPositiveSide = keepPositive;
+        
+        this.markDirty();
+        if (this.worldObj != null) {
+            this.worldObj.markBlockForUpdate(this.xCoord, this.yCoord, this.zCoord);
+        }
+    }
+    
+    public Block getOriginalBlock() {
+        return originalBlock;
+    }
+    
+    public int getOriginalMetadata() {
+        return originalMetadata;
+    }
+    
+    public float getNormalX() {
+        return normalX;
+    }
+    
+    public float getNormalY() {
+        return normalY;
+    }
+    
+    public float getNormalZ() {
+        return normalZ;
+    }
+    
+    public boolean keepPositiveSide() {
+        return keepPositiveSide;
+    }
+    
+    @Override
+    public void writeToNBT(NBTTagCompound nbt) {
+        super.writeToNBT(nbt);
+        
+        if (originalBlock != null) {
+            String blockName = Block.blockRegistry.getNameForObject(originalBlock);
+            nbt.setString("originalBlock", blockName);
+        }
+        nbt.setInteger("originalMeta", originalMetadata);
+        nbt.setFloat("normalX", normalX);
+        nbt.setFloat("normalY", normalY);
+        nbt.setFloat("normalZ", normalZ);
+        nbt.setBoolean("keepPositive", keepPositiveSide);
+    }
+    
+    @Override
+    public void readFromNBT(NBTTagCompound nbt) {
+        super.readFromNBT(nbt);
+        
+        if (nbt.hasKey("originalBlock")) {
+            String blockName = nbt.getString("originalBlock");
+            this.originalBlock = (Block) Block.blockRegistry.getObject(blockName);
+        }
+        this.originalMetadata = nbt.getInteger("originalMeta");
+        this.normalX = nbt.getFloat("normalX");
+        this.normalY = nbt.getFloat("normalY");
+        this.normalZ = nbt.getFloat("normalZ");
+        this.keepPositiveSide = nbt.getBoolean("keepPositive");
+    }
+    
+    @Override
+    public Packet getDescriptionPacket() {
+        NBTTagCompound nbt = new NBTTagCompound();
+        this.writeToNBT(nbt);
+        return new S35PacketUpdateTileEntity(this.xCoord, this.yCoord, this.zCoord, 0, nbt);
+    }
+    
+    @Override
+    public void onDataPacket(NetworkManager net, S35PacketUpdateTileEntity pkt) {
+        this.readFromNBT(pkt.getNbtCompound());
+        this.worldObj.markBlockRangeForRenderUpdate(
+            this.xCoord, this.yCoord, this.zCoord,
+            this.xCoord, this.yCoord, this.zCoord
+        );
+    }
+}
+
+================================================================================
+FILE: util/Plane.java
+RELATIVE PATH: new_mod_trial\src\main\java\com\cuttableblocks\util\Plane.java
+================================================================================
+
+package com.cuttableblocks.util;
+
+import net.minecraft.util.Vec3;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Utility class for plane-block intersection calculations.
+ */
+public class Plane {
+    
+    /**
+     * Represents an intersection point with UV coordinates.
+     */
+    public static class IntersectionPoint {
+        public final double x, y, z;
+        
+        public IntersectionPoint(double x, double y, double z) {
+            this.x = x;
+            this.y = y;
+            this.z = z;
+        }
+        
+        public Vec3 toVec3() {
+            return Vec3.createVectorHelper(x, y, z);
+        }
+    }
+    
+    /**
+     * Calculates intersection points between a plane and the unit cube [0,1]x[0,1]x[0,1].
+     * 
+     * Plane equation: nx*(x-0.5) + ny*(y-0.5) + nz*(z-0.5) = 0
+     * Which simplifies to: nx*x + ny*y + nz*z = 0.5*(nx+ny+nz)
+     * 
+     * @param nx X component of plane normal (should be normalized)
+     * @param ny Y component of plane normal
+     * @param nz Z component of plane normal
+     * @return List of intersection points on cube edges
+     */
+    public static List<IntersectionPoint> getIntersectionsWithUnitCube(float nx, float ny, float nz) {
+        List<IntersectionPoint> points = new ArrayList<>();
+        float d = 0.5f * (nx + ny + nz);
+        
+        // Check edges parallel to X axis (4 edges)
+        checkEdgeParallelX(points, nx, ny, nz, d, 0, 0);
+        checkEdgeParallelX(points, nx, ny, nz, d, 0, 1);
+        checkEdgeParallelX(points, nx, ny, nz, d, 1, 0);
+        checkEdgeParallelX(points, nx, ny, nz, d, 1, 1);
+        
+        // Check edges parallel to Y axis (4 edges)
+        checkEdgeParallelY(points, nx, ny, nz, d, 0, 0);
+        checkEdgeParallelY(points, nx, ny, nz, d, 0, 1);
+        checkEdgeParallelY(points, nx, ny, nz, d, 1, 0);
+        checkEdgeParallelY(points, nx, ny, nz, d, 1, 1);
+        
+        // Check edges parallel to Z axis (4 edges)
+        checkEdgeParallelZ(points, nx, ny, nz, d, 0, 0);
+        checkEdgeParallelZ(points, nx, ny, nz, d, 0, 1);
+        checkEdgeParallelZ(points, nx, ny, nz, d, 1, 0);
+        checkEdgeParallelZ(points, nx, ny, nz, d, 1, 1);
+        
+        return points;
+    }
+    
+    private static void checkEdgeParallelX(List<IntersectionPoint> points, 
+                                            float nx, float ny, float nz, float d,
+                                            int y, int z) {
+        // Edge: (t, y, z) where t in [0, 1]
+        // Equation: nx*t + ny*y + nz*z = d
+        if (Math.abs(nx) < 0.0001f) {
+            return; // Parallel to plane
+        }
+        
+        float t = (d - ny * y - nz * z) / nx;
+        if (t >= 0.0f && t <= 1.0f) {
+            points.add(new IntersectionPoint(t, y, z));
+        }
+    }
+    
+    private static void checkEdgeParallelY(List<IntersectionPoint> points, 
+                                            float nx, float ny, float nz, float d,
+                                            int x, int z) {
+        // Edge: (x, t, z) where t in [0, 1]
+        if (Math.abs(ny) < 0.0001f) {
+            return;
+        }
+        
+        float t = (d - nx * x - nz * z) / ny;
+        if (t >= 0.0f && t <= 1.0f) {
+            points.add(new IntersectionPoint(x, t, z));
+        }
+    }
+    
+    private static void checkEdgeParallelZ(List<IntersectionPoint> points, 
+                                            float nx, float ny, float nz, float d,
+                                            int x, int y) {
+        // Edge: (x, y, t) where t in [0, 1]
+        if (Math.abs(nz) < 0.0001f) {
+            return;
+        }
+        
+        float t = (d - nx * x - ny * y) / nz;
+        if (t >= 0.0f && t <= 1.0f) {
+            points.add(new IntersectionPoint(x, y, t));
+        }
+    }
+    
+    /**
+     * Determines which side of the plane a point is on.
+     * @return Positive if on positive side, negative if on negative side, 0 if on plane
+     */
+    public static double pointPlaneDistance(double px, double py, double pz,
+                                             float nx, float ny, float nz) {
+        float d = 0.5f * (nx + ny + nz);
+        return nx * px + ny * py + nz * pz - d;
+    }
+    
+    /**
+     * Checks if a point is on the "keep" side of the plane.
+     */
+    public static boolean isPointOnKeepSide(double px, double py, double pz,
+                                             float nx, float ny, float nz, 
+                                             boolean keepPositive) {
+        double dist = pointPlaneDistance(px, py, pz, nx, ny, nz);
+        return keepPositive ? dist > 0 : dist < 0;
+    }
+}
+
+================================================================================
+END OF FILE
+================================================================================
