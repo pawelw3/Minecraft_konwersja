@@ -1,5 +1,11 @@
+﻿=== CUTTABLE BLOCKS MOD - ALL JAVA SOURCE FILES ===
+Generated: 2026-02-07 01:19:33
+Total files: 17
+
+
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/CuttableBlocksMod.java
+=== FILE 1/17: CuttableBlocksMod.java ===
 ================================================================================
 
 package com.cuttableblocks;
@@ -39,8 +45,8 @@ public class CuttableBlocksMod {
     
     @EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        // Proxy preInit MUSI być przed rejestracją bloków - inicjalizuje renderId
-        // oraz ustawia tło CreativeTab (client-side only)
+        // Proxy preInit MUSI byÄ‡ przed rejestracjÄ… blokĂłw - inicjalizuje renderId
+        // oraz ustawia tĹ‚o CreativeTab (client-side only)
         proxy.preInit();
         
         ModBlocks.registerBlocks();
@@ -59,8 +65,9 @@ public class CuttableBlocksMod {
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/CreativeTabCuttableBlocks.java
+=== FILE 2/17: CreativeTabCuttableBlocks.java ===
 ================================================================================
 
 package com.cuttableblocks;
@@ -74,15 +81,41 @@ public class CreativeTabCuttableBlocks {
     public static CreativeTabs tabCuttableBlocks = new CreativeTabs("cuttableblocks") {
         @Override
         public Item getTabIconItem() {
-            // Używamy apple jako ikony - to Item (nie Block), więc na pewno działa
-            // Blocks.stone może być null podczas wczesnej inicjalizacji
+            // UĹĽywamy apple jako ikony - to Item (nie Block), wiÄ™c na pewno dziaĹ‚a
+            // Blocks.stone moĹĽe byÄ‡ null podczas wczesnej inicjalizacji
             return Items.apple;
         }
     };
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/blocks/BlockCuttable.java
+=== FILE 3/17: ModBlocks.java ===
+================================================================================
+
+package com.cuttableblocks.blocks;
+
+import com.cuttableblocks.CreativeTabCuttableBlocks;
+import cpw.mods.fml.common.registry.GameRegistry;
+import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
+
+public class ModBlocks {
+    
+    public static Block blockCuttable;
+    
+    public static void registerBlocks() {
+        blockCuttable = new BlockCuttable(Material.rock)
+            .setUnlocalizedName("cuttableBlock")
+            .setCreativeTab(CreativeTabCuttableBlocks.tabCuttableBlocks);
+        
+        GameRegistry.registerBlock(blockCuttable, "cuttable_block");
+    }
+}
+
+
+================================================================================
+=== FILE 4/17: BlockCuttable.java ===
 ================================================================================
 
 package com.cuttableblocks.blocks;
@@ -231,32 +264,31 @@ public class BlockCuttable extends BlockContainer {
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/blocks/ModBlocks.java
+=== FILE 5/17: CommonProxy.java ===
 ================================================================================
 
-package com.cuttableblocks.blocks;
+package com.cuttableblocks.common;
 
-import com.cuttableblocks.CreativeTabCuttableBlocks;
-import cpw.mods.fml.common.registry.GameRegistry;
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-
-public class ModBlocks {
+public class CommonProxy {
     
-    public static Block blockCuttable;
+    public void preInit() {
+        // Common pre-initialization code
+    }
     
-    public static void registerBlocks() {
-        blockCuttable = new BlockCuttable(Material.rock)
-            .setUnlocalizedName("cuttableBlock")
-            .setCreativeTab(CreativeTabCuttableBlocks.tabCuttableBlocks);
-        
-        GameRegistry.registerBlock(blockCuttable, "cuttable_block");
+    public void init() {
+        // Common initialization code
+    }
+    
+    public void postInit() {
+        // Common post-initialization code
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/client/ClientProxy.java
+=== FILE 6/17: ClientProxy.java ===
 ================================================================================
 
 package com.cuttableblocks.client;
@@ -295,8 +327,9 @@ public class ClientProxy extends CommonProxy {
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/client/CuttableBlockRenderer.java
+=== FILE 7/17: CuttableBlockRenderer.java ===
 ================================================================================
 
 package com.cuttableblocks.client;
@@ -363,711 +396,332 @@ public class CuttableBlockRenderer implements ISimpleBlockRenderingHandler {
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/client/render/AdvancedCutRenderer.java
+=== FILE 8/17: RenderHelper.java ===
 ================================================================================
 
 package com.cuttableblocks.client.render;
 
 import com.cuttableblocks.tileentities.TileEntityCuttable;
+import com.cuttableblocks.util.CutDirections;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 /**
- * Advanced renderer for cuttable blocks supporting arbitrary plane cuts.
- * Renders a block cut by a plane passing through its center.
+ * Helper class for rendering cuttable blocks.
+ * Fixed: deterministic axis detection (no 0.95/0.05 thresholds), proper brightness, z-fighting offset.
  */
-public class AdvancedCutRenderer {
+public class RenderHelper {
     
     private static final Tessellator tess = Tessellator.instance;
-    private static final double EPSILON = 1e-5;
+    private static final double Z_FIGHT_OFFSET = 1e-4;
     
     /**
-     * Renders a block cut by a plane with proper face culling.
+     * Renders a cut block.
+     * Deterministically chooses between axis-aligned and advanced rendering based on reconstructed normal.
      */
-    public static boolean renderAdvancedCut(RenderBlocks renderer, Block block, 
-                                            int x, int y, int z, TileEntityCuttable te) {
+    public static boolean renderCutBlock(RenderBlocks renderer, Block block, 
+                                         int x, int y, int z, TileEntityCuttable te) {
         
         Block originalBlock = te.getOriginalBlock();
         if (originalBlock == null) {
             return false;
         }
         
-        float nx = te.getNormalX();
-        float ny = te.getNormalY();
-        float nz = te.getNormalZ();
+        // Get deterministic normal from rotId/dirId (ignore cached normalX/Y/Z)
+        Vec3 nWorld = CutDirections.getWorldDir(te.getRotId(), te.getDirId());
+        double nx = nWorld.xCoord;
+        double ny = nWorld.yCoord;
+        double nz = nWorld.zCoord;
         boolean keepPositive = te.keepPositiveSide();
         int meta = te.getOriginalMetadata();
         
-        // Calculate plane intersection points with cube edges
-        List<Vec3> intersections = calculateIntersections(nx, ny, nz);
+        // Deterministic axis detection (section 5.2) - exact axis check
+        double absNx = Math.abs(nx);
+        double absNy = Math.abs(ny);
+        double absNz = Math.abs(nz);
         
-        // Deduplicate intersection points (Step 3)
-        intersections = deduplicatePoints(intersections, EPSILON);
+        boolean isAxisX = absNx > 0.999999 && absNy < 1e-6 && absNz < 1e-6;
+        boolean isAxisY = absNy > 0.999999 && absNx < 1e-6 && absNz < 1e-6;
+        boolean isAxisZ = absNz > 0.999999 && absNx < 1e-6 && absNy < 1e-6;
         
-        if (intersections.size() < 3) {
-            // Not enough points to form a polygon, fallback to simple cut
-            return false;
-        }
-        
-        // Determine which cube faces are visible (not cut off)
-        renderVisibleFaces(renderer, originalBlock, x, y, z, meta, nx, ny, nz, keepPositive);
-        
-        // Render the cut face (the polygon created by the plane)
-        renderCutFace(x, y, z, intersections, nx, ny, nz, keepPositive, originalBlock, meta);
-        
-        return true;
-    }
-    
-    /**
-     * Deduplicate points that are within epsilon distance of each other.
-     * This prevents issues when plane hits a vertex or edge exactly.
-     */
-    private static List<Vec3> deduplicatePoints(List<Vec3> points, double eps) {
-        List<Vec3> unique = new ArrayList<>();
-        double epsSq = eps * eps;
-        
-        for (Vec3 p : points) {
-            boolean isDuplicate = false;
-            for (Vec3 u : unique) {
-                double dx = p.xCoord - u.xCoord;
-                double dy = p.yCoord - u.yCoord;
-                double dz = p.zCoord - u.zCoord;
-                double distSq = dx * dx + dy * dy + dz * dz;
-                if (distSq < epsSq) {
-                    isDuplicate = true;
-                    break;
-                }
-            }
-            if (!isDuplicate) {
-                unique.add(p);
-            }
-        }
-        return unique;
-    }
-    
-    /**
-     * Calculate intersection points of the plane with cube edges.
-     * Plane equation: nx*(x-0.5) + ny*(y-0.5) + nz*(z-0.5) = 0
-     * Or: nx*x + ny*y + nz*z = 0.5*(nx + ny + nz)
-     */
-    private static List<Vec3> calculateIntersections(float nx, float ny, float nz) {
-        List<Vec3> points = new ArrayList<>();
-        float d = 0.5f * (nx + ny + nz);
-        
-        // Check all 12 edges of the unit cube [0,1]x[0,1]x[0,1]
-        
-        // Edges parallel to X axis (y=0/1, z=0/1)
-        checkEdgeX(points, nx, ny, nz, d, 0, 0);
-        checkEdgeX(points, nx, ny, nz, d, 0, 1);
-        checkEdgeX(points, nx, ny, nz, d, 1, 0);
-        checkEdgeX(points, nx, ny, nz, d, 1, 1);
-        
-        // Edges parallel to Y axis (x=0/1, z=0/1)
-        checkEdgeY(points, nx, ny, nz, d, 0, 0);
-        checkEdgeY(points, nx, ny, nz, d, 0, 1);
-        checkEdgeY(points, nx, ny, nz, d, 1, 0);
-        checkEdgeY(points, nx, ny, nz, d, 1, 1);
-        
-        // Edges parallel to Z axis (x=0/1, y=0/1)
-        checkEdgeZ(points, nx, ny, nz, d, 0, 0);
-        checkEdgeZ(points, nx, ny, nz, d, 0, 1);
-        checkEdgeZ(points, nx, ny, nz, d, 1, 0);
-        checkEdgeZ(points, nx, ny, nz, d, 1, 1);
-        
-        return points;
-    }
-    
-    private static void checkEdgeX(List<Vec3> points, float nx, float ny, float nz, 
-                                    float d, int y, int z) {
-        // Edge from (0,y,z) to (1,y,z), parametric: (t, y, z), t in [0,1]
-        // Plane equation: nx*t + ny*y + nz*z = d
-        if (Math.abs(nx) < 0.0001f) return;
-        
-        float t = (d - ny * y - nz * z) / nx;
-        if (t >= 0.0f && t <= 1.0f) {
-            points.add(Vec3.createVectorHelper(t, y, z));
-        }
-    }
-    
-    private static void checkEdgeY(List<Vec3> points, float nx, float ny, float nz,
-                                    float d, int x, int z) {
-        // Edge from (x,0,z) to (x,1,z), parametric: (x, t, z), t in [0,1]
-        if (Math.abs(ny) < 0.0001f) return;
-        
-        float t = (d - nx * x - nz * z) / ny;
-        if (t >= 0.0f && t <= 1.0f) {
-            points.add(Vec3.createVectorHelper(x, t, z));
-        }
-    }
-    
-    private static void checkEdgeZ(List<Vec3> points, float nx, float ny, float nz,
-                                    float d, int x, int y) {
-        // Edge from (x,y,0) to (x,y,1), parametric: (x, y, t), t in [0,1]
-        if (Math.abs(nz) < 0.0001f) return;
-        
-        float t = (d - nx * x - ny * y) / nz;
-        if (t >= 0.0f && t <= 1.0f) {
-            points.add(Vec3.createVectorHelper(x, y, t));
-        }
-    }
-    
-    /**
-     * Renders the visible portions of the original cube faces.
-     */
-    private static void renderVisibleFaces(RenderBlocks renderer, Block block,
-                                           int x, int y, int z, int meta,
-                                           float nx, float ny, float nz, 
-                                           boolean keepPositive) {
-        
-        // For each of the 6 cube faces, check if it should be rendered
-        // A face is rendered if its center is on the "keep" side of the plane
-        
-        double checkDist = keepPositive ? 0.001 : -0.001;
-        
-        // Bottom face (Y=0), center at (0.5, 0, 0.5)
-        if (isPointOnKeepSide(0.5, 0, 0.5, nx, ny, nz, keepPositive, checkDist)) {
-            renderBottomFace(renderer, block, x, y, z);
-        }
-        
-        // Top face (Y=1), center at (0.5, 1, 0.5)
-        if (isPointOnKeepSide(0.5, 1, 0.5, nx, ny, nz, keepPositive, checkDist)) {
-            renderTopFace(renderer, block, x, y, z);
-        }
-        
-        // North face (Z=0), center at (0.5, 0.5, 0)
-        if (isPointOnKeepSide(0.5, 0.5, 0, nx, ny, nz, keepPositive, checkDist)) {
-            renderNorthFace(renderer, block, x, y, z);
-        }
-        
-        // South face (Z=1), center at (0.5, 0.5, 1)
-        if (isPointOnKeepSide(0.5, 0.5, 1, nx, ny, nz, keepPositive, checkDist)) {
-            renderSouthFace(renderer, block, x, y, z);
-        }
-        
-        // West face (X=0), center at (0, 0.5, 0.5)
-        if (isPointOnKeepSide(0, 0.5, 0.5, nx, ny, nz, keepPositive, checkDist)) {
-            renderWestFace(renderer, block, x, y, z);
-        }
-        
-        // East face (X=1), center at (1, 0.5, 0.5)
-        if (isPointOnKeepSide(1, 0.5, 0.5, nx, ny, nz, keepPositive, checkDist)) {
-            renderEastFace(renderer, block, x, y, z);
-        }
-    }
-    
-    /**
-     * Check if a point is on the "keep" side of the plane.
-     */
-    private static boolean isPointOnKeepSide(double px, double py, double pz,
-                                              float nx, float ny, float nz,
-                                              boolean keepPositive, double epsilon) {
-        float d = 0.5f * (nx + ny + nz);
-        double dist = nx * px + ny * py + nz * pz - d;
-        return keepPositive ? (dist > -epsilon) : (dist < epsilon);
-    }
-    
-    /**
-     * Render the cut face (polygon) with PADDED texture (clamp-to-edge).
-     * For diagonal cut faces larger than 1x1, we use padding to maintain
-     * texture quality - the texture stays at 1:1 scale in the center,
-     * and edge pixels repeat outward.
-     * 
-     * Example: face is 22.6px wide (1.41 * 16), texture is 16px
-     * - We need 2 tiles (32px) to cover the face
-     * - Tiling is centered: face center aligns with texture center
-     * - UVs wrap around for seamless tiling
-     */
-    private static void renderCutFace(int x, int y, int z, List<Vec3> points,
-                                      float nx, float ny, float nz, boolean keepPositive,
-                                      Block originalBlock, int meta) {
-        
-        if (points.size() < 3) return;
-        
-        // Get icon from original block
-        IIcon icon = originalBlock.getIcon(0, meta);
-        
-        // Sort points to form a proper polygon using tangent/bitangent basis
-        Vec3 center = calculateCentroid(points);
-        List<Vec3> sortedPoints = sortPointsByAngle(points, center, nx, ny, nz);
-        
-        // Ensure correct winding order for visibility
-        sortedPoints = ensureCorrectWinding(sortedPoints, nx, ny, nz, keepPositive);
-        
-        // Calculate bounding box of the cut face
-        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
-        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
-        
-        for (Vec3 p : points) {
-            minX = Math.min(minX, p.xCoord);
-            minY = Math.min(minY, p.yCoord);
-            minZ = Math.min(minZ, p.zCoord);
-            maxX = Math.max(maxX, p.xCoord);
-            maxY = Math.max(maxY, p.yCoord);
-            maxZ = Math.max(maxZ, p.zCoord);
-        }
-        
-        // Determine if this is an axis-aligned or diagonal face
-        double dx = maxX - minX;
-        double dy = maxY - minY;
-        double dz = maxZ - minZ;
-        boolean isXFace = dx < 0.01;
-        boolean isYFace = dy < 0.01;
-        boolean isZFace = dz < 0.01;
-        boolean isDiagonal = !isXFace && !isYFace && !isZFace;
-        
-        // Calculate face size in texture units (16 = 1 full texture)
-        double faceWidth, faceHeight;
-        if (isXFace) {
-            faceWidth = dy * 16.0;
-            faceHeight = dz * 16.0;
-        } else if (isYFace) {
-            faceWidth = dx * 16.0;
-            faceHeight = dz * 16.0;
-        } else if (isZFace) {
-            faceWidth = dx * 16.0;
-            faceHeight = dy * 16.0;
+        // Section 3: keepPositive means keep dist >= 0 side
+        if (isAxisY) {
+            // ny > 0 means normal points up
+            // keepPositive=true -> keep upper half (dist >= 0)
+            boolean keepTop = (ny > 0) == keepPositive;
+            renderHorizontalCut(renderer, originalBlock, x, y, z, meta, keepTop);
+            return true;
+        } else if (isAxisX) {
+            boolean keepEast = (nx > 0) == keepPositive;
+            renderVerticalXCut(renderer, originalBlock, x, y, z, meta, keepEast);
+            return true;
+        } else if (isAxisZ) {
+            boolean keepSouth = (nz > 0) == keepPositive;
+            renderVerticalZCut(renderer, originalBlock, x, y, z, meta, keepSouth);
+            return true;
         } else {
-            // Diagonal face
-            faceWidth = Math.sqrt(dx*dx + dy*dy + dz*dz) * 16.0;
-            faceHeight = 16.0;
+            // Not axis-aligned, use advanced renderer
+            return AdvancedCutRenderer.renderAdvancedCut(renderer, block, x, y, z, te);
+        }
+    }
+    
+    /**
+     * Renders a horizontal cut (top or bottom half).
+     * Fixed: z-fighting offset, proper brightness/color for each face.
+     */
+    public static void renderHorizontalCut(RenderBlocks renderer, Block block, 
+                                            int x, int y, int z, int meta, boolean topHalf) {
+        
+        // Get brightness for this block
+        int brightness = block.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
+        
+        // Get textures
+        IIcon iconTop = block.getIcon(1, meta);
+        IIcon iconBottom = block.getIcon(0, meta);
+        IIcon iconSide = block.getIcon(2, meta);
+        
+        double yMin = topHalf ? 0.5 : 0.0;
+        double yMax = topHalf ? 1.0 : 0.5;
+        
+        // Section 6.2: anti z-fighting offset for cut-face
+        double yOffset = topHalf ? Z_FIGHT_OFFSET : -Z_FIGHT_OFFSET;
+        
+        // Top face (Y+) - full texture
+        if (topHalf) {
+            tess.setBrightness(brightness);
+            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconTop.getMinU(), iconTop.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconTop.getMaxU(), iconTop.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconTop.getMaxU(), iconTop.getMinV());
+            tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconTop.getMinU(), iconTop.getMinV());
         }
         
-        // Calculate lighting (use default brightness)
-        int brightness = 15 << 20 | 15 << 4;
+        // Bottom face (Y-) - full texture
+        if (!topHalf) {
+            tess.setBrightness(brightness);
+            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconBottom.getMinU(), iconBottom.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconBottom.getMaxU(), iconBottom.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconBottom.getMaxU(), iconBottom.getMaxV());
+            tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconBottom.getMinU(), iconBottom.getMaxV());
+        }
         
-        float brightnessFactor = Math.abs(nx) * 0.6f + Math.abs(ny) * 1.0f + Math.abs(nz) * 0.8f;
-        brightnessFactor = Math.max(0.4f, Math.min(1.0f, brightnessFactor));
+        // Side faces - half texture
+        double vMin = iconSide.getMinV();
+        double vMax = iconSide.getMaxV();
+        double vMid = iconSide.getInterpolatedV(8.0);
+        
+        double vTop = topHalf ? vMax : vMid;
+        double vBottom = topHalf ? vMid : vMin;
+        
+        // North face (Z-)
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
+        
+        // South face (Z+)
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMinU(), vTop);
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMinU(), vBottom);
+        
+        // West face (X-)
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
+        
+        // East face (X+)
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
+        
+        // Cut face (horizontal plane at Y=0.5) with offset and proper color
+        IIcon cutIcon = block.getIcon(1, meta);
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.0, y + 0.5 + yOffset, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 0.5 + yOffset, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 0.5 + yOffset, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
+        tess.addVertexWithUV(x + 0.0, y + 0.5 + yOffset, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
+    }
+    
+    /**
+     * Renders a vertical cut along X axis.
+     */
+    public static void renderVerticalXCut(RenderBlocks renderer, Block block,
+                                           int x, int y, int z, int meta, boolean eastHalf) {
+        int brightness = block.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
+        
+        IIcon iconSide = block.getIcon(2, meta);
+        IIcon iconTop = block.getIcon(1, meta);
+        IIcon iconBottom = block.getIcon(0, meta);
+        
+        double xMin = eastHalf ? 0.5 : 0.0;
+        double xMax = eastHalf ? 1.0 : 0.5;
+        double xOffset = eastHalf ? Z_FIGHT_OFFSET : -Z_FIGHT_OFFSET;
+        
+        // West/East face
+        if (!eastHalf) {
+            tess.setBrightness(brightness);
+            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, iconSide.getMinU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, iconSide.getMinU(), iconSide.getMinV());
+        } else {
+            tess.setBrightness(brightness);
+            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, iconSide.getMinU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, iconSide.getMinU(), iconSide.getMinV());
+        }
+        
+        // Top/Bottom - half texture
+        double uMin = iconTop.getMinU();
+        double uMax = iconTop.getMaxU();
+        double uMid = iconTop.getInterpolatedU(8.0);
+        
+        double uLeft = eastHalf ? uMid : uMin;
+        double uRight = eastHalf ? uMax : uMid;
         
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(brightnessFactor, brightnessFactor, brightnessFactor);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, uLeft, iconTop.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, uRight, iconTop.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconTop.getMinV());
+        tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, uLeft, iconTop.getMinV());
         
-        // Choose UV mapping based on face type:
-        // - Axis-aligned: use CLIPPED (show portion of texture)
-        // - Diagonal: use TILED CENTERED (tiling centered on face)
-        if (isDiagonal && (faceWidth > 16.0 || faceHeight > 16.0)) {
-            // Use centered tiling for large diagonal faces
-            // Step 1: Use degenerated quads (A,B,C,C) instead of triangles (A,B,C)
-            for (int i = 1; i < sortedPoints.size() - 1; i++) {
-                Vec3 a = sortedPoints.get(0);
-                Vec3 b = sortedPoints.get(i);
-                Vec3 c = sortedPoints.get(i + 1);
-                
-                addVertexWithTiledCenteredUV(x, y, z, a, icon, nx, ny, nz,
-                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithTiledCenteredUV(x, y, z, b, icon, nx, ny, nz,
-                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithTiledCenteredUV(x, y, z, c, icon, nx, ny, nz,
-                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithTiledCenteredUV(x, y, z, c, icon, nx, ny, nz,
-                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ); // DUPE: domyka QUAD
-            }
-        } else {
-            // Use standard clipped mapping for axis-aligned faces
-            // Step 1: Use degenerated quads (A,B,C,C) instead of triangles (A,B,C)
-            for (int i = 1; i < sortedPoints.size() - 1; i++) {
-                Vec3 a = sortedPoints.get(0);
-                Vec3 b = sortedPoints.get(i);
-                Vec3 c = sortedPoints.get(i + 1);
-                
-                addVertexWithClippedUV(x, y, z, a, icon, nx, ny, nz,
-                                       minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithClippedUV(x, y, z, b, icon, nx, ny, nz,
-                                       minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithClippedUV(x, y, z, c, icon, nx, ny, nz,
-                                       minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithClippedUV(x, y, z, c, icon, nx, ny, nz,
-                                       minX, minY, minZ, maxX, maxY, maxZ); // DUPE: domyka QUAD
-            }
-        }
-    }
-    
-    private static Vec3 calculateCentroid(List<Vec3> points) {
-        double cx = 0, cy = 0, cz = 0;
-        for (Vec3 p : points) {
-            cx += p.xCoord;
-            cy += p.yCoord;
-            cz += p.zCoord;
-        }
-        return Vec3.createVectorHelper(cx / points.size(), cy / points.size(), cz / points.size());
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, uLeft, iconBottom.getMinV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconBottom.getMinV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, uRight, iconBottom.getMaxV());
+        tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, uLeft, iconBottom.getMaxV());
+        
+        // North/South faces
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, uLeft, iconSide.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconSide.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconSide.getMinV());
+        tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, uLeft, iconSide.getMinV());
+        
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, uLeft, iconSide.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, uRight, iconSide.getMaxV());
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, uRight, iconSide.getMinV());
+        tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, uLeft, iconSide.getMinV());
+        
+        // Cut face at X=0.5 with offset
+        IIcon cutIcon = block.getIcon(4, meta);
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.5 + xOffset, y + 0.0, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
+        tess.addVertexWithUV(x + 0.5 + xOffset, y + 1.0, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
+        tess.addVertexWithUV(x + 0.5 + xOffset, y + 1.0, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
+        tess.addVertexWithUV(x + 0.5 + xOffset, y + 0.0, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
     }
     
     /**
-     * Sort points by angle around the center on the plane surface.
-     * Uses tangent/bitangent basis for correct sorting on arbitrary planes.
+     * Renders a vertical cut along Z axis.
      */
-    private static List<Vec3> sortPointsByAngle(List<Vec3> points, Vec3 center, 
-                                                 float nx, float ny, float nz) {
-        // Step 2: Build orthonormal basis on the plane
-        Vec3 n = Vec3.createVectorHelper(nx, ny, nz);
+    public static void renderVerticalZCut(RenderBlocks renderer, Block block,
+                                           int x, int y, int z, int meta, boolean southHalf) {
+        int brightness = block.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
         
-        // Choose helper vector not parallel to normal
-        Vec3 helper;
-        if (Math.abs(ny) < 0.99) {
-            helper = Vec3.createVectorHelper(0, 1, 0);
+        IIcon iconSide = block.getIcon(2, meta);
+        IIcon iconTop = block.getIcon(1, meta);
+        IIcon iconBottom = block.getIcon(0, meta);
+        
+        double zMin = southHalf ? 0.5 : 0.0;
+        double zMax = southHalf ? 1.0 : 0.5;
+        double zOffset = southHalf ? Z_FIGHT_OFFSET : -Z_FIGHT_OFFSET;
+        
+        // North/South face
+        if (!southHalf) {
+            tess.setBrightness(brightness);
+            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
         } else {
-            helper = Vec3.createVectorHelper(1, 0, 0);
+            tess.setBrightness(brightness);
+            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMinU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconSide.getMinU(), iconSide.getMaxV());
         }
         
-        // Calculate tangent and bitangent
-        Vec3 tangent = crossProduct(helper, n);
-        tangent = normalize(tangent);
+        // Top/Bottom
+        double uMin = iconTop.getMinU();
+        double uMax = iconTop.getMaxU();
+        double uMid = iconTop.getInterpolatedU(8.0);
+        double uLeft = southHalf ? uMid : uMin;
+        double uRight = southHalf ? uMax : uMid;
         
-        Vec3 bitangent = crossProduct(n, tangent);
-        bitangent = normalize(bitangent);
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, uLeft, iconTop.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, uRight, iconTop.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, uRight, iconTop.getMinV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, uLeft, iconTop.getMinV());
         
-        // Sort points by angle using the tangent/bitangent basis
-        List<Vec3> sorted = new ArrayList<>(points);
-        final Vec3 t = tangent;
-        final Vec3 bit = bitangent;
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, uLeft, iconBottom.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, uRight, iconBottom.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, uRight, iconBottom.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, uLeft, iconBottom.getMaxV());
         
-        sorted.sort((p1, p2) -> {
-            // Project onto tangent/bitangent plane
-            double v1X = p1.xCoord - center.xCoord;
-            double v1Y = p1.yCoord - center.yCoord;
-            double v1Z = p1.zCoord - center.zCoord;
-            
-            double v2X = p2.xCoord - center.xCoord;
-            double v2Y = p2.yCoord - center.yCoord;
-            double v2Z = p2.zCoord - center.zCoord;
-            
-            double u1 = v1X * t.xCoord + v1Y * t.yCoord + v1Z * t.zCoord;
-            double w1 = v1X * bit.xCoord + v1Y * bit.yCoord + v1Z * bit.zCoord;
-            
-            double u2 = v2X * t.xCoord + v2Y * t.yCoord + v2Z * t.zCoord;
-            double w2 = v2X * bit.xCoord + v2Y * bit.yCoord + v2Z * bit.zCoord;
-            
-            double angle1 = Math.atan2(w1, u1);
-            double angle2 = Math.atan2(w2, u2);
-            
-            return Double.compare(angle1, angle2);
-        });
+        // West/East faces
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
         
-        return sorted;
-    }
-    
-    /**
-     * Ensure correct winding order so that the polygon normal points outward.
-     * This prevents "transparent" faces due to backface culling.
-     */
-    private static List<Vec3> ensureCorrectWinding(List<Vec3> points, float nx, float ny, float nz, boolean keepPositive) {
-        if (points.size() < 3) return points;
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
         
-        // Calculate polygon normal using first three points
-        Vec3 p0 = points.get(0);
-        Vec3 p1 = points.get(1);
-        Vec3 p2 = points.get(2);
-        
-        Vec3 v1 = Vec3.createVectorHelper(p1.xCoord - p0.xCoord, p1.yCoord - p0.yCoord, p1.zCoord - p0.zCoord);
-        Vec3 v2 = Vec3.createVectorHelper(p2.xCoord - p0.xCoord, p2.yCoord - p0.yCoord, p2.zCoord - p0.zCoord);
-        
-        Vec3 polyNormal = crossProduct(v1, v2);
-        polyNormal = normalize(polyNormal);
-        
-        // Check if polygon normal aligns with plane normal
-        double dot = polyNormal.xCoord * nx + polyNormal.yCoord * ny + polyNormal.zCoord * nz;
-        
-        // The cut face should face outward from the kept portion
-        // If keepPositive is true, the cut face should point in the direction of -normal
-        // (toward the discarded negative side, so the kept positive side sees the face)
-        boolean shouldReverse;
-        if (keepPositive) {
-            // Cut face should point toward negative side (away from kept positive side)
-            shouldReverse = dot > 0;
-        } else {
-            // Cut face should point toward positive side (away from kept negative side)
-            shouldReverse = dot < 0;
-        }
-        
-        if (shouldReverse) {
-            Collections.reverse(points);
-        }
-        
-        return points;
-    }
-    
-    private static Vec3 crossProduct(Vec3 a, Vec3 b) {
-        return Vec3.createVectorHelper(
-            a.yCoord * b.zCoord - a.zCoord * b.yCoord,
-            a.zCoord * b.xCoord - a.xCoord * b.zCoord,
-            a.xCoord * b.yCoord - a.yCoord * b.xCoord
-        );
-    }
-    
-    private static Vec3 normalize(Vec3 v) {
-        double len = Math.sqrt(v.xCoord * v.xCoord + v.yCoord * v.yCoord + v.zCoord * v.zCoord);
-        if (len < 1e-10) {
-            return Vec3.createVectorHelper(0, 0, 0);
-        }
-        return Vec3.createVectorHelper(v.xCoord / len, v.yCoord / len, v.zCoord / len);
-    }
-    
-    private static void addVertexWithTiledUV(int x, int y, int z, Vec3 point, 
-                                              IIcon icon, float nx, float ny, float nz,
-                                              double faceWidth, double faceHeight,
-                                              double minX, double minY, double minZ,
-                                              double maxX, double maxY, double maxZ) {
-        // Calculate normalized position within the face bounds
-        double uNorm, vNorm;
-        
-        boolean isXFace = (maxX - minX) < 0.01;
-        boolean isYFace = (maxY - minY) < 0.01;
-        boolean isZFace = (maxZ - minZ) < 0.01;
-        
-        if (isXFace) {
-            uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-        } else if (isYFace) {
-            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-        } else if (isZFace) {
-            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-            vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-        } else {
-            // Diagonal - project onto dominant plane
-            if (Math.abs(nx) > Math.abs(ny) && Math.abs(nx) > Math.abs(nz)) {
-                uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-            } else if (Math.abs(ny) > Math.abs(nz)) {
-                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-            } else {
-                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-                vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-            }
-        }
-        
-        // Scale by face size to get texture coordinates
-        // This tiles the texture instead of stretching it
-        double uScaled = uNorm * (faceWidth / 16.0);
-        double vScaled = vNorm * (faceHeight / 16.0);
-        
-        // Wrap coordinates for tiling (0-1 range)
-        double uWrapped = uScaled - Math.floor(uScaled);
-        double vWrapped = vScaled - Math.floor(vScaled);
-        
-        // Get actual texture coordinates
-        double uMin = icon.getMinU();
-        double uMax = icon.getMaxU();
-        double vMin = icon.getMinV();
-        double vMax = icon.getMaxV();
-        
-        double uCoord = uMin + (uMax - uMin) * uWrapped;
-        double vCoord = vMin + (vMax - vMin) * vWrapped;
-        
-        tess.addVertexWithUV(
-            x + point.xCoord, 
-            y + point.yCoord, 
-            z + point.zCoord,
-            uCoord, vCoord
-        );
-    }
-    
-    /**
-     * Adds vertex with TILED UV coordinates centered on the face.
-     * Creates a tiling pattern that covers the face area, but only
-     * renders the fragment corresponding to the actual polygon.
-     * The tiling is centered on the face center.
-     * 
-     * Example: face is 22.6px wide (1.41 * 16), texture is 16px
-     * - We need 2 tiles (32px) to cover the face
-     * - Tiling is centered: face center aligns with texture center
-     * - UVs wrap around for seamless tiling
-     */
-    private static void addVertexWithTiledCenteredUV(int x, int y, int z, Vec3 point,
-                                                      IIcon icon, float nx, float ny, float nz,
-                                                      double faceWidth, double faceHeight,
-                                                      double minX, double minY, double minZ,
-                                                      double maxX, double maxY, double maxZ) {
-        
-        double cx = (minX + maxX) / 2.0;
-        double cy = (minY + maxY) / 2.0;
-        double cz = (minZ + maxZ) / 2.0;
-        
-        // Determine dominant axis for projection
-        boolean isXFace = (maxX - minX) < 0.01;
-        boolean isYFace = (maxY - minY) < 0.01;
-        boolean isZFace = (maxZ - minZ) < 0.01;
-        
-        // Calculate local coordinates relative to face center (-0.5 to 0.5 range)
-        double uLocal, vLocal;
-        if (isXFace) {
-            uLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
-            vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
-        } else if (isYFace) {
-            uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
-            vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
-        } else if (isZFace) {
-            uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
-            vLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
-        } else {
-            // Diagonal face - project based on dominant normal component
-            if (Math.abs(nx) > Math.abs(ny) && Math.abs(nx) > Math.abs(nz)) {
-                uLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
-                vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
-            } else if (Math.abs(ny) > Math.abs(nz)) {
-                uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
-                vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
-            } else {
-                uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
-                vLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
-            }
-        }
-        
-        // Convert to texture pixel coordinates
-        // Face center (0) maps to texture center (8px = 0.5 in UV)
-        // Face extends by faceWidth/2 pixels on each side
-        double uPixelOffset = uLocal * (faceWidth / 2.0);
-        double vPixelOffset = vLocal * (faceHeight / 2.0);
-        
-        // Convert to UV coordinates within a single texture tile
-        // Center is at 8px, so we add 8 and wrap around 16
-        double uPixel = 8.0 + uPixelOffset;
-        double vPixel = 8.0 + vPixelOffset;
-        
-        // Wrap to 0-16 range for seamless tiling
-        double uWrapped = ((uPixel % 16.0) + 16.0) % 16.0;
-        double vWrapped = ((vPixel % 16.0) + 16.0) % 16.0;
-        
-        // Convert to actual UV coordinates
-        double uFinal = icon.getInterpolatedU(uWrapped);
-        double vFinal = icon.getInterpolatedV(vWrapped);
-        
-        tess.addVertexWithUV(
-            x + point.xCoord,
-            y + point.yCoord,
-            z + point.zCoord,
-            uFinal, vFinal
-        );
-    }
-    
-    /**
-     * Adds vertex with CLIPPED UV coordinates.
-     * Shows only the portion of texture corresponding to the face size.
-     */
-    private static void addVertexWithClippedUV(int x, int y, int z, Vec3 point,
-                                                IIcon icon, float nx, float ny, float nz,
-                                                double minX, double minY, double minZ,
-                                                double maxX, double maxY, double maxZ) {
-        
-        boolean isXFace = (maxX - minX) < 0.01;
-        boolean isYFace = (maxY - minY) < 0.01;
-        boolean isZFace = (maxZ - minZ) < 0.01;
-        
-        double uNorm, vNorm;
-        if (isXFace) {
-            uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-        } else if (isYFace) {
-            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-        } else if (isZFace) {
-            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-            vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-        } else {
-            // Diagonal - use simple projection
-            if (Math.abs(nx) > Math.abs(ny) && Math.abs(nx) > Math.abs(nz)) {
-                uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-            } else if (Math.abs(ny) > Math.abs(nz)) {
-                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-            } else {
-                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-                vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-            }
-        }
-        
-        double uMin = icon.getMinU();
-        double uMax = icon.getMaxU();
-        double vMin = icon.getMinV();
-        double vMax = icon.getMaxV();
-        
-        double uCoord = uMin + (uMax - uMin) * uNorm;
-        double vCoord = vMin + (vMax - vMin) * vNorm;
-        
-        tess.addVertexWithUV(
-            x + point.xCoord,
-            y + point.yCoord,
-            z + point.zCoord,
-            uCoord, vCoord
-        );
-    }
-    
-    // Legacy method for simple UV mapping (used by other parts of the code)
-    private static void addVertexWithUV(int x, int y, int z, Vec3 point, 
-                                        IIcon icon, float nx, float ny, float nz) {
-        // Map 3D point to 2D UV coordinates
-        double u, v;
-        
-        if (Math.abs(ny) > Math.abs(nx) && Math.abs(ny) > Math.abs(nz)) {
-            u = point.xCoord;
-            v = point.zCoord;
-        } else if (Math.abs(nx) > Math.abs(nz)) {
-            u = point.zCoord;
-            v = point.yCoord;
-        } else {
-            u = point.xCoord;
-            v = point.yCoord;
-        }
-        
-        double uMin = icon.getMinU();
-        double uMax = icon.getMaxU();
-        double vMin = icon.getMinV();
-        double vMax = icon.getMaxV();
-        
-        double uCoord = uMin + (uMax - uMin) * u;
-        double vCoord = vMin + (vMax - vMin) * v;
-        
-        tess.addVertexWithUV(
-            x + point.xCoord, 
-            y + point.yCoord, 
-            z + point.zCoord,
-            uCoord, vCoord
-        );
-    }
-    
-    // Face rendering methods using original block's icons
-    private static void renderBottomFace(RenderBlocks rb, Block block, int x, int y, int z) {
-        IIcon icon = block.getIcon(0, 0);
-        rb.renderFaceYNeg(block, x, y, z, icon);
-    }
-    
-    private static void renderTopFace(RenderBlocks rb, Block block, int x, int y, int z) {
-        IIcon icon = block.getIcon(1, 0);
-        rb.renderFaceYPos(block, x, y, z, icon);
-    }
-    
-    private static void renderNorthFace(RenderBlocks rb, Block block, int x, int y, int z) {
-        IIcon icon = block.getIcon(2, 0);
-        rb.renderFaceZNeg(block, x, y, z, icon);
-    }
-    
-    private static void renderSouthFace(RenderBlocks rb, Block block, int x, int y, int z) {
-        IIcon icon = block.getIcon(3, 0);
-        rb.renderFaceZPos(block, x, y, z, icon);
-    }
-    
-    private static void renderWestFace(RenderBlocks rb, Block block, int x, int y, int z) {
-        IIcon icon = block.getIcon(4, 0);
-        rb.renderFaceXNeg(block, x, y, z, icon);
-    }
-    
-    private static void renderEastFace(RenderBlocks rb, Block block, int x, int y, int z) {
-        IIcon icon = block.getIcon(5, 0);
-        rb.renderFaceXPos(block, x, y, z, icon);
+        // Cut face at Z=0.5 with offset
+        IIcon cutIcon = block.getIcon(2, meta);
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + 0.5 + zOffset, cutIcon.getMinU(), cutIcon.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + 0.5 + zOffset, cutIcon.getMinU(), cutIcon.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + 0.5 + zOffset, cutIcon.getMaxU(), cutIcon.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + 0.5 + zOffset, cutIcon.getMaxU(), cutIcon.getMaxV());
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/client/render/CutFaceRenderer.java
+=== FILE 9/17: CutFaceRenderer.java ===
 ================================================================================
 
 package com.cuttableblocks.client.render;
@@ -1282,350 +936,9 @@ public class CutFaceRenderer {
     }
 }
 
-================================================================================
-FILE: src/main/java/com/cuttableblocks/client/render/RenderHelper.java
-================================================================================
-
-package com.cuttableblocks.client.render;
-
-import com.cuttableblocks.tileentities.TileEntityCuttable;
-import net.minecraft.block.Block;
-import net.minecraft.client.renderer.RenderBlocks;
-import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.util.IIcon;
-import net.minecraft.world.IBlockAccess;
-
-/**
- * Helper class for rendering cuttable blocks.
- * Based on rendering techniques from Carpenter's Blocks.
- * 
- * Implements 16x16 grid snapping for cut planes - planes are rounded to
- * points on block edges divided into 16 equal segments (matching Minecraft's
- * 16x16 texture pixels). This ensures consistent texture mapping and reduces
- * z-fighting artifacts.
- */
-public class RenderHelper {
-    
-    public static final int GRID_SEGMENTS = 16;
-    
-    private static final Tessellator tessellator = Tessellator.instance;
-    
-    /**
-     * Renders a cut block with the given plane parameters.
-     * 
-     * @param renderer The RenderBlocks instance
-     * @param block The block being rendered (BlockCuttable)
-     * @param x Block X position
-     * @param y Block Y position  
-     * @param z Block Z position
-     * @param te The TileEntity containing cut data
-     * @return true if rendered successfully
-     */
-    public static boolean renderCutBlock(RenderBlocks renderer, Block block, 
-                                         int x, int y, int z, TileEntityCuttable te) {
-        
-        Block originalBlock = te.getOriginalBlock();
-        if (originalBlock == null) {
-            return false;
-        }
-        
-        float nx = te.getNormalX();
-        float ny = te.getNormalY();
-        float nz = te.getNormalZ();
-        
-        // Check if cut is axis-aligned (simplified) or diagonal (advanced)
-        float absNx = Math.abs(nx);
-        float absNy = Math.abs(ny);
-        float absNz = Math.abs(nz);
-        
-        boolean isAxisAligned = (absNx > 0.95f || absNy > 0.95f || absNz > 0.95f) ||
-                                (absNx < 0.05f && absNy < 0.05f) ||
-                                (absNx < 0.05f && absNz < 0.05f) ||
-                                (absNy < 0.05f && absNz < 0.05f);
-        
-        if (isAxisAligned) {
-            // Use simple rendering for axis-aligned cuts
-            return renderAxisAlignedCut(renderer, block, x, y, z, te);
-        } else {
-            // Use advanced rendering for diagonal cuts
-            return AdvancedCutRenderer.renderAdvancedCut(renderer, block, x, y, z, te);
-        }
-    }
-    
-    /**
-     * Renders an axis-aligned cut (simpler and more efficient).
-     */
-    private static boolean renderAxisAlignedCut(RenderBlocks renderer, Block block,
-                                                 int x, int y, int z, TileEntityCuttable te) {
-        
-        Block originalBlock = te.getOriginalBlock();
-        int originalMeta = te.getOriginalMetadata();
-        float nx = te.getNormalX();
-        float ny = te.getNormalY();
-        float nz = te.getNormalZ();
-        boolean keepPositive = te.keepPositiveSide();
-        
-        float absNx = Math.abs(nx);
-        float absNy = Math.abs(ny);
-        float absNz = Math.abs(nz);
-        
-        // Save original block bounds
-        double prevMinX = renderer.renderMinX;
-        double prevMinY = renderer.renderMinY;
-        double prevMinZ = renderer.renderMinZ;
-        double prevMaxX = renderer.renderMaxX;
-        double prevMaxY = renderer.renderMaxY;
-        double prevMaxZ = renderer.renderMaxZ;
-        
-        // Render based on dominant normal direction
-        if (absNy > absNx && absNy > absNz) {
-            // Dominant Y - horizontal cut
-            renderHorizontalCut(renderer, originalBlock, x, y, z, originalMeta, ny > 0 == keepPositive);
-        } else if (absNx > absNz) {
-            // Dominant X - vertical cut along X
-            renderVerticalXCut(renderer, originalBlock, x, y, z, originalMeta, nx > 0 == keepPositive);
-        } else {
-            // Dominant Z - vertical cut along Z
-            renderVerticalZCut(renderer, originalBlock, x, y, z, originalMeta, nz > 0 == keepPositive);
-        }
-        
-        // Restore block bounds
-        renderer.setRenderBounds(prevMinX, prevMinY, prevMinZ, prevMaxX, prevMaxY, prevMaxZ);
-        
-        return true;
-    }
-    
-    /**
-     * Renders a horizontal cut (top or bottom half) with proper texture mapping.
-     * Textures are NOT stretched - we show only the appropriate portion.
-     */
-    private static void renderHorizontalCut(RenderBlocks renderer, Block block, 
-                                            int x, int y, int z, int meta, boolean topHalf) {
-        Tessellator tess = Tessellator.instance;
-        
-        // Get textures for all faces
-        IIcon iconTop = block.getIcon(1, meta);
-        IIcon iconBottom = block.getIcon(0, meta);
-        IIcon iconSide = block.getIcon(2, meta); // North/South side
-        
-        double yMin = topHalf ? 0.5 : 0.0;
-        double yMax = topHalf ? 1.0 : 0.5;
-        
-        // Top face (Y+) - full texture
-        if (topHalf) {
-            tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconTop.getMinU(), iconTop.getMaxV());
-            tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconTop.getMaxU(), iconTop.getMaxV());
-            tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconTop.getMaxU(), iconTop.getMinV());
-            tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconTop.getMinU(), iconTop.getMinV());
-        }
-        
-        // Bottom face (Y-) - full texture
-        if (!topHalf) {
-            tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconBottom.getMinU(), iconBottom.getMinV());
-            tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconBottom.getMaxU(), iconBottom.getMinV());
-            tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconBottom.getMaxU(), iconBottom.getMaxV());
-            tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconBottom.getMinU(), iconBottom.getMaxV());
-        }
-        
-        // Side faces - show only half of texture (clipped, not stretched!)
-        double vMin = iconSide.getMinV();
-        double vMax = iconSide.getMaxV();
-        double vMid = iconSide.getInterpolatedV(topHalf ? 8.0 : 8.0); // Middle of texture
-        
-        double vTop = topHalf ? vMax : vMid;
-        double vBottom = topHalf ? vMid : vMin;
-        
-        // North face (Z-)
-        tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
-        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMaxU(), vBottom);
-        tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconSide.getMaxU(), vTop);
-        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
-        
-        // South face (Z+)
-        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMinU(), vTop);
-        tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
-        tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
-        tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMinU(), vBottom);
-        
-        // West face (X-)
-        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
-        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
-        tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
-        tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
-        
-        // East face (X+)
-        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
-        tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
-        tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
-        tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
-        
-        // Cut face (horizontal plane at Y=0.5) - tile texture with padding
-        if (true) { // Always render cut face
-            IIcon cutIcon = block.getIcon(1, meta);
-            // Use tiled texture for cut face
-            double u0 = cutIcon.getMinU();
-            double u1 = cutIcon.getMaxU();
-            double v0 = cutIcon.getMinV();
-            double v1 = cutIcon.getMaxV();
-            
-            tess.addVertexWithUV(x + 0.0, y + 0.5, z + 1.0, u0, v1);
-            tess.addVertexWithUV(x + 1.0, y + 0.5, z + 1.0, u1, v1);
-            tess.addVertexWithUV(x + 1.0, y + 0.5, z + 0.0, u1, v0);
-            tess.addVertexWithUV(x + 0.0, y + 0.5, z + 0.0, u0, v0);
-        }
-    }
-    
-    /**
-     * Renders a vertical cut along X axis (east or west half) with proper textures.
-     */
-    private static void renderVerticalXCut(RenderBlocks renderer, Block block,
-                                           int x, int y, int z, int meta, boolean eastHalf) {
-        Tessellator tess = Tessellator.instance;
-        
-        IIcon iconSide = block.getIcon(2, meta);
-        IIcon iconTop = block.getIcon(1, meta);
-        IIcon iconBottom = block.getIcon(0, meta);
-        
-        double xMin = eastHalf ? 0.5 : 0.0;
-        double xMax = eastHalf ? 1.0 : 0.5;
-        
-        // West/East face - full texture on the solid side
-        if (!eastHalf) {
-            // West face visible
-            tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, iconSide.getMinU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, iconSide.getMaxU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, iconSide.getMaxU(), iconSide.getMinV());
-            tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, iconSide.getMinU(), iconSide.getMinV());
-        } else {
-            // East face visible
-            tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, iconSide.getMinU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, iconSide.getMaxU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, iconSide.getMaxU(), iconSide.getMinV());
-            tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, iconSide.getMinU(), iconSide.getMinV());
-        }
-        
-        // Top/Bottom - show half texture (clipped)
-        double uMin = iconTop.getMinU();
-        double uMax = iconTop.getMaxU();
-        double uMid = iconTop.getInterpolatedU(eastHalf ? 8.0 : 8.0);
-        
-        double uLeft = eastHalf ? uMid : uMin;
-        double uRight = eastHalf ? uMax : uMid;
-        
-        // Top face
-        tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, uLeft, iconTop.getMaxV());
-        tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, uRight, iconTop.getMaxV());
-        tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconTop.getMinV());
-        tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, uLeft, iconTop.getMinV());
-        
-        // Bottom face
-        tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, uLeft, iconBottom.getMinV());
-        tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconBottom.getMinV());
-        tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, uRight, iconBottom.getMaxV());
-        tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, uLeft, iconBottom.getMaxV());
-        
-        // North/South faces - half texture
-        tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, uLeft, iconSide.getMaxV());
-        tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconSide.getMaxV());
-        tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconSide.getMinV());
-        tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, uLeft, iconSide.getMinV());
-        
-        tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, uLeft, iconSide.getMaxV());
-        tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, uRight, iconSide.getMaxV());
-        tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, uRight, iconSide.getMinV());
-        tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, uLeft, iconSide.getMinV());
-        
-        // Cut face at X=0.5 - tile texture
-        IIcon cutIcon = block.getIcon(4, meta);
-        tess.addVertexWithUV(x + 0.5, y + 0.0, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
-        tess.addVertexWithUV(x + 0.5, y + 1.0, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
-        tess.addVertexWithUV(x + 0.5, y + 1.0, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
-        tess.addVertexWithUV(x + 0.5, y + 0.0, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
-    }
-    
-    /**
-     * Renders a vertical cut along Z axis (south or north half) with proper textures.
-     */
-    private static void renderVerticalZCut(RenderBlocks renderer, Block block,
-                                           int x, int y, int z, int meta, boolean southHalf) {
-        Tessellator tess = Tessellator.instance;
-        
-        IIcon iconSide = block.getIcon(2, meta);
-        IIcon iconTop = block.getIcon(1, meta);
-        IIcon iconBottom = block.getIcon(0, meta);
-        
-        double zMin = southHalf ? 0.5 : 0.0;
-        double zMax = southHalf ? 1.0 : 0.5;
-        
-        // North/South face - full texture
-        if (!southHalf) {
-            tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMaxU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMaxU(), iconSide.getMinV());
-            tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
-        } else {
-            tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMinU(), iconSide.getMinV());
-            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
-            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconSide.getMinU(), iconSide.getMaxV());
-        }
-        
-        // Top/Bottom - half texture
-        double uMin = iconTop.getMinU();
-        double uMax = iconTop.getMaxU();
-        double uMid = iconTop.getInterpolatedU(8.0);
-        double uLeft = southHalf ? uMid : uMin;
-        double uRight = southHalf ? uMax : uMid;
-        
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, uLeft, iconTop.getMaxV());
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, uRight, iconTop.getMaxV());
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, uRight, iconTop.getMinV());
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, uLeft, iconTop.getMinV());
-        
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, uLeft, iconBottom.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, uRight, iconBottom.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, uRight, iconBottom.getMaxV());
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, uLeft, iconBottom.getMaxV());
-        
-        // West/East faces - half texture
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
-        
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
-        
-        // Cut face at Z=0.5 - tile texture
-        IIcon cutIcon = block.getIcon(2, meta);
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + 0.5, cutIcon.getMinU(), cutIcon.getMaxV());
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + 0.5, cutIcon.getMinU(), cutIcon.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + 0.5, cutIcon.getMaxU(), cutIcon.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + 0.5, cutIcon.getMaxU(), cutIcon.getMaxV());
-    }
-    
-    /**
-     * Renders the "cut face" - the diagonal face created by the plane.
-     * This is more complex and requires custom vertex drawing.
-     */
-    public static void renderCutFace(RenderBlocks renderer, Block block,
-                                     int x, int y, int z, TileEntityCuttable te) {
-        
-        // Get the original block's icons
-        IIcon icon = block.getIcon(0, 0);
-        
-        // Calculate intersection points of plane with cube edges
-        // This would create a polygon that represents the cut surface
-        
-        // For simplified version, we skip the diagonal face rendering
-        // In full implementation, this would draw a polygon with proper UV mapping
-    }
-}
 
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/client/render/TextureMapper.java
+=== FILE 10/17: TextureMapper.java ===
 ================================================================================
 
 package com.cuttableblocks.client.render;
@@ -2021,117 +1334,625 @@ public class TextureMapper {
     }
 }
 
-================================================================================
-FILE: src/main/java/com/cuttableblocks/common/CommonProxy.java
-================================================================================
-
-package com.cuttableblocks.common;
-
-public class CommonProxy {
-    
-    public void preInit() {
-        // Common pre-initialization code
-    }
-    
-    public void init() {
-        // Common initialization code
-    }
-    
-    public void postInit() {
-        // Common post-initialization code
-    }
-}
 
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/items/ItemCuttingTool.java
+=== FILE 11/17: AdvancedCutRenderer.java ===
 ================================================================================
 
-package com.cuttableblocks.items;
+package com.cuttableblocks.client.render;
 
-import com.cuttableblocks.blocks.ModBlocks;
 import com.cuttableblocks.tileentities.TileEntityCuttable;
+import com.cuttableblocks.util.CutDirections;
 import net.minecraft.block.Block;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.client.renderer.RenderBlocks;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.util.IIcon;
 import net.minecraft.util.Vec3;
-import net.minecraft.world.World;
 
-public class ItemCuttingTool extends Item {
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+/**
+ * Advanced renderer for cuttable blocks with discrete 18 directions.
+ * Fixes: consistent keepPositive (Definition A), stable UV, anti z-fighting.
+ */
+public class AdvancedCutRenderer {
     
-    public ItemCuttingTool() {
-        this.setMaxStackSize(1);
-        this.setFull3D();
+    private static final Tessellator tess = Tessellator.instance;
+    private static final double EPSILON = 1e-6;
+    private static final double EPS_MERGE = 1e-6;
+    private static final double Z_FIGHT_OFFSET = 1e-4;
+    private static final Vec3 CENTER = Vec3.createVectorHelper(0.5, 0.5, 0.5);
+    
+    /**
+     * Main entry point for rendering.
+     */
+    public static boolean renderAdvancedCut(RenderBlocks renderer, Block block, 
+                                            int x, int y, int z, TileEntityCuttable te) {
+        
+        Block originalBlock = te.getOriginalBlock();
+        if (originalBlock == null) {
+            return false;
+        }
+        
+        int rotId = te.getRotId();
+        int dirId = te.getDirId();
+        boolean keepPositive = te.keepPositiveSide();
+        int meta = te.getOriginalMetadata();
+        
+        // Get world-space normal (deterministically from rotId/dirId)
+        Vec3 nWorld = CutDirections.getWorldDir(rotId, dirId);
+        float nx = (float) nWorld.xCoord;
+        float ny = (float) nWorld.yCoord;
+        float nz = (float) nWorld.zCoord;
+        
+        // Calculate planeD through center
+        double planeD = 0.5 * (nx + ny + nz);
+        
+        // Deterministic render mode selection based on reconstructed normal
+        // Check if exactly axis-aligned (one component == 1.0, others == 0)
+        double absNx = Math.abs(nx);
+        double absNy = Math.abs(ny);
+        double absNz = Math.abs(nz);
+        
+        boolean isAxisX = absNx > 0.999999 && absNy < 0.000001 && absNz < 0.000001;
+        boolean isAxisY = absNy > 0.999999 && absNx < 0.000001 && absNz < 0.000001;
+        boolean isAxisZ = absNz > 0.999999 && absNx < 0.000001 && absNy < 0.000001;
+        
+        if (isAxisY) {
+            // Definition A: keepPositive means keep dist >= 0 side
+            // For horizontal cut: ny > 0 means normal points up
+            // keepPositive=true -> keep upper half (dist >= 0)
+            // keepPositive=false -> keep lower half (dist < 0)
+            boolean keepTop = (ny > 0) == keepPositive;
+            RenderHelper.renderHorizontalCut(renderer, originalBlock, x, y, z, meta, keepTop);
+            return true;
+        } else if (isAxisX) {
+            boolean keepEast = (nx > 0) == keepPositive;
+            RenderHelper.renderVerticalXCut(renderer, originalBlock, x, y, z, meta, keepEast);
+            return true;
+        } else if (isAxisZ) {
+            boolean keepSouth = (nz > 0) == keepPositive;
+            RenderHelper.renderVerticalZCut(renderer, originalBlock, x, y, z, meta, keepSouth);
+            return true;
+        } else {
+            return renderDiagonalCut(renderer, originalBlock, x, y, z, meta, 
+                                    nx, ny, nz, keepPositive, planeD);
+        }
     }
     
-    @Override
-    public boolean onItemUse(ItemStack stack, EntityPlayer player, World world, 
-                             int x, int y, int z, int side, 
-                             float hitX, float hitY, float hitZ) {
+    private static boolean renderDiagonalCut(RenderBlocks renderer, Block originalBlock,
+                                              int x, int y, int z, int meta,
+                                              float nx, float ny, float nz, 
+                                              boolean keepPositive, double planeD) {
         
-        if (world.isRemote) {
-            return true;
-        }
+        List<Vec3> intersections = calculateIntersections(nx, ny, nz, planeD);
+        intersections = deduplicatePoints(intersections, EPS_MERGE);
         
-        Block targetBlock = world.getBlock(x, y, z);
-        int targetMeta = world.getBlockMetadata(x, y, z);
-        
-        // Cannot cut air, bedrock, or already cut blocks
-        if (targetBlock == Blocks.air || targetBlock == Blocks.bedrock 
-            || targetBlock == ModBlocks.blockCuttable) {
+        if (intersections.size() < 3) {
             return false;
         }
         
-        // Get player's look vector
-        Vec3 lookVec = player.getLookVec();
-        
-        // Normalize the vector
-        double len = Math.sqrt(lookVec.xCoord * lookVec.xCoord 
-                             + lookVec.yCoord * lookVec.yCoord 
-                             + lookVec.zCoord * lookVec.zCoord);
-        
-        if (len < 0.0001) {
-            return false;
-        }
-        
-        float nx = (float)(lookVec.xCoord / len);
-        float ny = (float)(lookVec.yCoord / len);
-        float nz = (float)(lookVec.zCoord / len);
-        
-        // Determine which side to keep based on player position relative to block center
-        double playerToCenterX = player.posX - (x + 0.5);
-        double playerToCenterY = player.posY + player.getEyeHeight() - (y + 0.5);
-        double playerToCenterZ = player.posZ - (z + 0.5);
-        
-        // Dot product: positive means player is on the positive side of the plane
-        double dotProduct = playerToCenterX * nx + playerToCenterY * ny + playerToCenterZ * nz;
-        boolean keepPositive = dotProduct > 0;
-        
-        // Debug message
-        player.addChatMessage(new ChatComponentText(
-            String.format("Cutting with normal (%.2f, %.2f, %.2f), keeping %s side",
-                nx, ny, nz, keepPositive ? "positive" : "negative")
-        ));
-        
-        // Replace with cuttable block
-        world.setBlock(x, y, z, ModBlocks.blockCuttable, 0, 3);
-        
-        // Set the tile entity data
-        TileEntityCuttable te = (TileEntityCuttable) world.getTileEntity(x, y, z);
-        if (te != null) {
-            te.setCutData(targetBlock, targetMeta, nx, ny, nz, keepPositive);
-        }
-        
-        world.markBlockForUpdate(x, y, z);
+        renderClippedCubeFaces(renderer, originalBlock, x, y, z, meta, nx, ny, nz, keepPositive, planeD);
+        renderCutFace(x, y, z, intersections, nx, ny, nz, keepPositive, originalBlock, meta);
         
         return true;
     }
+    
+    private static double planeDist(double px, double py, double pz, float nx, float ny, float nz, double planeD) {
+        return nx * px + ny * py + nz * pz - planeD;
+    }
+    
+    private static boolean keepSide(double dist, boolean keepPositive, double eps) {
+        // Definition A: keepPositive means keep dist >= 0 side
+        return keepPositive ? (dist >= -eps) : (dist <= eps);
+    }
+    
+    private static double wrap16(double px) {
+        double w = px % 16.0;
+        if (w < 0) w += 16.0;
+        return w;
+    }
+    
+    private static List<Vec3> clipPolygonByPlane(List<Vec3> poly, float nx, float ny, float nz, 
+                                                  boolean keepPositive, double planeD) {
+        if (poly.size() < 3) return poly;
+        
+        List<Vec3> output = new ArrayList<>();
+        int n = poly.size();
+        
+        for (int i = 0; i < n; i++) {
+            Vec3 A = poly.get(i);
+            Vec3 B = poly.get((i + 1) % n);
+            
+            double dA = planeDist(A.xCoord, A.yCoord, A.zCoord, nx, ny, nz, planeD);
+            double dB = planeDist(B.xCoord, B.yCoord, B.zCoord, nx, ny, nz, planeD);
+            
+            boolean inA = keepSide(dA, keepPositive, EPSILON);
+            boolean inB = keepSide(dB, keepPositive, EPSILON);
+            
+            if (inA && inB) {
+                output.add(B);
+            } else if (inA && !inB) {
+                Vec3 intersect = intersectEdgeWithPlane(A, B, dA, dB);
+                if (intersect != null) output.add(intersect);
+            } else if (!inA && inB) {
+                Vec3 intersect = intersectEdgeWithPlane(A, B, dA, dB);
+                if (intersect != null) output.add(intersect);
+                output.add(B);
+            }
+        }
+        
+        return output;
+    }
+    
+    private static Vec3 intersectEdgeWithPlane(Vec3 A, Vec3 B, double dA, double dB) {
+        double denom = dA - dB;
+        if (Math.abs(denom) < 1e-10) return null;
+        
+        double t = dA / denom;
+        if (t < 0 || t > 1) return null;
+        
+        double ix = A.xCoord + t * (B.xCoord - A.xCoord);
+        double iy = A.yCoord + t * (B.yCoord - A.yCoord);
+        double iz = A.zCoord + t * (B.zCoord - A.zCoord);
+        
+        return Vec3.createVectorHelper(ix, iy, iz);
+    }
+    
+    private static List<Vec3> getFacePolygon(int side) {
+        List<Vec3> poly = new ArrayList<>(4);
+        switch (side) {
+            case 0: // BOTTOM
+                poly.add(Vec3.createVectorHelper(0, 0, 0));
+                poly.add(Vec3.createVectorHelper(1, 0, 0));
+                poly.add(Vec3.createVectorHelper(1, 0, 1));
+                poly.add(Vec3.createVectorHelper(0, 0, 1));
+                break;
+            case 1: // TOP
+                poly.add(Vec3.createVectorHelper(0, 1, 0));
+                poly.add(Vec3.createVectorHelper(0, 1, 1));
+                poly.add(Vec3.createVectorHelper(1, 1, 1));
+                poly.add(Vec3.createVectorHelper(1, 1, 0));
+                break;
+            case 2: // NORTH
+                poly.add(Vec3.createVectorHelper(0, 0, 0));
+                poly.add(Vec3.createVectorHelper(0, 1, 0));
+                poly.add(Vec3.createVectorHelper(1, 1, 0));
+                poly.add(Vec3.createVectorHelper(1, 0, 0));
+                break;
+            case 3: // SOUTH
+                poly.add(Vec3.createVectorHelper(0, 0, 1));
+                poly.add(Vec3.createVectorHelper(1, 0, 1));
+                poly.add(Vec3.createVectorHelper(1, 1, 1));
+                poly.add(Vec3.createVectorHelper(0, 1, 1));
+                break;
+            case 4: // WEST
+                poly.add(Vec3.createVectorHelper(0, 0, 0));
+                poly.add(Vec3.createVectorHelper(0, 0, 1));
+                poly.add(Vec3.createVectorHelper(0, 1, 1));
+                poly.add(Vec3.createVectorHelper(0, 1, 0));
+                break;
+            case 5: // EAST
+                poly.add(Vec3.createVectorHelper(1, 0, 0));
+                poly.add(Vec3.createVectorHelper(1, 1, 0));
+                poly.add(Vec3.createVectorHelper(1, 1, 1));
+                poly.add(Vec3.createVectorHelper(1, 0, 1));
+                break;
+        }
+        return poly;
+    }
+    
+    private static Vec3 getFaceNormal(int side) {
+        switch (side) {
+            case 0: return Vec3.createVectorHelper(0, -1, 0);
+            case 1: return Vec3.createVectorHelper(0, 1, 0);
+            case 2: return Vec3.createVectorHelper(0, 0, -1);
+            case 3: return Vec3.createVectorHelper(0, 0, 1);
+            case 4: return Vec3.createVectorHelper(-1, 0, 0);
+            case 5: return Vec3.createVectorHelper(1, 0, 0);
+        }
+        return Vec3.createVectorHelper(0, 1, 0);
+    }
+    
+    private static double[] getUVForPoint(Vec3 p, int side) {
+        double u, v;
+        switch (side) {
+            case 0: case 1: // BOTTOM/TOP
+                u = p.xCoord;
+                v = p.zCoord;
+                break;
+            case 2: case 3: // NORTH/SOUTH
+                u = p.xCoord;
+                v = 1.0 - p.yCoord;
+                break;
+            case 4: case 5: // WEST/EAST
+                u = p.zCoord;
+                v = 1.0 - p.yCoord;
+                break;
+            default:
+                u = p.xCoord;
+                v = p.yCoord;
+        }
+        return new double[] { u, v };
+    }
+    
+    private static void renderClippedCubeFaces(RenderBlocks renderer, Block originalBlock,
+                                               int x, int y, int z, int meta,
+                                               float nx, float ny, float nz, 
+                                               boolean keepPositive, double planeD) {
+        
+        for (int side = 0; side < 6; side++) {
+            List<Vec3> facePoly = getFacePolygon(side);
+            List<Vec3> clipped = clipPolygonByPlane(facePoly, nx, ny, nz, keepPositive, planeD);
+            clipped = deduplicatePoints(clipped, EPS_MERGE);
+            
+            if (clipped.size() > 1) {
+                Vec3 first = clipped.get(0);
+                Vec3 last = clipped.get(clipped.size() - 1);
+                if (distanceSq(first, last) < EPS_MERGE*EPS_MERGE) {
+                    clipped.remove(clipped.size() - 1);
+                }
+            }
+            
+            if (clipped.size() < 3) continue;
+            
+            Vec3 expectedNormal = getFaceNormal(side);
+            clipped = ensureFaceWinding(clipped, expectedNormal);
+            
+            IIcon icon = originalBlock.getIcon(side, meta);
+            int brightness = originalBlock.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
+            
+            renderClippedPolygon(clipped, side, icon, x, y, z, brightness);
+        }
+    }
+    
+    private static double distanceSq(Vec3 a, Vec3 b) {
+        double dx = a.xCoord - b.xCoord;
+        double dy = a.yCoord - b.yCoord;
+        double dz = a.zCoord - b.zCoord;
+        return dx*dx + dy*dy + dz*dz;
+    }
+    
+    private static List<Vec3> ensureFaceWinding(List<Vec3> poly, Vec3 expectedNormal) {
+        if (poly.size() < 3) return poly;
+        
+        Vec3 p0 = poly.get(0);
+        Vec3 p1 = poly.get(1);
+        Vec3 p2 = poly.get(2);
+        
+        Vec3 v1 = Vec3.createVectorHelper(p1.xCoord - p0.xCoord, p1.yCoord - p0.yCoord, p1.zCoord - p0.zCoord);
+        Vec3 v2 = Vec3.createVectorHelper(p2.xCoord - p0.xCoord, p2.yCoord - p0.yCoord, p2.zCoord - p0.zCoord);
+        
+        Vec3 actualNormal = crossProduct(v1, v2);
+        actualNormal = normalize(actualNormal);
+        
+        double dot = actualNormal.xCoord * expectedNormal.xCoord + 
+                     actualNormal.yCoord * expectedNormal.yCoord + 
+                     actualNormal.zCoord * expectedNormal.zCoord;
+        
+        if (dot < 0) {
+            Collections.reverse(poly);
+        }
+        
+        return poly;
+    }
+    
+    private static void renderClippedPolygon(List<Vec3> poly, int side, IIcon icon,
+                                              int x, int y, int z, int brightness) {
+        if (poly.size() < 3) return;
+        
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        
+        Vec3 pA = poly.get(0);
+        double[] uvA = getUVForPoint(pA, side);
+        
+        for (int i = 1; i < poly.size() - 1; i++) {
+            Vec3 pB = poly.get(i);
+            Vec3 pC = poly.get(i + 1);
+            
+            double[] uvB = getUVForPoint(pB, side);
+            double[] uvC = getUVForPoint(pC, side);
+            
+            tess.addVertexWithUV(x + pA.xCoord, y + pA.yCoord, z + pA.zCoord, 
+                                icon.getInterpolatedU(uvA[0] * 16.0), 
+                                icon.getInterpolatedV(uvA[1] * 16.0));
+            tess.addVertexWithUV(x + pB.xCoord, y + pB.yCoord, z + pB.zCoord,
+                                icon.getInterpolatedU(uvB[0] * 16.0),
+                                icon.getInterpolatedV(uvB[1] * 16.0));
+            tess.addVertexWithUV(x + pC.xCoord, y + pC.yCoord, z + pC.zCoord,
+                                icon.getInterpolatedU(uvC[0] * 16.0),
+                                icon.getInterpolatedV(uvC[1] * 16.0));
+            tess.addVertexWithUV(x + pC.xCoord, y + pC.yCoord, z + pC.zCoord,
+                                icon.getInterpolatedU(uvC[0] * 16.0),
+                                icon.getInterpolatedV(uvC[1] * 16.0));
+        }
+    }
+    
+    /**
+     * Render cut face with STABLE UV (origin at center, consistent scale).
+     */
+    private static void renderCutFace(int x, int y, int z, List<Vec3> points,
+                                      float nx, float ny, float nz, boolean keepPositive,
+                                      Block originalBlock, int meta) {
+        
+        if (points.size() < 3) return;
+        
+        IIcon icon = originalBlock.getIcon(0, meta);
+        
+        Vec3 center = calculateCentroid(points);
+        List<Vec3> sortedPoints = sortPointsByAngle(points, center, nx, ny, nz);
+        sortedPoints = ensureCorrectWinding(sortedPoints, nx, ny, nz, keepPositive);
+        
+        // STABLE tangent/bitangent basis
+        // Deterministic choice of helper vector based on largest normal component
+        Vec3 n = normalize(Vec3.createVectorHelper(nx, ny, nz));
+        
+        double absNx = Math.abs(n.xCoord);
+        double absNy = Math.abs(n.yCoord);
+        double absNz = Math.abs(n.zCoord);
+        
+        Vec3 helper;
+        if (absNx >= absNy && absNx >= absNz) {
+            helper = Vec3.createVectorHelper(0, 1, 0);
+        } else if (absNy >= absNz) {
+            helper = Vec3.createVectorHelper(0, 0, 1);
+        } else {
+            helper = Vec3.createVectorHelper(0, 1, 0);
+        }
+        
+        Vec3 tangent = normalize(crossProduct(helper, n));
+        Vec3 bitangent = crossProduct(n, tangent);
+        bitangent = normalize(bitangent);
+        
+        // Origin at center for consistent "pattern phase"
+        Vec3 origin = CENTER;
+        
+        // Get brightness
+        int brightness = 15 << 20 | 15 << 4;
+        tess.setBrightness(brightness);
+        float brightnessFactor = Math.abs(nx) * 0.6f + Math.abs(ny) * 1.0f + Math.abs(nz) * 0.8f;
+        brightnessFactor = Math.max(0.4f, Math.min(1.0f, brightnessFactor));
+        tess.setColorOpaque_F(brightnessFactor, brightnessFactor, brightnessFactor);
+        
+        // Anti z-fighting offset
+        Vec3 offset = Vec3.createVectorHelper(n.xCoord * Z_FIGHT_OFFSET, 
+                                               n.yCoord * Z_FIGHT_OFFSET, 
+                                               n.zCoord * Z_FIGHT_OFFSET);
+        
+        Vec3 pA = sortedPoints.get(0);
+        double[] uvA = getCutFaceUV(pA, origin, tangent, bitangent);
+        
+        for (int i = 1; i < sortedPoints.size() - 1; i++) {
+            Vec3 pB = sortedPoints.get(i);
+            Vec3 pC = sortedPoints.get(i + 1);
+            
+            double[] uvB = getCutFaceUV(pB, origin, tangent, bitangent);
+            double[] uvC = getCutFaceUV(pC, origin, tangent, bitangent);
+            
+            tess.addVertexWithUV(x + pA.xCoord + offset.xCoord, 
+                                y + pA.yCoord + offset.yCoord, 
+                                z + pA.zCoord + offset.zCoord,
+                                icon.getInterpolatedU(uvA[0]), icon.getInterpolatedV(uvA[1]));
+            tess.addVertexWithUV(x + pB.xCoord + offset.xCoord, 
+                                y + pB.yCoord + offset.yCoord, 
+                                z + pB.zCoord + offset.zCoord,
+                                icon.getInterpolatedU(uvB[0]), icon.getInterpolatedV(uvB[1]));
+            tess.addVertexWithUV(x + pC.xCoord + offset.xCoord, 
+                                y + pC.yCoord + offset.yCoord, 
+                                z + pC.zCoord + offset.zCoord,
+                                icon.getInterpolatedU(uvC[0]), icon.getInterpolatedV(uvC[1]));
+            tess.addVertexWithUV(x + pC.xCoord + offset.xCoord, 
+                                y + pC.yCoord + offset.yCoord, 
+                                z + pC.zCoord + offset.zCoord,
+                                icon.getInterpolatedU(uvC[0]), icon.getInterpolatedV(uvC[1]));
+        }
+    }
+    
+    /**
+     * STABLE UV: 1 block = 16 pixels, origin at center, wraps for tiling.
+     */
+    private static double[] getCutFaceUV(Vec3 p, Vec3 origin, Vec3 tangent, Vec3 bitangent) {
+        double vx = p.xCoord - origin.xCoord;
+        double vy = p.yCoord - origin.yCoord;
+        double vz = p.zCoord - origin.zCoord;
+        
+        double uBlocks = vx * tangent.xCoord + vy * tangent.yCoord + vz * tangent.zCoord;
+        double vBlocks = vx * bitangent.xCoord + vy * bitangent.yCoord + vz * bitangent.zCoord;
+        
+        double uPx = uBlocks * 16.0;
+        double vPx = vBlocks * 16.0;
+        
+        double uTile = wrap16(uPx);
+        double vTile = wrap16(vPx);
+        
+        return new double[] { uTile, vTile };
+    }
+    
+    private static List<Vec3> deduplicatePoints(List<Vec3> points, double eps) {
+        List<Vec3> unique = new ArrayList<>();
+        double epsSq = eps * eps;
+        
+        for (Vec3 p : points) {
+            boolean isDuplicate = false;
+            for (Vec3 u : unique) {
+                double dx = p.xCoord - u.xCoord;
+                double dy = p.yCoord - u.yCoord;
+                double dz = p.zCoord - u.zCoord;
+                if (dx*dx + dy*dy + dz*dz < epsSq) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            if (!isDuplicate) {
+                unique.add(p);
+            }
+        }
+        return unique;
+    }
+    
+    private static List<Vec3> calculateIntersections(float nx, float ny, float nz, double planeD) {
+        List<Vec3> points = new ArrayList<>();
+        
+        checkEdgeX(points, nx, ny, nz, planeD, 0, 0);
+        checkEdgeX(points, nx, ny, nz, planeD, 0, 1);
+        checkEdgeX(points, nx, ny, nz, planeD, 1, 0);
+        checkEdgeX(points, nx, ny, nz, planeD, 1, 1);
+        
+        checkEdgeY(points, nx, ny, nz, planeD, 0, 0);
+        checkEdgeY(points, nx, ny, nz, planeD, 0, 1);
+        checkEdgeY(points, nx, ny, nz, planeD, 1, 0);
+        checkEdgeY(points, nx, ny, nz, planeD, 1, 1);
+        
+        checkEdgeZ(points, nx, ny, nz, planeD, 0, 0);
+        checkEdgeZ(points, nx, ny, nz, planeD, 0, 1);
+        checkEdgeZ(points, nx, ny, nz, planeD, 1, 0);
+        checkEdgeZ(points, nx, ny, nz, planeD, 1, 1);
+        
+        return points;
+    }
+    
+    private static void checkEdgeX(List<Vec3> points, float nx, float ny, float nz, 
+                                    double planeD, int y, int z) {
+        if (Math.abs(nx) < 0.0001f) return;
+        
+        double t = (planeD - ny * y - nz * z) / nx;
+        if (t >= -EPSILON && t <= 1.0 + EPSILON) {
+            points.add(Vec3.createVectorHelper(clamp01(t), y, z));
+        }
+    }
+    
+    private static void checkEdgeY(List<Vec3> points, float nx, float ny, float nz,
+                                    double planeD, int x, int z) {
+        if (Math.abs(ny) < 0.0001f) return;
+        
+        double t = (planeD - nx * x - nz * z) / ny;
+        if (t >= -EPSILON && t <= 1.0 + EPSILON) {
+            points.add(Vec3.createVectorHelper(x, clamp01(t), z));
+        }
+    }
+    
+    private static void checkEdgeZ(List<Vec3> points, float nx, float ny, float nz,
+                                    double planeD, int x, int y) {
+        if (Math.abs(nz) < 0.0001f) return;
+        
+        double t = (planeD - nx * x - ny * y) / nz;
+        if (t >= -EPSILON && t <= 1.0 + EPSILON) {
+            points.add(Vec3.createVectorHelper(x, y, clamp01(t)));
+        }
+    }
+    
+    private static double clamp01(double v) {
+        return Math.max(0.0, Math.min(1.0, v));
+    }
+    
+    private static Vec3 calculateCentroid(List<Vec3> points) {
+        double cx = 0, cy = 0, cz = 0;
+        for (Vec3 p : points) {
+            cx += p.xCoord;
+            cy += p.yCoord;
+            cz += p.zCoord;
+        }
+        return Vec3.createVectorHelper(cx / points.size(), cy / points.size(), cz / points.size());
+    }
+    
+    private static List<Vec3> sortPointsByAngle(List<Vec3> points, Vec3 center, 
+                                                 float nx, float ny, float nz) {
+        Vec3 n = normalize(Vec3.createVectorHelper(nx, ny, nz));
+        
+        // Deterministic helper choice
+        double absNx = Math.abs(n.xCoord);
+        double absNy = Math.abs(n.yCoord);
+        double absNz = Math.abs(n.zCoord);
+        
+        Vec3 helper;
+        if (absNx >= absNy && absNx >= absNz) {
+            helper = Vec3.createVectorHelper(0, 1, 0);
+        } else if (absNy >= absNz) {
+            helper = Vec3.createVectorHelper(0, 0, 1);
+        } else {
+            helper = Vec3.createVectorHelper(0, 1, 0);
+        }
+        
+        Vec3 tangent = normalize(crossProduct(helper, n));
+        Vec3 bitangent = normalize(crossProduct(n, tangent));
+        
+        List<Vec3> sorted = new ArrayList<>(points);
+        final Vec3 t = tangent;
+        final Vec3 bit = bitangent;
+        
+        sorted.sort((p1, p2) -> {
+            double v1X = p1.xCoord - center.xCoord;
+            double v1Y = p1.yCoord - center.yCoord;
+            double v1Z = p1.zCoord - center.zCoord;
+            
+            double v2X = p2.xCoord - center.xCoord;
+            double v2Y = p2.yCoord - center.yCoord;
+            double v2Z = p2.zCoord - center.zCoord;
+            
+            double u1 = v1X * t.xCoord + v1Y * t.yCoord + v1Z * t.zCoord;
+            double w1 = v1X * bit.xCoord + v1Y * bit.yCoord + v1Z * bit.zCoord;
+            
+            double u2 = v2X * t.xCoord + v2Y * t.yCoord + v2Z * t.zCoord;
+            double w2 = v2X * bit.xCoord + v2Y * bit.yCoord + v2Z * bit.zCoord;
+            
+            double angle1 = Math.atan2(w1, u1);
+            double angle2 = Math.atan2(w2, u2);
+            
+            return Double.compare(angle1, angle2);
+        });
+        
+        return sorted;
+    }
+    
+    private static List<Vec3> ensureCorrectWinding(List<Vec3> points, float nx, float ny, float nz, boolean keepPositive) {
+        if (points.size() < 3) return points;
+        
+        Vec3 p0 = points.get(0);
+        Vec3 p1 = points.get(1);
+        Vec3 p2 = points.get(2);
+        
+        Vec3 v1 = Vec3.createVectorHelper(p1.xCoord - p0.xCoord, p1.yCoord - p0.yCoord, p1.zCoord - p0.zCoord);
+        Vec3 v2 = Vec3.createVectorHelper(p2.xCoord - p0.xCoord, p2.yCoord - p0.yCoord, p2.zCoord - p0.zCoord);
+        
+        Vec3 polyNormal = crossProduct(v1, v2);
+        polyNormal = normalize(polyNormal);
+        
+        double dot = polyNormal.xCoord * nx + polyNormal.yCoord * ny + polyNormal.zCoord * nz;
+        
+        // Definition A: keepPositive means keep dist >= 0 side
+        // Cut face should point toward the DISCARDED side
+        boolean shouldReverse = keepPositive ? (dot > 0) : (dot < 0);
+        
+        if (shouldReverse) {
+            Collections.reverse(points);
+        }
+        
+        return points;
+    }
+    
+    private static Vec3 crossProduct(Vec3 a, Vec3 b) {
+        return Vec3.createVectorHelper(
+            a.yCoord * b.zCoord - a.zCoord * b.yCoord,
+            a.zCoord * b.xCoord - a.xCoord * b.zCoord,
+            a.xCoord * b.yCoord - a.yCoord * b.xCoord
+        );
+    }
+    
+    private static Vec3 normalize(Vec3 v) {
+        double len = Math.sqrt(v.xCoord * v.xCoord + v.yCoord * v.yCoord + v.zCoord * v.zCoord);
+        if (len < 1e-10) {
+            return Vec3.createVectorHelper(0, 0, 0);
+        }
+        return Vec3.createVectorHelper(v.xCoord / len, v.yCoord / len, v.zCoord / len);
+    }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/items/ModItems.java
+=== FILE 12/17: ModItems.java ===
 ================================================================================
 
 package com.cuttableblocks.items;
@@ -2154,8 +1975,137 @@ public class ModItems {
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/tileentities/ModTileEntities.java
+=== FILE 13/17: ItemCuttingTool.java ===
+================================================================================
+
+package com.cuttableblocks.items;
+
+import com.cuttableblocks.blocks.ModBlocks;
+import com.cuttableblocks.tileentities.TileEntityCuttable;
+import com.cuttableblocks.util.CutDirections;
+import net.minecraft.block.Block;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.Vec3;
+import net.minecraft.world.World;
+
+public class ItemCuttingTool extends Item {
+    
+    public ItemCuttingTool() {
+        this.setMaxStackSize(1);
+        this.setFull3D();
+    }
+    
+    /**
+     * Snap value to 1/16 grid (matching Minecraft's 16x16 texture pixels)
+     */
+    private static float snap16(float v) {
+        float s = Math.round(v * 16.0f) / 16.0f;
+        if (s < 0f) s = 0f;
+        if (s > 1f) s = 1f;
+        return s;
+    }
+    
+    @Override
+    public boolean onItemUse(ItemStack stack, EntityPlayer player, World world, 
+                             int x, int y, int z, int side, 
+                             float hitX, float hitY, float hitZ) {
+        
+        if (world.isRemote) {
+            return true;
+        }
+        
+        Block targetBlock = world.getBlock(x, y, z);
+        int targetMeta = world.getBlockMetadata(x, y, z);
+        
+        // Cannot cut air, bedrock, or already cut blocks
+        if (targetBlock == Blocks.air || targetBlock == Blocks.bedrock 
+            || targetBlock == ModBlocks.blockCuttable) {
+            return false;
+        }
+        
+        // Get anchor point p0 on 1/16 grid, snapped to clicked face
+        float px = snap16(hitX);
+        float py = snap16(hitY);
+        float pz = snap16(hitZ);
+        
+        // Snap coordinate perpendicular to clicked face to 0 or 1
+        switch(side) {
+            case 0: py = 0f; break; // bottom (y=0)
+            case 1: py = 1f; break; // top (y=1)
+            case 2: pz = 0f; break; // north (z=0)
+            case 3: pz = 1f; break; // south (z=1)
+            case 4: px = 0f; break; // west (x=0)
+            case 5: px = 1f; break; // east (x=1)
+        }
+        
+        // Block rotation (for now always 0, can be extended later)
+        int rotId = 0;
+        
+        // Get player's look vector and normalize
+        Vec3 lookVec = player.getLookVec().normalize();
+        
+        // Find best matching discrete direction
+        int dirId = CutDirections.findBestDirection(lookVec, rotId);
+        
+        // Get the actual world-space normal for this direction
+        Vec3 nWorld = CutDirections.getWorldDir(rotId, dirId);
+        double nx = nWorld.xCoord;
+        double ny = nWorld.yCoord;
+        double nz = nWorld.zCoord;
+        
+        // Calculate planeD - plane ALWAYS passes through center (0.5,0.5,0.5)
+        double planeD = 0.5 * (nx + ny + nz);
+        
+        // DEFINITION A: keepPositive means we keep side where dist >= 0
+        // Player position in block-local coordinates (0..1)
+        double plx = player.posX - x;
+        double ply = (player.posY + player.getEyeHeight()) - y;
+        double plz = player.posZ - z;
+        
+        // Distance from player to plane (positive = player is on positive side)
+        double playerDist = nx * plx + ny * ply + nz * plz - planeD;
+        
+        // UX: Keep side OPPOSITE to player (cut off the part where player stands)
+        // This maps to: keepPositive = (playerDist < 0)
+        // Definition A: keepPositive == true means keep dist >= 0 side
+        boolean keepPositive = playerDist < 0;
+        
+        // Log look vector for debugging
+        System.out.println(String.format(
+            "[CuttableBlocks] LookVec: (%.4f, %.4f, %.4f) | dirId=%d | nWorld: (%.4f, %.4f, %.4f)",
+            lookVec.xCoord, lookVec.yCoord, lookVec.zCoord, dirId, nx, ny, nz));
+        
+        // Debug message to player
+        player.addChatMessage(new ChatComponentText(
+            String.format("Cut: look=(%.2f, %.2f, %.2f), dir=%d, keepPos=%s",
+                lookVec.xCoord, lookVec.yCoord, lookVec.zCoord, dirId, keepPositive)
+        ));
+        
+        // Replace with cuttable block
+        world.setBlock(x, y, z, ModBlocks.blockCuttable, 0, 3);
+        
+        // Set the tile entity data with discrete direction and anchor
+        TileEntityCuttable te = (TileEntityCuttable) world.getTileEntity(x, y, z);
+        if (te != null) {
+            te.setCutData(targetBlock, targetMeta, rotId, dirId, 
+                         keepPositive, px, py, pz);
+        }
+        
+        world.markBlockForUpdate(x, y, z);
+        
+        return true;
+    }
+}
+
+
+================================================================================
+=== FILE 14/17: ModTileEntities.java ===
 ================================================================================
 
 package com.cuttableblocks.tileentities;
@@ -2169,48 +2119,88 @@ public class ModTileEntities {
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/tileentities/TileEntityCuttable.java
+=== FILE 15/17: TileEntityCuttable.java ===
 ================================================================================
 
 package com.cuttableblocks.tileentities;
 
+import com.cuttableblocks.util.CutDirections;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.Packet;
 import net.minecraft.network.play.server.S35PacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.Vec3;
 
 public class TileEntityCuttable extends TileEntity {
     
     private Block originalBlock;
     private int originalMetadata;
-    private float normalX, normalY, normalZ;
+    
+    // Discrete direction storage (replaces normalX/Y/Z)
+    private byte rotId;          // Block rotation 0..23
+    private byte dirId;          // Direction 0..17
     private boolean keepPositiveSide;
+    
+    // Anchor point for UV mapping origin
+    private float anchorX, anchorY, anchorZ;
+    
+    // Cached normal (reconstructed from rotId/dirId)
+    private float normalX, normalY, normalZ;
+    private boolean normalDirty = true;
     
     public TileEntityCuttable() {
         this.originalBlock = null;
         this.originalMetadata = 0;
-        this.normalX = 0.0f;
-        this.normalY = 1.0f;
-        this.normalZ = 0.0f;
+        this.rotId = 0;
+        this.dirId = 0;
         this.keepPositiveSide = true;
+        this.anchorX = 0.5f;
+        this.anchorY = 0.5f;
+        this.anchorZ = 0.5f;
     }
     
-    public void setCutData(Block block, int meta, float nx, float ny, float nz, boolean keepPositive) {
+    /**
+     * Set cut data with discrete directions.
+     */
+    public void setCutData(Block block, int meta, int rotId, int dirId, 
+                           boolean keepPositive, float anchorX, float anchorY, float anchorZ) {
         this.originalBlock = block;
         this.originalMetadata = meta;
-        this.normalX = nx;
-        this.normalY = ny;
-        this.normalZ = nz;
+        this.rotId = (byte) rotId;
+        this.dirId = (byte) dirId;
         this.keepPositiveSide = keepPositive;
+        this.anchorX = anchorX;
+        this.anchorY = anchorY;
+        this.anchorZ = anchorZ;
+        this.normalDirty = true;
         
         this.markDirty();
         if (this.worldObj != null) {
             this.worldObj.markBlockForUpdate(this.xCoord, this.yCoord, this.zCoord);
         }
     }
+    
+    /**
+     * Legacy overload for backward compatibility.
+     */
+    public void setCutData(Block block, int meta, float nx, float ny, float nz, 
+                           boolean keepPositive, double planeD, 
+                           float anchorX, float anchorY, float anchorZ) {
+        // Approximate the normal to find closest dirId with rotId=0
+        Vec3 lookVec = Vec3.createVectorHelper(nx, ny, nz);
+        lookVec = lookVec.normalize();
+        int bestDirId = CutDirections.findBestDirection(lookVec, 0);
+        
+        setCutData(block, meta, 0, bestDirId, keepPositive, anchorX, anchorY, anchorZ);
+    }
+    
+    // ====================================================================================
+    // GETTERS
+    // ====================================================================================
     
     public Block getOriginalBlock() {
         return originalBlock;
@@ -2220,21 +2210,77 @@ public class TileEntityCuttable extends TileEntity {
         return originalMetadata;
     }
     
-    public float getNormalX() {
-        return normalX;
+    public int getRotId() {
+        return rotId & 0xFF;
     }
     
-    public float getNormalY() {
-        return normalY;
-    }
-    
-    public float getNormalZ() {
-        return normalZ;
+    public int getDirId() {
+        return dirId & 0xFF;
     }
     
     public boolean keepPositiveSide() {
         return keepPositiveSide;
     }
+    
+    public float getAnchorX() {
+        return anchorX;
+    }
+    
+    public float getAnchorY() {
+        return anchorY;
+    }
+    
+    public float getAnchorZ() {
+        return anchorZ;
+    }
+    
+    /**
+     * Get reconstructed normal vector (cached).
+     */
+    public float getNormalX() {
+        rebuildNormalIfNeeded();
+        return normalX;
+    }
+    
+    public float getNormalY() {
+        rebuildNormalIfNeeded();
+        return normalY;
+    }
+    
+    public float getNormalZ() {
+        rebuildNormalIfNeeded();
+        return normalZ;
+    }
+    
+    /**
+     * Get plane D (distance from origin).
+     * Plane always passes through center: d = 0.5*(nx+ny+nz)
+     */
+    public double getPlaneD() {
+        rebuildNormalIfNeeded();
+        return 0.5 * (normalX + normalY + normalZ);
+    }
+    
+    /**
+     * Get world-space normal vector.
+     */
+    public Vec3 getWorldNormal() {
+        return CutDirections.getWorldDir(getRotId(), getDirId());
+    }
+    
+    private void rebuildNormalIfNeeded() {
+        if (normalDirty) {
+            Vec3 n = CutDirections.getWorldDir(getRotId(), getDirId());
+            normalX = (float) n.xCoord;
+            normalY = (float) n.yCoord;
+            normalZ = (float) n.zCoord;
+            normalDirty = false;
+        }
+    }
+    
+    // ====================================================================================
+    // NBT
+    // ====================================================================================
     
     @Override
     public void writeToNBT(NBTTagCompound nbt) {
@@ -2245,10 +2291,22 @@ public class TileEntityCuttable extends TileEntity {
             nbt.setString("originalBlock", blockName);
         }
         nbt.setInteger("originalMeta", originalMetadata);
+        
+        // New discrete direction storage
+        nbt.setByte("rotId", rotId);
+        nbt.setByte("dirId", dirId);
+        nbt.setBoolean("keepPositive", keepPositiveSide);
+        
+        // Anchor for UV
+        nbt.setFloat("anchorX", anchorX);
+        nbt.setFloat("anchorY", anchorY);
+        nbt.setFloat("anchorZ", anchorZ);
+        
+        // Legacy compatibility - also store computed normal
+        rebuildNormalIfNeeded();
         nbt.setFloat("normalX", normalX);
         nbt.setFloat("normalY", normalY);
         nbt.setFloat("normalZ", normalZ);
-        nbt.setBoolean("keepPositive", keepPositiveSide);
     }
     
     @Override
@@ -2260,10 +2318,30 @@ public class TileEntityCuttable extends TileEntity {
             this.originalBlock = (Block) Block.blockRegistry.getObject(blockName);
         }
         this.originalMetadata = nbt.getInteger("originalMeta");
-        this.normalX = nbt.getFloat("normalX");
-        this.normalY = nbt.getFloat("normalY");
-        this.normalZ = nbt.getFloat("normalZ");
+        
+        // Read discrete directions (with legacy fallback)
+        if (nbt.hasKey("rotId")) {
+            this.rotId = nbt.getByte("rotId");
+            this.dirId = nbt.getByte("dirId");
+        } else {
+            // Legacy: reconstruct from stored normal
+            float nx = nbt.getFloat("normalX");
+            float ny = nbt.getFloat("normalY");
+            float nz = nbt.getFloat("normalZ");
+            Vec3 lookVec = Vec3.createVectorHelper(nx, ny, nz);
+            lookVec = lookVec.normalize();
+            this.dirId = (byte) CutDirections.findBestDirection(lookVec, 0);
+            this.rotId = 0;
+        }
+        
         this.keepPositiveSide = nbt.getBoolean("keepPositive");
+        
+        // Anchor (with default)
+        this.anchorX = nbt.hasKey("anchorX") ? nbt.getFloat("anchorX") : 0.5f;
+        this.anchorY = nbt.hasKey("anchorY") ? nbt.getFloat("anchorY") : 0.5f;
+        this.anchorZ = nbt.hasKey("anchorZ") ? nbt.getFloat("anchorZ") : 0.5f;
+        
+        this.normalDirty = true;
     }
     
     @Override
@@ -2283,8 +2361,9 @@ public class TileEntityCuttable extends TileEntity {
     }
 }
 
+
 ================================================================================
-FILE: src/main/java/com/cuttableblocks/util/Plane.java
+=== FILE 16/17: Plane.java ===
 ================================================================================
 
 package com.cuttableblocks.util;
@@ -2416,6 +2495,292 @@ public class Plane {
     }
 }
 
+
 ================================================================================
-END OF FILE - Total 16 Java files from new_mod_trial/src/main/java/
+=== FILE 17/17: CutDirections.java ===
 ================================================================================
+
+package com.cuttableblocks.util;
+
+import net.minecraft.util.Vec3;
+
+/**
+ * Discrete cut directions (18 classes) and rotation system.
+ * 
+ * This class provides:
+ * - 18 base direction vectors (integer representations)
+ * - 24 rotation matrices (cube rotations)
+ * - Direction approximation from look vector
+ */
+public class CutDirections {
+    
+    // ====================================================================================
+    // BASE DIRECTIONS (18 canonical integer vectors)
+    // These represent direction classes under cube rotations
+    // ====================================================================================
+    
+    public static final int[][] BASE_DIRS_18 = new int[][] {
+        {-1,  0,  0},    // 0:  -X axis (axis-aligned)
+        {-1, -1,  0},    // 1:  diagonal XY
+        {-1, -1, -1},    // 2:  corner
+        
+        {-2, -1,  0},    // 3:  shallow diagonal
+        {-2, -1, -1},    // 4:  
+        {-2, -2, -1},    // 5:  
+        
+        {-4, -1,  0},    // 6:  very shallow
+        {-4, -1, -1},    // 7:  
+        {-4, -2,  1},    // 8:  
+        {-4, -2, -1},    // 9:  
+        {-4, -4, -1},    // 10: 
+        
+        {-8, -1,  0},    // 11: almost flat
+        {-8, -1, -1},    // 12: 
+        {-8, -2,  1},    // 13: 
+        {-8, -2, -1},    // 14: 
+        {-8, -4,  1},    // 15: 
+        {-8, -4, -1},    // 16: 
+        {-8, -8, -1}     // 17: 
+    };
+    
+    public static final int NUM_DIRECTIONS = 18;
+    public static final int NUM_ROTATIONS = 24;
+    
+    // ====================================================================================
+    // ROTATION SYSTEM (24 cube rotations)
+    // Each rotation is stored as: perm[3] (axis permutation) and sign[3] (axis sign)
+    // Rotation formula: out[i] = sign[i] * v[perm[i]]
+    // ====================================================================================
+    
+    private static final int[][] ROT_PERM = new int[NUM_ROTATIONS][3];
+    private static final int[][] ROT_SIGN = new int[NUM_ROTATIONS][3];
+    
+    static {
+        generateRotations();
+    }
+    
+    /**
+     * Generate all 24 rotations of the cube (determinant = +1).
+     */
+    private static void generateRotations() {
+        int rotIdx = 0;
+        
+        // All permutations of axes (6)
+        int[][] perms = {
+            {0, 1, 2}, {0, 2, 1}, {1, 0, 2},
+            {1, 2, 0}, {2, 0, 1}, {2, 1, 0}
+        };
+        
+        for (int[] perm : perms) {
+            // All sign combinations (8)
+            for (int sx = -1; sx <= 1; sx += 2) {
+                for (int sy = -1; sy <= 1; sy += 2) {
+                    for (int sz = -1; sz <= 1; sz += 2) {
+                        int[] sign = {sx, sy, sz};
+                        
+                        // Calculate determinant (must be +1 for proper rotation)
+                        // det = sign[0]*sign[1]*sign[2]*signum(perm)
+                        int permSign = permutationSign(perm);
+                        int totalSign = sx * sy * sz * permSign;
+                        
+                        if (totalSign == 1) {
+                            ROT_PERM[rotIdx] = perm.clone();
+                            ROT_SIGN[rotIdx] = sign.clone();
+                            rotIdx++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (rotIdx != NUM_ROTATIONS) {
+            throw new RuntimeException("Expected 24 rotations, got " + rotIdx);
+        }
+    }
+    
+    /**
+     * Calculate sign of permutation (parity).
+     * Returns +1 for even, -1 for odd permutation.
+     */
+    private static int permutationSign(int[] perm) {
+        int inversions = 0;
+        for (int i = 0; i < 3; i++) {
+            for (int j = i + 1; j < 3; j++) {
+                if (perm[i] > perm[j]) inversions++;
+            }
+        }
+        return (inversions % 2 == 0) ? 1 : -1;
+    }
+    
+    // ====================================================================================
+    // ROTATION OPERATIONS
+    // ====================================================================================
+    
+    /**
+     * Apply rotation to a vector.
+     * v_world = R(rotId) * v_local
+     */
+    public static Vec3 rotate(int rotId, Vec3 v) {
+        int[] perm = ROT_PERM[rotId];
+        int[] sign = ROT_SIGN[rotId];
+        
+        double[] in = {v.xCoord, v.yCoord, v.zCoord};
+        double[] out = new double[3];
+        
+        for (int i = 0; i < 3; i++) {
+            out[i] = sign[i] * in[perm[i]];
+        }
+        
+        return Vec3.createVectorHelper(out[0], out[1], out[2]);
+    }
+    
+    /**
+     * Apply inverse rotation to a vector.
+     * v_local = R(rotId)^{-1} * v_world
+     */
+    public static Vec3 inverseRotate(int rotId, Vec3 v) {
+        int[] perm = ROT_PERM[rotId];
+        int[] sign = ROT_SIGN[rotId];
+        
+        double[] in = {v.xCoord, v.yCoord, v.zCoord};
+        double[] out = new double[3];
+        
+        // Inverse: perm' = perm^{-1}, sign' = sign(perm^{-1}(i)) * sign(i)
+        // Simpler: apply transpose (inverse of rotation matrix)
+        for (int i = 0; i < 3; i++) {
+            // Find which input index maps to this output
+            for (int j = 0; j < 3; j++) {
+                if (perm[j] == i) {
+                    out[i] = sign[j] * in[j];
+                    break;
+                }
+            }
+        }
+        
+        return Vec3.createVectorHelper(out[0], out[1], out[2]);
+    }
+    
+    // ====================================================================================
+    // NORMAL VECTOR OPERATIONS
+    // ====================================================================================
+    
+    /**
+     * Normalize integer direction to unit vector.
+     */
+    public static Vec3 normalizeIntDir(int a, int b, int c) {
+        double len = Math.sqrt(a*a + b*b + c*c);
+        return Vec3.createVectorHelper(a/len, b/len, c/len);
+    }
+    
+    /**
+     * Get base direction vector (local space) for given dirId.
+     */
+    public static Vec3 getBaseDir(int dirId) {
+        int[] d = BASE_DIRS_18[dirId];
+        return normalizeIntDir(d[0], d[1], d[2]);
+    }
+    
+    /**
+     * Get world-space direction for given (rotId, dirId).
+     */
+    public static Vec3 getWorldDir(int rotId, int dirId) {
+        Vec3 local = getBaseDir(dirId);
+        return rotate(rotId, local);
+    }
+    
+    // ====================================================================================
+    // DIRECTION APPROXIMATION
+    // ====================================================================================
+    
+    /**
+     * Find best matching direction for given look vector.
+     * Returns dirId (0..17) of closest base direction.
+     * 
+     * @param lookVec World-space look vector (should be normalized)
+     * @param rotId Block rotation (0..23)
+     * @return Best matching direction ID (0..17)
+     */
+    public static int findBestDirection(Vec3 lookVec, int rotId) {
+        // Transform to local space
+        Vec3 local = inverseRotate(rotId, lookVec);
+        
+        int bestId = 0;
+        double bestDot = -1e9;
+        
+        for (int i = 0; i < NUM_DIRECTIONS; i++) {
+            Vec3 base = getBaseDir(i);
+            double dot = local.xCoord * base.xCoord 
+                       + local.yCoord * base.yCoord 
+                       + local.zCoord * base.zCoord;
+            
+            if (dot > bestDot) {
+                bestDot = dot;
+                bestId = i;
+            }
+        }
+        
+        return bestId;
+    }
+    
+    // ====================================================================================
+    // RENDER MODE CLASSIFICATION (for half-block fixes)
+    // ====================================================================================
+    
+    public enum RenderMode {
+        AXIS_X,     // Axis-aligned along X
+        AXIS_Y,     // Axis-aligned along Y  
+        AXIS_Z,     // Axis-aligned along Z
+        ADVANCED    // Diagonal/other
+    }
+    
+    /**
+     * Determine render mode for given direction.
+     * This is deterministic based on dirId, not float thresholds.
+     */
+    public static RenderMode getRenderMode(int rotId, int dirId) {
+        Vec3 worldDir = getWorldDir(rotId, dirId);
+        
+        double nx = Math.abs(worldDir.xCoord);
+        double ny = Math.abs(worldDir.yCoord);
+        double nz = Math.abs(worldDir.zCoord);
+        
+        // Check if exactly axis-aligned (one component is 1.0, others 0)
+        double EPS = 1e-6;
+        boolean isAxisX = (Math.abs(nx - 1.0) < EPS) && (ny < EPS) && (nz < EPS);
+        boolean isAxisY = (Math.abs(ny - 1.0) < EPS) && (nx < EPS) && (nz < EPS);
+        boolean isAxisZ = (Math.abs(nz - 1.0) < EPS) && (nx < EPS) && (ny < EPS);
+        
+        if (isAxisX) return RenderMode.AXIS_X;
+        if (isAxisY) return RenderMode.AXIS_Y;
+        if (isAxisZ) return RenderMode.AXIS_Z;
+        
+        return RenderMode.ADVANCED;
+    }
+    
+    /**
+     * Check if direction is exactly axis-aligned (for half-block logic).
+     */
+    public static boolean isAxisAligned(int dirId) {
+        int[] d = BASE_DIRS_18[dirId];
+        int nonZero = 0;
+        if (d[0] != 0) nonZero++;
+        if (d[1] != 0) nonZero++;
+        if (d[2] != 0) nonZero++;
+        return nonZero == 1;
+    }
+    
+    /**
+     * Get axis index for axis-aligned direction (0=X, 1=Y, 2=Z).
+     * Returns -1 if not axis-aligned.
+     */
+    public static int getAxis(int dirId) {
+        int[] d = BASE_DIRS_18[dirId];
+        if (d[0] != 0 && d[1] == 0 && d[2] == 0) return 0;
+        if (d[0] == 0 && d[1] != 0 && d[2] == 0) return 1;
+        if (d[0] == 0 && d[1] == 0 && d[2] != 0) return 2;
+        return -1;
+    }
+}
+
+
+=== END OF ALL FILES ===

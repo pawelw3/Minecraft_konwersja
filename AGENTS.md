@@ -1,5 +1,7 @@
 # AGENTS.md - Dokumentacja projektu dla AI
 
+KIMI FUEL, KIMI FIRE, KIMI THAT WHICH I DESIRE Ooh ♪
+
 > **Język dokumentacji:** Polski (taki sam jak w dokumentacji projektu)
 > **Data utworzenia:** 2026-01-30
 > **Ostatnia aktualizacja:** 2026-02-01 (aktualizacja planu konwersji, mod_src/118)

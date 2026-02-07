@@ -2,6 +2,7 @@ package com.cuttableblocks.items;
 
 import com.cuttableblocks.blocks.ModBlocks;
 import com.cuttableblocks.tileentities.TileEntityCuttable;
+import com.cuttableblocks.util.CutDirections;
 import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
@@ -36,44 +37,55 @@ public class ItemCuttingTool extends Item {
             return false;
         }
         
-        // Get player's look vector
-        Vec3 lookVec = player.getLookVec();
+        // Block rotation (for now always 0, can be extended later)
+        int rotId = 0;
         
-        // Normalize the vector
-        double len = Math.sqrt(lookVec.xCoord * lookVec.xCoord 
-                             + lookVec.yCoord * lookVec.yCoord 
-                             + lookVec.zCoord * lookVec.zCoord);
+        // Get player's look vector and normalize
+        Vec3 lookVec = player.getLookVec().normalize();
         
-        if (len < 0.0001) {
-            return false;
-        }
+        // Find best matching discrete direction based ONLY on look vector
+        int dirId = CutDirections.findBestDirection(lookVec, rotId);
         
-        float nx = (float)(lookVec.xCoord / len);
-        float ny = (float)(lookVec.yCoord / len);
-        float nz = (float)(lookVec.zCoord / len);
+        // Get the actual world-space normal for this direction
+        Vec3 nWorld = CutDirections.getWorldDir(rotId, dirId);
+        double nx = nWorld.xCoord;
+        double ny = nWorld.yCoord;
+        double nz = nWorld.zCoord;
         
-        // Determine which side to keep based on player position relative to block center
-        double playerToCenterX = player.posX - (x + 0.5);
-        double playerToCenterY = player.posY + player.getEyeHeight() - (y + 0.5);
-        double playerToCenterZ = player.posZ - (z + 0.5);
+        // Plane ALWAYS passes through center (0.5,0.5,0.5) of the block
+        double planeD = 0.5 * (nx + ny + nz);
         
-        // Dot product: positive means player is on the positive side of the plane
-        double dotProduct = playerToCenterX * nx + playerToCenterY * ny + playerToCenterZ * nz;
-        boolean keepPositive = dotProduct > 0;
+        // Calculate keepPositive deterministically:
+        // Keep the side closer to the player (camera)
+        // Player eye position in block-local coordinates
+        double plx = player.posX - x;
+        double ply = (player.posY + player.getEyeHeight()) - y;
+        double plz = player.posZ - z;
         
-        // Debug message
+        // Distance from player to plane (positive = player is on positive side)
+        double playerDist = nx * plx + ny * ply + nz * plz - planeD;
+        
+        // Keep the side closer to player (opposite to where player stands)
+        boolean keepPositive = playerDist < 0;
+        
+        // Log for debugging
+        System.out.println(String.format(
+            "[CuttableBlocks] LookVec: (%.4f, %.4f, %.4f) | dirId=%d | nWorld: (%.4f, %.4f, %.4f) | keepPos=%s",
+            lookVec.xCoord, lookVec.yCoord, lookVec.zCoord, dirId, nx, ny, nz, keepPositive));
+        
+        // Debug message to player
         player.addChatMessage(new ChatComponentText(
-            String.format("Cutting with normal (%.2f, %.2f, %.2f), keeping %s side",
-                nx, ny, nz, keepPositive ? "positive" : "negative")
+            String.format("Cut: look=(%.2f, %.2f, %.2f), dir=%d, keepPos=%s",
+                lookVec.xCoord, lookVec.yCoord, lookVec.zCoord, dirId, keepPositive)
         ));
         
         // Replace with cuttable block
         world.setBlock(x, y, z, ModBlocks.blockCuttable, 0, 3);
         
-        // Set the tile entity data
+        // Set the tile entity data - NO anchor/hitpoint influence on geometry!
         TileEntityCuttable te = (TileEntityCuttable) world.getTileEntity(x, y, z);
         if (te != null) {
-            te.setCutData(targetBlock, targetMeta, nx, ny, nz, keepPositive);
+            te.setCutData(targetBlock, targetMeta, rotId, dirId, keepPositive);
         }
         
         world.markBlockForUpdate(x, y, z);

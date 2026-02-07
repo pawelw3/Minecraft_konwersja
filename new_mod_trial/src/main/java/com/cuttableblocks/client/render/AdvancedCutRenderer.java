@@ -1,6 +1,7 @@
 package com.cuttableblocks.client.render;
 
 import com.cuttableblocks.tileentities.TileEntityCuttable;
+import com.cuttableblocks.util.CutDirections;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.RenderBlocks;
 import net.minecraft.client.renderer.Tessellator;
@@ -12,17 +13,19 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Advanced renderer for cuttable blocks supporting arbitrary plane cuts.
- * Renders a block cut by a plane passing through its center.
+ * Advanced renderer for cuttable blocks with discrete 18 directions.
+ * Fixed: consistent keepPositive (Definition A), stable UV, anti z-fighting, EPS comparisons.
  */
 public class AdvancedCutRenderer {
     
     private static final Tessellator tess = Tessellator.instance;
-    private static final double EPSILON = 1e-5;
-    private static final double EPS_MERGE = 1e-5;
+    private static final double EPSILON = 1e-6;
+    private static final double EPS_MERGE = 1e-6;
+    private static final double Z_FIGHT_OFFSET = 1e-4;
+    private static final Vec3 CENTER = Vec3.createVectorHelper(0.5, 0.5, 0.5);
     
     /**
-     * Renders a block cut by a plane with proper face culling.
+     * Main entry point for rendering.
      */
     public static boolean renderAdvancedCut(RenderBlocks renderer, Block block, 
                                             int x, int y, int z, TileEntityCuttable te) {
@@ -32,62 +35,88 @@ public class AdvancedCutRenderer {
             return false;
         }
         
-        float nx = te.getNormalX();
-        float ny = te.getNormalY();
-        float nz = te.getNormalZ();
+        int rotId = te.getRotId();
+        int dirId = te.getDirId();
         boolean keepPositive = te.keepPositiveSide();
         int meta = te.getOriginalMetadata();
         
-        // Calculate plane intersection points with cube edges
-        List<Vec3> intersections = calculateIntersections(nx, ny, nz);
+        // Get world-space normal (deterministically from rotId/dirId)
+        Vec3 nWorld = CutDirections.getWorldDir(rotId, dirId);
+        float nx = (float) nWorld.xCoord;
+        float ny = (float) nWorld.yCoord;
+        float nz = (float) nWorld.zCoord;
         
-        // Deduplicate intersection points (Step 3)
-        intersections = deduplicatePoints(intersections, EPSILON);
+        // Calculate planeD through center (plane always passes through block center)
+        double planeD = 0.5 * (nx + ny + nz);
+        
+        // Deterministic render mode selection based on reconstructed normal
+        // Check if exactly axis-aligned (one component == 1.0, others == 0)
+        double absNx = Math.abs(nx);
+        double absNy = Math.abs(ny);
+        double absNz = Math.abs(nz);
+        
+        boolean isAxisX = absNx > 0.999999 && absNy < 0.000001 && absNz < 0.000001;
+        boolean isAxisY = absNy > 0.999999 && absNx < 0.000001 && absNz < 0.000001;
+        boolean isAxisZ = absNz > 0.999999 && absNx < 0.000001 && absNy < 0.000001;
+        
+        if (isAxisY) {
+            // Definition A: keepPositive means keep dist >= 0 side
+            // For horizontal cut: ny > 0 means normal points up
+            // keepPositive=true -> keep upper half (dist >= 0)
+            // keepPositive=false -> keep lower half (dist < 0)
+            boolean keepTop = (ny > 0) == keepPositive;
+            RenderHelper.renderHorizontalCut(renderer, originalBlock, x, y, z, meta, keepTop);
+            return true;
+        } else if (isAxisX) {
+            boolean keepEast = (nx > 0) == keepPositive;
+            RenderHelper.renderVerticalXCut(renderer, originalBlock, x, y, z, meta, keepEast);
+            return true;
+        } else if (isAxisZ) {
+            boolean keepSouth = (nz > 0) == keepPositive;
+            RenderHelper.renderVerticalZCut(renderer, originalBlock, x, y, z, meta, keepSouth);
+            return true;
+        } else {
+            return renderDiagonalCut(renderer, originalBlock, x, y, z, meta, 
+                                    nx, ny, nz, keepPositive, planeD);
+        }
+    }
+    
+    private static boolean renderDiagonalCut(RenderBlocks renderer, Block originalBlock,
+                                              int x, int y, int z, int meta,
+                                              float nx, float ny, float nz, 
+                                              boolean keepPositive, double planeD) {
+        
+        List<Vec3> intersections = calculateIntersections(nx, ny, nz, planeD);
+        intersections = deduplicatePoints(intersections, EPS_MERGE);
         
         if (intersections.size() < 3) {
-            // Not enough points to form a polygon, fallback to simple cut
             return false;
         }
         
-        // Render clipped cube faces (NEW: replaces renderVisibleFaces)
-        renderClippedCubeFaces(renderer, originalBlock, x, y, z, meta, nx, ny, nz, keepPositive);
-        
-        // Render the cut face (the polygon created by the plane)
+        renderClippedCubeFaces(renderer, originalBlock, x, y, z, meta, nx, ny, nz, keepPositive, planeD);
         renderCutFace(x, y, z, intersections, nx, ny, nz, keepPositive, originalBlock, meta);
         
         return true;
     }
     
-    // ====================================================================================
-    // PLANE HELPERS
-    // ====================================================================================
-    
-    /**
-     * Calculate signed distance from point to plane.
-     * Plane: nx*x + ny*y + nz*z = d, where d = 0.5*(nx+ny+nz)
-     */
-    private static double planeDist(double px, double py, double pz, float nx, float ny, float nz) {
-        double d = 0.5 * (nx + ny + nz);
-        return nx * px + ny * py + nz * pz - d;
+    private static double planeDist(double px, double py, double pz, float nx, float ny, float nz, double planeD) {
+        return nx * px + ny * py + nz * pz - planeD;
     }
     
-    /**
-     * Check if point should be kept based on its signed distance.
-     */
     private static boolean keepSide(double dist, boolean keepPositive, double eps) {
+        // Definition A: keepPositive means keep dist >= 0 side
+        // Use EPS to avoid points exactly on plane falling through cracks
         return keepPositive ? (dist >= -eps) : (dist <= eps);
     }
     
-    // ====================================================================================
-    // POLYGON CLIPPING (Sutherland-Hodgman)
-    // ====================================================================================
+    private static double wrap16(double px) {
+        double w = px % 16.0;
+        if (w < 0) w += 16.0;
+        return w;
+    }
     
-    /**
-     * Clip polygon by plane using Sutherland-Hodgman algorithm.
-     * Returns polygon containing only points on the "keep" side.
-     */
     private static List<Vec3> clipPolygonByPlane(List<Vec3> poly, float nx, float ny, float nz, 
-                                                  boolean keepPositive) {
+                                                  boolean keepPositive, double planeD) {
         if (poly.size() < 3) return poly;
         
         List<Vec3> output = new ArrayList<>();
@@ -97,41 +126,34 @@ public class AdvancedCutRenderer {
             Vec3 A = poly.get(i);
             Vec3 B = poly.get((i + 1) % n);
             
-            double dA = planeDist(A.xCoord, A.yCoord, A.zCoord, nx, ny, nz);
-            double dB = planeDist(B.xCoord, B.yCoord, B.zCoord, nx, ny, nz);
+            double dA = planeDist(A.xCoord, A.yCoord, A.zCoord, nx, ny, nz, planeD);
+            double dB = planeDist(B.xCoord, B.yCoord, B.zCoord, nx, ny, nz, planeD);
             
+            // Use EPS for stable comparisons
             boolean inA = keepSide(dA, keepPositive, EPSILON);
             boolean inB = keepSide(dB, keepPositive, EPSILON);
             
             if (inA && inB) {
-                // Both inside: keep B
                 output.add(B);
             } else if (inA && !inB) {
-                // A inside, B outside: keep intersection
                 Vec3 intersect = intersectEdgeWithPlane(A, B, dA, dB);
                 if (intersect != null) output.add(intersect);
             } else if (!inA && inB) {
-                // A outside, B inside: keep intersection and B
                 Vec3 intersect = intersectEdgeWithPlane(A, B, dA, dB);
                 if (intersect != null) output.add(intersect);
                 output.add(B);
             }
-            // Both outside: keep nothing
         }
         
         return output;
     }
     
-    /**
-     * Find intersection of edge AB with plane.
-     * dA, dB are signed distances of A and B from plane.
-     */
     private static Vec3 intersectEdgeWithPlane(Vec3 A, Vec3 B, double dA, double dB) {
         double denom = dA - dB;
-        if (Math.abs(denom) < 1e-10) return null; // Parallel
+        if (Math.abs(denom) < EPSILON) return null;
         
         double t = dA / denom;
-        if (t < 0 || t > 1) return null; // Outside segment
+        if (t < 0 || t > 1) return null;
         
         double ix = A.xCoord + t * (B.xCoord - A.xCoord);
         double iy = A.yCoord + t * (B.yCoord - A.yCoord);
@@ -140,48 +162,40 @@ public class AdvancedCutRenderer {
         return Vec3.createVectorHelper(ix, iy, iz);
     }
     
-    // ====================================================================================
-    // FACE DEFINITIONS (6 cube faces in CCW order)
-    // ====================================================================================
-    
-    /**
-     * Get the 4 vertices of a cube face in CCW order (looking from outside).
-     * Side indices: 0=Bottom, 1=Top, 2=North, 3=South, 4=West, 5=East
-     */
     private static List<Vec3> getFacePolygon(int side) {
         List<Vec3> poly = new ArrayList<>(4);
         switch (side) {
-            case 0: // BOTTOM (y=0)
+            case 0: // BOTTOM
                 poly.add(Vec3.createVectorHelper(0, 0, 0));
                 poly.add(Vec3.createVectorHelper(1, 0, 0));
                 poly.add(Vec3.createVectorHelper(1, 0, 1));
                 poly.add(Vec3.createVectorHelper(0, 0, 1));
                 break;
-            case 1: // TOP (y=1)
+            case 1: // TOP
                 poly.add(Vec3.createVectorHelper(0, 1, 0));
                 poly.add(Vec3.createVectorHelper(0, 1, 1));
                 poly.add(Vec3.createVectorHelper(1, 1, 1));
                 poly.add(Vec3.createVectorHelper(1, 1, 0));
                 break;
-            case 2: // NORTH (z=0)
+            case 2: // NORTH
                 poly.add(Vec3.createVectorHelper(0, 0, 0));
                 poly.add(Vec3.createVectorHelper(0, 1, 0));
                 poly.add(Vec3.createVectorHelper(1, 1, 0));
                 poly.add(Vec3.createVectorHelper(1, 0, 0));
                 break;
-            case 3: // SOUTH (z=1)
+            case 3: // SOUTH
                 poly.add(Vec3.createVectorHelper(0, 0, 1));
                 poly.add(Vec3.createVectorHelper(1, 0, 1));
                 poly.add(Vec3.createVectorHelper(1, 1, 1));
                 poly.add(Vec3.createVectorHelper(0, 1, 1));
                 break;
-            case 4: // WEST (x=0)
+            case 4: // WEST
                 poly.add(Vec3.createVectorHelper(0, 0, 0));
                 poly.add(Vec3.createVectorHelper(0, 0, 1));
                 poly.add(Vec3.createVectorHelper(0, 1, 1));
                 poly.add(Vec3.createVectorHelper(0, 1, 0));
                 break;
-            case 5: // EAST (x=1)
+            case 5: // EAST
                 poly.add(Vec3.createVectorHelper(1, 0, 0));
                 poly.add(Vec3.createVectorHelper(1, 1, 0));
                 poly.add(Vec3.createVectorHelper(1, 1, 1));
@@ -191,55 +205,36 @@ public class AdvancedCutRenderer {
         return poly;
     }
     
-    /**
-     * Get expected normal for a cube face (for winding correction).
-     */
     private static Vec3 getFaceNormal(int side) {
         switch (side) {
-            case 0: return Vec3.createVectorHelper(0, -1, 0); // Bottom
-            case 1: return Vec3.createVectorHelper(0, 1, 0);  // Top
-            case 2: return Vec3.createVectorHelper(0, 0, -1); // North
-            case 3: return Vec3.createVectorHelper(0, 0, 1);  // South
-            case 4: return Vec3.createVectorHelper(-1, 0, 0); // West
-            case 5: return Vec3.createVectorHelper(1, 0, 0);  // East
+            case 0: return Vec3.createVectorHelper(0, -1, 0);
+            case 1: return Vec3.createVectorHelper(0, 1, 0);
+            case 2: return Vec3.createVectorHelper(0, 0, -1);
+            case 3: return Vec3.createVectorHelper(0, 0, 1);
+            case 4: return Vec3.createVectorHelper(-1, 0, 0);
+            case 5: return Vec3.createVectorHelper(1, 0, 0);
         }
         return Vec3.createVectorHelper(0, 1, 0);
     }
     
-    // ====================================================================================
-    // UV MAPPING
-    // ====================================================================================
-    
     /**
-     * Calculate UV coordinates for a point on a given face.
-     * Returns u,v in [0,1] range.
+     * Get UV for a point on a face using WORLD-SPACE coordinates.
+     * This ensures consistent texture scale regardless of clipping.
      */
     private static double[] getUVForPoint(Vec3 p, int side) {
         double u, v;
         switch (side) {
-            case 0: // BOTTOM (y=0): u=x, v=z
+            case 0: case 1: // BOTTOM/TOP
                 u = p.xCoord;
                 v = p.zCoord;
                 break;
-            case 1: // TOP (y=1): u=x, v=z
+            case 2: case 3: // NORTH/SOUTH
                 u = p.xCoord;
-                v = p.zCoord;
+                v = p.yCoord;  // Use world Y directly (0-1 range)
                 break;
-            case 2: // NORTH (z=0): u=x, v=1-y
-                u = p.xCoord;
-                v = 1.0 - p.yCoord;
-                break;
-            case 3: // SOUTH (z=1): u=x, v=1-y
-                u = p.xCoord;
-                v = 1.0 - p.yCoord;
-                break;
-            case 4: // WEST (x=0): u=z, v=1-y
+            case 4: case 5: // WEST/EAST
                 u = p.zCoord;
-                v = 1.0 - p.yCoord;
-                break;
- case 5: // EAST (x=1): u=z, v=1-y
-                u = p.zCoord;
-                v = 1.0 - p.yCoord;
+                v = p.yCoord;  // Use world Y directly
                 break;
             default:
                 u = p.xCoord;
@@ -248,70 +243,46 @@ public class AdvancedCutRenderer {
         return new double[] { u, v };
     }
     
-    // ====================================================================================
-    // RENDERING CLIPPED FACES
-    // ====================================================================================
-    
-    /**
-     * Render all 6 cube faces with clipping.
-     * Replaces the old renderVisibleFaces which used binary on/off decision.
-     */
     private static void renderClippedCubeFaces(RenderBlocks renderer, Block originalBlock,
                                                int x, int y, int z, int meta,
                                                float nx, float ny, float nz, 
-                                               boolean keepPositive) {
+                                               boolean keepPositive, double planeD) {
         
-        // Get brightness and color
-        int brightness = originalBlock.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
-        float colorR = 1.0f;
-        float colorG = 1.0f;
-        float colorB = 1.0f;
-        
-        // Process each of 6 faces
         for (int side = 0; side < 6; side++) {
-            // Get base polygon for this face
             List<Vec3> facePoly = getFacePolygon(side);
-            
-            // Clip against the cutting plane
-            List<Vec3> clipped = clipPolygonByPlane(facePoly, nx, ny, nz, keepPositive);
-            
-            // Deduplicate points after clipping
+            List<Vec3> clipped = clipPolygonByPlane(facePoly, nx, ny, nz, keepPositive, planeD);
             clipped = deduplicatePoints(clipped, EPS_MERGE);
             
-            // Remove closing point if same as first
             if (clipped.size() > 1) {
                 Vec3 first = clipped.get(0);
                 Vec3 last = clipped.get(clipped.size() - 1);
-                double dx = first.xCoord - last.xCoord;
-                double dy = first.yCoord - last.yCoord;
-                double dz = first.zCoord - last.zCoord;
-                if (dx*dx + dy*dy + dz*dz < EPS_MERGE*EPS_MERGE) {
+                if (distanceSq(first, last) < EPS_MERGE*EPS_MERGE) {
                     clipped.remove(clipped.size() - 1);
                 }
             }
             
-            // Skip if less than 3 vertices (no polygon to render)
             if (clipped.size() < 3) continue;
             
-            // Ensure correct winding (CCW when looking from outside)
             Vec3 expectedNormal = getFaceNormal(side);
             clipped = ensureFaceWinding(clipped, expectedNormal);
             
-            // Get icon for this side
             IIcon icon = originalBlock.getIcon(side, meta);
+            int brightness = originalBlock.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
             
-            // Render the clipped polygon
-            renderClippedPolygon(clipped, side, icon, x, y, z, brightness, colorR, colorG, colorB);
+            renderClippedPolygon(clipped, side, icon, x, y, z, brightness);
         }
     }
     
-    /**
-     * Ensure polygon has correct winding order (CCW when looking from outside).
-     */
+    private static double distanceSq(Vec3 a, Vec3 b) {
+        double dx = a.xCoord - b.xCoord;
+        double dy = a.yCoord - b.yCoord;
+        double dz = a.zCoord - b.zCoord;
+        return dx*dx + dy*dy + dz*dz;
+    }
+    
     private static List<Vec3> ensureFaceWinding(List<Vec3> poly, Vec3 expectedNormal) {
         if (poly.size() < 3) return poly;
         
-        // Calculate actual normal of first triangle
         Vec3 p0 = poly.get(0);
         Vec3 p1 = poly.get(1);
         Vec3 p2 = poly.get(2);
@@ -322,12 +293,10 @@ public class AdvancedCutRenderer {
         Vec3 actualNormal = crossProduct(v1, v2);
         actualNormal = normalize(actualNormal);
         
-        // Check if normals point in same direction
         double dot = actualNormal.xCoord * expectedNormal.xCoord + 
                      actualNormal.yCoord * expectedNormal.yCoord + 
                      actualNormal.zCoord * expectedNormal.zCoord;
         
-        // If dot < 0, normals point in opposite directions - reverse winding
         if (dot < 0) {
             Collections.reverse(poly);
         }
@@ -336,19 +305,21 @@ public class AdvancedCutRenderer {
     }
     
     /**
-     * Render clipped polygon as degenerate quads (triangle fan).
+     * Render clipped polygon using GL_TRIANGLES (proper triangles, not fake quads).
      */
     private static void renderClippedPolygon(List<Vec3> poly, int side, IIcon icon,
-                                              int x, int y, int z, int brightness,
-                                              float r, float g, float b) {
+                                              int x, int y, int z, int brightness) {
         if (poly.size() < 3) return;
         
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(r, g, b);
+        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
         
-        // Triangle fan from first vertex
         Vec3 pA = poly.get(0);
         double[] uvA = getUVForPoint(pA, side);
+        
+        // Convert to texture coordinates (0-16 range)
+        double uA = icon.getInterpolatedU(uvA[0] * 16.0);
+        double vA = icon.getInterpolatedV(uvA[1] * 16.0);
         
         for (int i = 1; i < poly.size() - 1; i++) {
             Vec3 pB = poly.get(i);
@@ -357,48 +328,22 @@ public class AdvancedCutRenderer {
             double[] uvB = getUVForPoint(pB, side);
             double[] uvC = getUVForPoint(pC, side);
             
-            // Degenerate quad: A, B, C, C
-            addVertexWithUV(x + pA.xCoord, y + pA.yCoord, z + pA.zCoord, 
-                           icon.getInterpolatedU(uvA[0] * 16.0), 
-                           icon.getInterpolatedV(uvA[1] * 16.0));
-            addVertexWithUV(x + pB.xCoord, y + pB.yCoord, z + pB.zCoord,
-                           icon.getInterpolatedU(uvB[0] * 16.0),
-                           icon.getInterpolatedV(uvB[1] * 16.0));
-            addVertexWithUV(x + pC.xCoord, y + pC.yCoord, z + pC.zCoord,
-                           icon.getInterpolatedU(uvC[0] * 16.0),
-                           icon.getInterpolatedV(uvC[1] * 16.0));
-            addVertexWithUV(x + pC.xCoord, y + pC.yCoord, z + pC.zCoord,
-                           icon.getInterpolatedU(uvC[0] * 16.0),
-                           icon.getInterpolatedV(uvC[1] * 16.0)); // Duplicate C for quad
+            double uB = icon.getInterpolatedU(uvB[0] * 16.0);
+            double vB = icon.getInterpolatedV(uvB[1] * 16.0);
+            double uC = icon.getInterpolatedU(uvC[0] * 16.0);
+            double vC = icon.getInterpolatedV(uvC[1] * 16.0);
+            
+            // Render as proper triangle fan (GL_TRIANGLES in 1.7.10 is default)
+            // First triangle
+            tess.addVertexWithUV(x + pA.xCoord, y + pA.yCoord, z + pA.zCoord, uA, vA);
+            tess.addVertexWithUV(x + pB.xCoord, y + pB.yCoord, z + pB.zCoord, uB, vB);
+            tess.addVertexWithUV(x + pC.xCoord, y + pC.yCoord, z + pC.zCoord, uC, vC);
         }
     }
     
-    private static void addVertexWithUV(double x, double y, double z, double u, double v) {
-        tess.addVertexWithUV(x, y, z, u, v);
-    }
-    
-    // ====================================================================================
-    // LEGACY METHODS (kept for reference but not used in renderAdvancedCut)
-    // ====================================================================================
-    
     /**
-     * OLD METHOD - kept for reference but replaced by renderClippedCubeFaces.
-     * Renders cube faces based on center point test (causes threshold behavior).
-     */
-    @Deprecated
-    private static void renderVisibleFaces(RenderBlocks renderer, Block block,
-                                           int x, int y, int z, int meta,
-                                           float nx, float ny, float nz, 
-                                           boolean keepPositive) {
-        // Not used - replaced by renderClippedCubeFaces
-    }
-    
-    // ====================================================================================
-    // CUT FACE RENDERING (the diagonal face created by the cutting plane)
-    // ====================================================================================
-    
-    /**
-     * Render the cut face (polygon) with PADDED texture (clamp-to-edge).
+     * Render cut face with STABLE UV (origin at block center, world-space basis).
+     * UV scale is constant regardless of cut plane orientation.
      */
     private static void renderCutFace(int x, int y, int z, List<Vec3> points,
                                       float nx, float ny, float nz, boolean keepPositive,
@@ -406,107 +351,102 @@ public class AdvancedCutRenderer {
         
         if (points.size() < 3) return;
         
-        // Get icon from original block
-        IIcon icon = originalBlock.getIcon(0, meta);
+        // Use icon from top face for cut face texture
+        IIcon icon = originalBlock.getIcon(1, meta);
         
-        // Sort points to form a proper polygon using tangent/bitangent basis
         Vec3 center = calculateCentroid(points);
         List<Vec3> sortedPoints = sortPointsByAngle(points, center, nx, ny, nz);
-        
-        // Ensure correct winding order for visibility
         sortedPoints = ensureCorrectWinding(sortedPoints, nx, ny, nz, keepPositive);
         
-        // Calculate bounding box of the cut face
-        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
-        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
+        // Build world-space tangent/bitangent basis on the cut plane
+        Vec3 n = normalize(Vec3.createVectorHelper(nx, ny, nz));
         
-        for (Vec3 p : points) {
-            minX = Math.min(minX, p.xCoord);
-            minY = Math.min(minY, p.yCoord);
-            minZ = Math.min(minZ, p.zCoord);
-            maxX = Math.max(maxX, p.xCoord);
-            maxY = Math.max(maxY, p.yCoord);
-            maxZ = Math.max(maxZ, p.zCoord);
-        }
-        
-        // Determine if this is an axis-aligned or diagonal face
-        double dx = maxX - minX;
-        double dy = maxY - minY;
-        double dz = maxZ - minZ;
-        boolean isXFace = dx < 0.01;
-        boolean isYFace = dy < 0.01;
-        boolean isZFace = dz < 0.01;
-        boolean isDiagonal = !isXFace && !isYFace && !isZFace;
-        
-        // Calculate face size in texture units (16 = 1 full texture)
-        double faceWidth, faceHeight;
-        if (isXFace) {
-            faceWidth = dy * 16.0;
-            faceHeight = dz * 16.0;
-        } else if (isYFace) {
-            faceWidth = dx * 16.0;
-            faceHeight = dz * 16.0;
-        } else if (isZFace) {
-            faceWidth = dx * 16.0;
-            faceHeight = dy * 16.0;
+        // Choose helper vector - prefer world Y if possible, else world X
+        Vec3 helper;
+        if (Math.abs(n.yCoord) < 0.9) {
+            helper = Vec3.createVectorHelper(0, 1, 0);
         } else {
-            // Diagonal face
-            faceWidth = Math.sqrt(dx*dx + dy*dy + dz*dz) * 16.0;
-            faceHeight = 16.0;
+            helper = Vec3.createVectorHelper(1, 0, 0);
         }
         
-        // Calculate lighting (use default brightness)
-        int brightness = 15 << 20 | 15 << 4;
+        Vec3 tangent = normalize(crossProduct(helper, n));
+        Vec3 bitangent = crossProduct(n, tangent);
+        bitangent = normalize(bitangent);
         
+        // UV origin is always block center (for stable, repeatable patterns)
+        Vec3 origin = CENTER;
+        
+        // Get brightness
+        int brightness = 15 << 20 | 15 << 4;
+        tess.setBrightness(brightness);
         float brightnessFactor = Math.abs(nx) * 0.6f + Math.abs(ny) * 1.0f + Math.abs(nz) * 0.8f;
         brightnessFactor = Math.max(0.4f, Math.min(1.0f, brightnessFactor));
-        
-        tess.setBrightness(brightness);
         tess.setColorOpaque_F(brightnessFactor, brightnessFactor, brightnessFactor);
         
-        // Choose UV mapping based on face type
-        if (isDiagonal && (faceWidth > 16.0 || faceHeight > 16.0)) {
-            // Use centered tiling for large diagonal faces
-            for (int i = 1; i < sortedPoints.size() - 1; i++) {
-                Vec3 a = sortedPoints.get(0);
-                Vec3 b = sortedPoints.get(i);
-                Vec3 c = sortedPoints.get(i + 1);
-                
-                addVertexWithTiledCenteredUV(x, y, z, a, icon, nx, ny, nz,
-                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithTiledCenteredUV(x, y, z, b, icon, nx, ny, nz,
-                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithTiledCenteredUV(x, y, z, c, icon, nx, ny, nz,
-                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithTiledCenteredUV(x, y, z, c, icon, nx, ny, nz,
-                                      faceWidth, faceHeight, minX, minY, minZ, maxX, maxY, maxZ);
-            }
-        } else {
-            // Use standard clipped mapping for axis-aligned faces
-            for (int i = 1; i < sortedPoints.size() - 1; i++) {
-                Vec3 a = sortedPoints.get(0);
-                Vec3 b = sortedPoints.get(i);
-                Vec3 c = sortedPoints.get(i + 1);
-                
-                addVertexWithClippedUV(x, y, z, a, icon, nx, ny, nz,
-                                       minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithClippedUV(x, y, z, b, icon, nx, ny, nz,
-                                       minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithClippedUV(x, y, z, c, icon, nx, ny, nz,
-                                       minX, minY, minZ, maxX, maxY, maxZ);
-                addVertexWithClippedUV(x, y, z, c, icon, nx, ny, nz,
-                                       minX, minY, minZ, maxX, maxY, maxZ);
-            }
+        // Anti z-fighting offset
+        Vec3 offset = Vec3.createVectorHelper(n.xCoord * Z_FIGHT_OFFSET, 
+                                               n.yCoord * Z_FIGHT_OFFSET, 
+                                               n.zCoord * Z_FIGHT_OFFSET);
+        
+        Vec3 pA = sortedPoints.get(0);
+        double[] uvA = getCutFaceUV(pA, origin, tangent, bitangent, icon);
+        
+        for (int i = 1; i < sortedPoints.size() - 1; i++) {
+            Vec3 pB = sortedPoints.get(i);
+            Vec3 pC = sortedPoints.get(i + 1);
+            
+            double[] uvB = getCutFaceUV(pB, origin, tangent, bitangent, icon);
+            double[] uvC = getCutFaceUV(pC, origin, tangent, bitangent, icon);
+            
+            // Render as proper triangle (no degenerate quads)
+            tess.addVertexWithUV(x + pA.xCoord + offset.xCoord, 
+                                y + pA.yCoord + offset.yCoord, 
+                                z + pA.zCoord + offset.zCoord,
+                                uvA[0], uvA[1]);
+            tess.addVertexWithUV(x + pB.xCoord + offset.xCoord, 
+                                y + pB.yCoord + offset.yCoord, 
+                                z + pB.zCoord + offset.zCoord,
+                                uvB[0], uvB[1]);
+            tess.addVertexWithUV(x + pC.xCoord + offset.xCoord, 
+                                y + pC.yCoord + offset.yCoord, 
+                                z + pC.zCoord + offset.zCoord,
+                                uvC[0], uvC[1]);
         }
     }
     
-    // ====================================================================================
-    // UTILITY METHODS
-    // ====================================================================================
-    
     /**
-     * Deduplicate points that are within epsilon distance of each other.
+     * STABLE UV: origin at block center, world-space tangent/bitangent basis.
+     * Texture repeats (tiles) for larger faces.
      */
+    private static double[] getCutFaceUV(Vec3 p, Vec3 origin, Vec3 tangent, Vec3 bitangent, IIcon icon) {
+        // Vector from origin (block center) to point
+        double vx = p.xCoord - origin.xCoord;
+        double vy = p.yCoord - origin.yCoord;
+        double vz = p.zCoord - origin.zCoord;
+        
+        // Project onto tangent/bitangent basis (world-space coordinates)
+        double uBlocks = vx * tangent.xCoord + vy * tangent.yCoord + vz * tangent.zCoord;
+        double vBlocks = vx * bitangent.xCoord + vy * bitangent.yCoord + vz * bitangent.zCoord;
+        
+        // Convert to pixel coordinates (16 pixels per block)
+        double uPx = uBlocks * 16.0;
+        double vPx = vBlocks * 16.0;
+        
+        // Wrap for tiling (texture repeats)
+        double uTile = wrap16(uPx);
+        double vTile = wrap16(vPx);
+        
+        // Apply small inset to avoid atlas bleeding (0.5 texel inset)
+        uTile = Math.max(0.5, Math.min(15.5, uTile));
+        vTile = Math.max(0.5, Math.min(15.5, vTile));
+        
+        // Convert to icon UV
+        double uFinal = icon.getInterpolatedU(uTile);
+        double vFinal = icon.getInterpolatedV(vTile);
+        
+        return new double[] { uFinal, vFinal };
+    }
+    
     private static List<Vec3> deduplicatePoints(List<Vec3> points, double eps) {
         List<Vec3> unique = new ArrayList<>();
         double epsSq = eps * eps;
@@ -517,8 +457,7 @@ public class AdvancedCutRenderer {
                 double dx = p.xCoord - u.xCoord;
                 double dy = p.yCoord - u.yCoord;
                 double dz = p.zCoord - u.zCoord;
-                double distSq = dx * dx + dy * dy + dz * dz;
-                if (distSq < epsSq) {
+                if (dx*dx + dy*dy + dz*dz < epsSq) {
                     isDuplicate = true;
                     break;
                 }
@@ -530,73 +469,59 @@ public class AdvancedCutRenderer {
         return unique;
     }
     
-    /**
-     * Calculate intersection points of the plane with cube edges.
-     */
-    private static List<Vec3> calculateIntersections(float nx, float ny, float nz) {
+    private static List<Vec3> calculateIntersections(float nx, float ny, float nz, double planeD) {
         List<Vec3> points = new ArrayList<>();
-        float d = 0.5f * (nx + ny + nz);
         
-        // Edges parallel to X axis (y=0/1, z=0/1)
-        checkEdgeX(points, nx, ny, nz, d, 0, 0);
-        checkEdgeX(points, nx, ny, nz, d, 0, 1);
-        checkEdgeX(points, nx, ny, nz, d, 1, 0);
-        checkEdgeX(points, nx, ny, nz, d, 1, 1);
+        checkEdgeX(points, nx, ny, nz, planeD, 0, 0);
+        checkEdgeX(points, nx, ny, nz, planeD, 0, 1);
+        checkEdgeX(points, nx, ny, nz, planeD, 1, 0);
+        checkEdgeX(points, nx, ny, nz, planeD, 1, 1);
         
-        // Edges parallel to Y axis (x=0/1, z=0/1)
-        checkEdgeY(points, nx, ny, nz, d, 0, 0);
-        checkEdgeY(points, nx, ny, nz, d, 0, 1);
-        checkEdgeY(points, nx, ny, nz, d, 1, 0);
-        checkEdgeY(points, nx, ny, nz, d, 1, 1);
+        checkEdgeY(points, nx, ny, nz, planeD, 0, 0);
+        checkEdgeY(points, nx, ny, nz, planeD, 0, 1);
+        checkEdgeY(points, nx, ny, nz, planeD, 1, 0);
+        checkEdgeY(points, nx, ny, nz, planeD, 1, 1);
         
-        // Edges parallel to Z axis (x=0/1, y=0/1)
-        checkEdgeZ(points, nx, ny, nz, d, 0, 0);
-        checkEdgeZ(points, nx, ny, nz, d, 0, 1);
-        checkEdgeZ(points, nx, ny, nz, d, 1, 0);
-        checkEdgeZ(points, nx, ny, nz, d, 1, 1);
+        checkEdgeZ(points, nx, ny, nz, planeD, 0, 0);
+        checkEdgeZ(points, nx, ny, nz, planeD, 0, 1);
+        checkEdgeZ(points, nx, ny, nz, planeD, 1, 0);
+        checkEdgeZ(points, nx, ny, nz, planeD, 1, 1);
         
         return points;
     }
     
     private static void checkEdgeX(List<Vec3> points, float nx, float ny, float nz, 
-                                    float d, int y, int z) {
-        if (Math.abs(nx) < 0.0001f) return;
+                                    double planeD, int y, int z) {
+        if (Math.abs(nx) < EPSILON) return;
         
-        float t = (d - ny * y - nz * z) / nx;
-        if (t >= 0.0f && t <= 1.0f) {
-            points.add(Vec3.createVectorHelper(t, y, z));
+        double t = (planeD - ny * y - nz * z) / nx;
+        if (t >= -EPSILON && t <= 1.0 + EPSILON) {
+            points.add(Vec3.createVectorHelper(clamp01(t), y, z));
         }
     }
     
     private static void checkEdgeY(List<Vec3> points, float nx, float ny, float nz,
-                                    float d, int x, int z) {
-        if (Math.abs(ny) < 0.0001f) return;
+                                    double planeD, int x, int z) {
+        if (Math.abs(ny) < EPSILON) return;
         
-        float t = (d - nx * x - nz * z) / ny;
-        if (t >= 0.0f && t <= 1.0f) {
-            points.add(Vec3.createVectorHelper(x, t, z));
+        double t = (planeD - nx * x - nz * z) / ny;
+        if (t >= -EPSILON && t <= 1.0 + EPSILON) {
+            points.add(Vec3.createVectorHelper(x, clamp01(t), z));
         }
     }
     
     private static void checkEdgeZ(List<Vec3> points, float nx, float ny, float nz,
-                                    float d, int x, int y) {
-        if (Math.abs(nz) < 0.0001f) return;
+                                    double planeD, int x, int y) {
+        if (Math.abs(nz) < EPSILON) return;
         
-        float t = (d - nx * x - ny * y) / nz;
-        if (t >= 0.0f && t <= 1.0f) {
-            points.add(Vec3.createVectorHelper(x, y, t));
+        double t = (planeD - nx * x - ny * y) / nz;
+        if (t >= -EPSILON && t <= 1.0 + EPSILON) {
+            points.add(Vec3.createVectorHelper(x, y, clamp01(t)));
         }
     }
     
-    /**
-     * Check if a point is on the "keep" side of the plane.
-     */
-    private static boolean isPointOnKeepSide(double px, double py, double pz,
-                                              float nx, float ny, float nz,
-                                              boolean keepPositive, double epsilon) {
-        float d = 0.5f * (nx + ny + nz);
-        double dist = nx * px + ny * py + nz * pz - d;
-        return keepPositive ? (dist > -epsilon) : (dist < epsilon);
+    private static double clamp01(double v) {
+        return Math.max(0.0, Math.min(1.0, v));
     }
     
     private static Vec3 calculateCentroid(List<Vec3> points) {
@@ -609,35 +534,26 @@ public class AdvancedCutRenderer {
         return Vec3.createVectorHelper(cx / points.size(), cy / points.size(), cz / points.size());
     }
     
-    /**
-     * Sort points by angle around the center on the plane surface.
-     */
     private static List<Vec3> sortPointsByAngle(List<Vec3> points, Vec3 center, 
                                                  float nx, float ny, float nz) {
-        Vec3 n = Vec3.createVectorHelper(nx, ny, nz);
+        Vec3 n = normalize(Vec3.createVectorHelper(nx, ny, nz));
         
-        // Choose helper vector not parallel to normal
+        // Deterministic helper choice
         Vec3 helper;
-        if (Math.abs(ny) < 0.99) {
+        if (Math.abs(n.yCoord) < 0.9) {
             helper = Vec3.createVectorHelper(0, 1, 0);
         } else {
             helper = Vec3.createVectorHelper(1, 0, 0);
         }
         
-        // Calculate tangent and bitangent
-        Vec3 tangent = crossProduct(helper, n);
-        tangent = normalize(tangent);
+        Vec3 tangent = normalize(crossProduct(helper, n));
+        Vec3 bitangent = normalize(crossProduct(n, tangent));
         
-        Vec3 bitangent = crossProduct(n, tangent);
-        bitangent = normalize(bitangent);
-        
-        // Sort points by angle using the tangent/bitangent basis
         List<Vec3> sorted = new ArrayList<>(points);
         final Vec3 t = tangent;
         final Vec3 bit = bitangent;
         
         sorted.sort((p1, p2) -> {
-            // Project onto tangent/bitangent plane
             double v1X = p1.xCoord - center.xCoord;
             double v1Y = p1.yCoord - center.yCoord;
             double v1Z = p1.zCoord - center.zCoord;
@@ -661,13 +577,9 @@ public class AdvancedCutRenderer {
         return sorted;
     }
     
-    /**
-     * Ensure correct winding order so that the polygon normal points outward.
-     */
     private static List<Vec3> ensureCorrectWinding(List<Vec3> points, float nx, float ny, float nz, boolean keepPositive) {
         if (points.size() < 3) return points;
         
-        // Calculate polygon normal using first three points
         Vec3 p0 = points.get(0);
         Vec3 p1 = points.get(1);
         Vec3 p2 = points.get(2);
@@ -678,18 +590,11 @@ public class AdvancedCutRenderer {
         Vec3 polyNormal = crossProduct(v1, v2);
         polyNormal = normalize(polyNormal);
         
-        // Check if polygon normal aligns with plane normal
         double dot = polyNormal.xCoord * nx + polyNormal.yCoord * ny + polyNormal.zCoord * nz;
         
-        // The cut face should face outward from the kept portion
-        boolean shouldReverse;
-        if (keepPositive) {
-            // Cut face should point toward negative side
-            shouldReverse = dot > 0;
-        } else {
-            // Cut face should point toward positive side
-            shouldReverse = dot < 0;
-        }
+        // Definition A: keepPositive means keep dist >= 0 side
+        // Cut face should point toward the DISCARDED side
+        boolean shouldReverse = keepPositive ? (dot > 0) : (dot < 0);
         
         if (shouldReverse) {
             Collections.reverse(points);
@@ -697,10 +602,6 @@ public class AdvancedCutRenderer {
         
         return points;
     }
-    
-    // ====================================================================================
-    // VECTOR MATH HELPERS
-    // ====================================================================================
     
     private static Vec3 crossProduct(Vec3 a, Vec3 b) {
         return Vec3.createVectorHelper(
@@ -712,118 +613,9 @@ public class AdvancedCutRenderer {
     
     private static Vec3 normalize(Vec3 v) {
         double len = Math.sqrt(v.xCoord * v.xCoord + v.yCoord * v.yCoord + v.zCoord * v.zCoord);
-        if (len < 1e-10) {
+        if (len < EPSILON) {
             return Vec3.createVectorHelper(0, 0, 0);
         }
         return Vec3.createVectorHelper(v.xCoord / len, v.yCoord / len, v.zCoord / len);
-    }
-    
-    // ====================================================================================
-    // UV MAPPING FOR CUT FACE
-    // ====================================================================================
-    
-    private static void addVertexWithTiledCenteredUV(int x, int y, int z, Vec3 point,
-                                                      IIcon icon, float nx, float ny, float nz,
-                                                      double faceWidth, double faceHeight,
-                                                      double minX, double minY, double minZ,
-                                                      double maxX, double maxY, double maxZ) {
-        
-        double cx = (minX + maxX) / 2.0;
-        double cy = (minY + maxY) / 2.0;
-        double cz = (minZ + maxZ) / 2.0;
-        
-        boolean isXFace = (maxX - minX) < 0.01;
-        boolean isYFace = (maxY - minY) < 0.01;
-        boolean isZFace = (maxZ - minZ) < 0.01;
-        
-        double uLocal, vLocal;
-        if (isXFace) {
-            uLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
-            vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
-        } else if (isYFace) {
-            uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
-            vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
-        } else if (isZFace) {
-            uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
-            vLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
-        } else {
-            if (Math.abs(nx) > Math.abs(ny) && Math.abs(nx) > Math.abs(nz)) {
-                uLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
-                vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
-            } else if (Math.abs(ny) > Math.abs(nz)) {
-                uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
-                vLocal = (point.zCoord - cz) / Math.max(maxZ - minZ, 0.001);
-            } else {
-                uLocal = (point.xCoord - cx) / Math.max(maxX - minX, 0.001);
-                vLocal = (point.yCoord - cy) / Math.max(maxY - minY, 0.001);
-            }
-        }
-        
-        double uPixelOffset = uLocal * (faceWidth / 2.0);
-        double vPixelOffset = vLocal * (faceHeight / 2.0);
-        
-        double uPixel = 8.0 + uPixelOffset;
-        double vPixel = 8.0 + vPixelOffset;
-        
-        double uWrapped = ((uPixel % 16.0) + 16.0) % 16.0;
-        double vWrapped = ((vPixel % 16.0) + 16.0) % 16.0;
-        
-        double uFinal = icon.getInterpolatedU(uWrapped);
-        double vFinal = icon.getInterpolatedV(vWrapped);
-        
-        tess.addVertexWithUV(
-            x + point.xCoord,
-            y + point.yCoord,
-            z + point.zCoord,
-            uFinal, vFinal
-        );
-    }
-    
-    private static void addVertexWithClippedUV(int x, int y, int z, Vec3 point,
-                                                IIcon icon, float nx, float ny, float nz,
-                                                double minX, double minY, double minZ,
-                                                double maxX, double maxY, double maxZ) {
-        
-        boolean isXFace = (maxX - minX) < 0.01;
-        boolean isYFace = (maxY - minY) < 0.01;
-        boolean isZFace = (maxZ - minZ) < 0.01;
-        
-        double uNorm, vNorm;
-        if (isXFace) {
-            uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-        } else if (isYFace) {
-            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-            vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-        } else if (isZFace) {
-            uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-            vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-        } else {
-            if (Math.abs(nx) > Math.abs(ny) && Math.abs(nx) > Math.abs(nz)) {
-                uNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-            } else if (Math.abs(ny) > Math.abs(nz)) {
-                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-                vNorm = (point.zCoord - minZ) / Math.max(maxZ - minZ, 0.001);
-            } else {
-                uNorm = (point.xCoord - minX) / Math.max(maxX - minX, 0.001);
-                vNorm = (point.yCoord - minY) / Math.max(maxY - minY, 0.001);
-            }
-        }
-        
-        double uMin = icon.getMinU();
-        double uMax = icon.getMaxU();
-        double vMin = icon.getMinV();
-        double vMax = icon.getMaxV();
-        
-        double uCoord = uMin + (uMax - uMin) * uNorm;
-        double vCoord = vMin + (vMax - vMin) * vNorm;
-        
-        tess.addVertexWithUV(
-            x + point.xCoord,
-            y + point.yCoord,
-            z + point.zCoord,
-            uCoord, vCoord
-        );
     }
 }
