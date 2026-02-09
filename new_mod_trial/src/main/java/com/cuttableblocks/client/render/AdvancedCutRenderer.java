@@ -83,19 +83,25 @@ public class AdvancedCutRenderer {
     
     private static boolean renderDiagonalCut(RenderBlocks renderer, Block originalBlock,
                                               int x, int y, int z, int meta,
-                                              float nx, float ny, float nz, 
+                                              float nx, float ny, float nz,
                                               boolean keepPositive, double planeD) {
-        
+
         List<Vec3> intersections = calculateIntersections(nx, ny, nz, planeD);
         intersections = deduplicatePoints(intersections, EPS_MERGE);
-        
+
         if (intersections.size() < 3) {
             return false;
         }
-        
-        renderClippedCubeFaces(renderer, originalBlock, x, y, z, meta, nx, ny, nz, keepPositive, planeD);
-        renderCutFace(x, y, z, intersections, nx, ny, nz, keepPositive, originalBlock, meta);
-        
+
+        // Biome color multiplier (grass, leaves, etc.)
+        int colorMultiplier = originalBlock.colorMultiplier(renderer.blockAccess, x, y, z);
+        float cr = ((colorMultiplier >> 16) & 0xFF) / 255.0f;
+        float cg = ((colorMultiplier >> 8) & 0xFF) / 255.0f;
+        float cb = (colorMultiplier & 0xFF) / 255.0f;
+
+        renderClippedCubeFaces(renderer, originalBlock, x, y, z, meta, nx, ny, nz, keepPositive, planeD, cr, cg, cb);
+        renderCutFace(x, y, z, intersections, nx, ny, nz, keepPositive, originalBlock, meta, cr, cg, cb);
+
         return true;
     }
     
@@ -230,11 +236,11 @@ public class AdvancedCutRenderer {
                 break;
             case 2: case 3: // NORTH/SOUTH
                 u = p.xCoord;
-                v = p.yCoord;  // Use world Y directly (0-1 range)
+                v = 1.0 - p.yCoord;  // MC convention: y=0 -> maxV (bottom), y=1 -> minV (top)
                 break;
             case 4: case 5: // WEST/EAST
                 u = p.zCoord;
-                v = p.yCoord;  // Use world Y directly
+                v = 1.0 - p.yCoord;  // MC convention: y=0 -> maxV (bottom), y=1 -> minV (top)
                 break;
             default:
                 u = p.xCoord;
@@ -245,14 +251,15 @@ public class AdvancedCutRenderer {
     
     private static void renderClippedCubeFaces(RenderBlocks renderer, Block originalBlock,
                                                int x, int y, int z, int meta,
-                                               float nx, float ny, float nz, 
-                                               boolean keepPositive, double planeD) {
-        
+                                               float nx, float ny, float nz,
+                                               boolean keepPositive, double planeD,
+                                               float cr, float cg, float cb) {
+
         for (int side = 0; side < 6; side++) {
             List<Vec3> facePoly = getFacePolygon(side);
             List<Vec3> clipped = clipPolygonByPlane(facePoly, nx, ny, nz, keepPositive, planeD);
             clipped = deduplicatePoints(clipped, EPS_MERGE);
-            
+
             if (clipped.size() > 1) {
                 Vec3 first = clipped.get(0);
                 Vec3 last = clipped.get(clipped.size() - 1);
@@ -260,16 +267,16 @@ public class AdvancedCutRenderer {
                     clipped.remove(clipped.size() - 1);
                 }
             }
-            
+
             if (clipped.size() < 3) continue;
-            
+
             Vec3 expectedNormal = getFaceNormal(side);
             clipped = ensureFaceWinding(clipped, expectedNormal);
-            
+
             IIcon icon = originalBlock.getIcon(side, meta);
             int brightness = originalBlock.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
-            
-            renderClippedPolygon(clipped, side, icon, x, y, z, brightness);
+
+            renderClippedPolygon(clipped, side, icon, x, y, z, brightness, getFaceBrightness(side), cr, cg, cb);
         }
     }
     
@@ -304,15 +311,26 @@ public class AdvancedCutRenderer {
         return poly;
     }
     
+    private static float getFaceBrightness(int side) {
+        switch (side) {
+            case 0: return 0.5f;
+            case 1: return 1.0f;
+            case 2: case 3: return 0.8f;
+            case 4: case 5: return 0.6f;
+            default: return 1.0f;
+        }
+    }
+
     /**
-     * Render clipped polygon using GL_TRIANGLES (proper triangles, not fake quads).
+     * Render clipped polygon as degenerate quads for GL_QUADS tessellator.
      */
     private static void renderClippedPolygon(List<Vec3> poly, int side, IIcon icon,
-                                              int x, int y, int z, int brightness) {
+                                              int x, int y, int z, int brightness, float faceBrightness,
+                                              float cr, float cg, float cb) {
         if (poly.size() < 3) return;
-        
+
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.setColorOpaque_F(faceBrightness * cr, faceBrightness * cg, faceBrightness * cb);
         
         Vec3 pA = poly.get(0);
         double[] uvA = getUVForPoint(pA, side);
@@ -333,10 +351,10 @@ public class AdvancedCutRenderer {
             double uC = icon.getInterpolatedU(uvC[0] * 16.0);
             double vC = icon.getInterpolatedV(uvC[1] * 16.0);
             
-            // Render as proper triangle fan (GL_TRIANGLES in 1.7.10 is default)
-            // First triangle
+            // Degenerate quad (4th vertex = 3rd) for GL_QUADS tessellator
             tess.addVertexWithUV(x + pA.xCoord, y + pA.yCoord, z + pA.zCoord, uA, vA);
             tess.addVertexWithUV(x + pB.xCoord, y + pB.yCoord, z + pB.zCoord, uB, vB);
+            tess.addVertexWithUV(x + pC.xCoord, y + pC.yCoord, z + pC.zCoord, uC, vC);
             tess.addVertexWithUV(x + pC.xCoord, y + pC.yCoord, z + pC.zCoord, uC, vC);
         }
     }
@@ -347,7 +365,8 @@ public class AdvancedCutRenderer {
      */
     private static void renderCutFace(int x, int y, int z, List<Vec3> points,
                                       float nx, float ny, float nz, boolean keepPositive,
-                                      Block originalBlock, int meta) {
+                                      Block originalBlock, int meta,
+                                      float cr, float cg, float cb) {
         
         if (points.size() < 3) return;
         
@@ -373,15 +392,15 @@ public class AdvancedCutRenderer {
         Vec3 bitangent = crossProduct(n, tangent);
         bitangent = normalize(bitangent);
         
-        // UV origin is always block center (for stable, repeatable patterns)
-        Vec3 origin = CENTER;
+        // UV origin is polygon centroid (centers texture on the cut face)
+        Vec3 origin = center;
         
         // Get brightness
         int brightness = 15 << 20 | 15 << 4;
         tess.setBrightness(brightness);
         float brightnessFactor = Math.abs(nx) * 0.6f + Math.abs(ny) * 1.0f + Math.abs(nz) * 0.8f;
         brightnessFactor = Math.max(0.4f, Math.min(1.0f, brightnessFactor));
-        tess.setColorOpaque_F(brightnessFactor, brightnessFactor, brightnessFactor);
+        tess.setColorOpaque_F(brightnessFactor * cr, brightnessFactor * cg, brightnessFactor * cb);
         
         // Anti z-fighting offset
         Vec3 offset = Vec3.createVectorHelper(n.xCoord * Z_FIGHT_OFFSET, 
@@ -398,17 +417,21 @@ public class AdvancedCutRenderer {
             double[] uvB = getCutFaceUV(pB, origin, tangent, bitangent, icon);
             double[] uvC = getCutFaceUV(pC, origin, tangent, bitangent, icon);
             
-            // Render as proper triangle (no degenerate quads)
-            tess.addVertexWithUV(x + pA.xCoord + offset.xCoord, 
-                                y + pA.yCoord + offset.yCoord, 
+            // Degenerate quad (4th vertex = 3rd) for GL_QUADS tessellator
+            tess.addVertexWithUV(x + pA.xCoord + offset.xCoord,
+                                y + pA.yCoord + offset.yCoord,
                                 z + pA.zCoord + offset.zCoord,
                                 uvA[0], uvA[1]);
-            tess.addVertexWithUV(x + pB.xCoord + offset.xCoord, 
-                                y + pB.yCoord + offset.yCoord, 
+            tess.addVertexWithUV(x + pB.xCoord + offset.xCoord,
+                                y + pB.yCoord + offset.yCoord,
                                 z + pB.zCoord + offset.zCoord,
                                 uvB[0], uvB[1]);
-            tess.addVertexWithUV(x + pC.xCoord + offset.xCoord, 
-                                y + pC.yCoord + offset.yCoord, 
+            tess.addVertexWithUV(x + pC.xCoord + offset.xCoord,
+                                y + pC.yCoord + offset.yCoord,
+                                z + pC.zCoord + offset.zCoord,
+                                uvC[0], uvC[1]);
+            tess.addVertexWithUV(x + pC.xCoord + offset.xCoord,
+                                y + pC.yCoord + offset.yCoord,
                                 z + pC.zCoord + offset.zCoord,
                                 uvC[0], uvC[1]);
         }
@@ -428,17 +451,14 @@ public class AdvancedCutRenderer {
         double uBlocks = vx * tangent.xCoord + vy * tangent.yCoord + vz * tangent.zCoord;
         double vBlocks = vx * bitangent.xCoord + vy * bitangent.yCoord + vz * bitangent.zCoord;
         
-        // Convert to pixel coordinates (16 pixels per block)
-        double uPx = uBlocks * 16.0;
-        double vPx = vBlocks * 16.0;
+        // Convert to pixel coordinates (16 pixels per block), centered on tile middle (8,8)
+        double uPx = uBlocks * 16.0 + 8.0;
+        double vPx = vBlocks * 16.0 + 8.0;
         
-        // Wrap for tiling (texture repeats)
-        double uTile = wrap16(uPx);
-        double vTile = wrap16(vPx);
-        
-        // Apply small inset to avoid atlas bleeding (0.5 texel inset)
-        uTile = Math.max(0.5, Math.min(15.5, uTile));
-        vTile = Math.max(0.5, Math.min(15.5, vTile));
+        // Clamp to tile range (no wrapping - wrap16 causes UV discontinuities
+        // when triangle vertices land on opposite sides of the 16-boundary)
+        double uTile = Math.max(0.5, Math.min(15.5, uPx));
+        double vTile = Math.max(0.5, Math.min(15.5, vPx));
         
         // Convert to icon UV
         double uFinal = icon.getInterpolatedU(uTile);

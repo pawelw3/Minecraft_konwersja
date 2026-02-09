@@ -219,7 +219,37 @@ public class CutDirections {
         
         return bestId;
     }
-    
+
+    /**
+     * Find best matching (rotId, dirId) pair for given look vector.
+     * Searches all 24 rotations x 18 directions for the globally best match.
+     *
+     * @param lookVec World-space look vector (should be normalized)
+     * @return int[2] with {rotId, dirId}
+     */
+    public static int[] findBestRotationAndDirection(Vec3 lookVec) {
+        int bestRotId = 0;
+        int bestDirId = 0;
+        double bestDot = -1e9;
+
+        for (int r = 0; r < NUM_ROTATIONS; r++) {
+            Vec3 local = inverseRotate(r, lookVec);
+            for (int d = 0; d < NUM_DIRECTIONS; d++) {
+                Vec3 base = getBaseDir(d);
+                double dot = local.xCoord * base.xCoord
+                           + local.yCoord * base.yCoord
+                           + local.zCoord * base.zCoord;
+                if (dot > bestDot) {
+                    bestDot = dot;
+                    bestRotId = r;
+                    bestDirId = d;
+                }
+            }
+        }
+
+        return new int[] { bestRotId, bestDirId };
+    }
+
     // ====================================================================================
     // RENDER MODE CLASSIFICATION (for half-block fixes)
     // ====================================================================================

@@ -37,14 +37,13 @@ public class ItemCuttingTool extends Item {
             return false;
         }
         
-        // Block rotation (for now always 0, can be extended later)
-        int rotId = 0;
-        
         // Get player's look vector and normalize
         Vec3 lookVec = player.getLookVec().normalize();
-        
-        // Find best matching discrete direction based ONLY on look vector
-        int dirId = CutDirections.findBestDirection(lookVec, rotId);
+
+        // Find best matching (rotId, dirId) pair across all 24 rotations x 18 directions
+        int[] best = CutDirections.findBestRotationAndDirection(lookVec);
+        int rotId = best[0];
+        int dirId = best[1];
         
         // Get the actual world-space normal for this direction
         Vec3 nWorld = CutDirections.getWorldDir(rotId, dirId);

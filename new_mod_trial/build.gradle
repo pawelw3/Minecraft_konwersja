@@ -37,4 +37,4 @@ task deploy(type: Copy) {
     into '../headless_server/1.7.10/mods'
 }
 
-deploy.dependsOn jar
+deploy.dependsOn build

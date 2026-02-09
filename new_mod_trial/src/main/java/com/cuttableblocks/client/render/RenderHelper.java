@@ -77,7 +77,13 @@ public class RenderHelper {
         
         // Get brightness for this block
         int brightness = block.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
-        
+
+        // Biome color multiplier (grass, leaves, etc.)
+        int colorMultiplier = block.colorMultiplier(renderer.blockAccess, x, y, z);
+        float cr = ((colorMultiplier >> 16) & 0xFF) / 255.0f;
+        float cg = ((colorMultiplier >> 8) & 0xFF) / 255.0f;
+        float cb = (colorMultiplier & 0xFF) / 255.0f;
+
         // Get textures
         IIcon iconTop = block.getIcon(1, meta);
         IIcon iconBottom = block.getIcon(0, meta);
@@ -92,7 +98,7 @@ public class RenderHelper {
         // Top face (Y+) - full texture
         if (topHalf) {
             tess.setBrightness(brightness);
-            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.setColorOpaque_F(1.0f * cr, 1.0f * cg, 1.0f * cb);
             tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconTop.getMinU(), iconTop.getMaxV());
             tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconTop.getMaxU(), iconTop.getMaxV());
             tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconTop.getMaxU(), iconTop.getMinV());
@@ -102,7 +108,7 @@ public class RenderHelper {
         // Bottom face (Y-) - full texture
         if (!topHalf) {
             tess.setBrightness(brightness);
-            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.setColorOpaque_F(0.5f * cr, 0.5f * cg, 0.5f * cb);
             tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconBottom.getMinU(), iconBottom.getMinV());
             tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconBottom.getMaxU(), iconBottom.getMinV());
             tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconBottom.getMaxU(), iconBottom.getMaxV());
@@ -114,49 +120,58 @@ public class RenderHelper {
         double vMax = iconSide.getMaxV();
         double vMid = iconSide.getInterpolatedV(8.0);
         
-        double vTop = topHalf ? vMax : vMid;
-        double vBottom = topHalf ? vMid : vMin;
+        double vTop = topHalf ? vMin : vMid;
+        double vBottom = topHalf ? vMid : vMax;
         
-        // North face (Z-)
+        // North face (Z-) - outward normal = -Z
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.setColorOpaque_F(0.8f * cr, 0.8f * cg, 0.8f * cb);
         tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
-        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
         tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconSide.getMaxU(), vTop);
-        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
-        
-        // South face (Z+)
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMaxU(), vBottom);
+
+        // South face (Z+) - outward normal = +Z
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMinU(), vTop);
-        tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
-        tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+        tess.setColorOpaque_F(0.8f * cr, 0.8f * cg, 0.8f * cb);
         tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMinU(), vBottom);
-        
-        // West face (X-)
-        tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
-        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
-        tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
-        tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
-        
-        // East face (X+)
-        tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
         tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
         tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMinU(), vTop);
+
+        // West face (X-) - outward normal = -X
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(0.6f * cr, 0.6f * cg, 0.6f * cb);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
+        tess.addVertexWithUV(x + 0.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 0.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
+
+        // East face (X+) - outward normal = +X
+        tess.setBrightness(brightness);
+        tess.setColorOpaque_F(0.6f * cr, 0.6f * cg, 0.6f * cb);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 0.0, iconSide.getMinU(), vBottom);
         tess.addVertexWithUV(x + 1.0, y + yMax, z + 0.0, iconSide.getMinU(), vTop);
-        
-        // Cut face (horizontal plane at Y=0.5) with offset and proper color
+        tess.addVertexWithUV(x + 1.0, y + yMax, z + 1.0, iconSide.getMaxU(), vTop);
+        tess.addVertexWithUV(x + 1.0, y + yMin, z + 1.0, iconSide.getMaxU(), vBottom);
+
+        // Cut face (horizontal plane at Y=0.5) with offset
         IIcon cutIcon = block.getIcon(1, meta);
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 0.0, y + 0.5 + yOffset, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
-        tess.addVertexWithUV(x + 1.0, y + 0.5 + yOffset, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
-        tess.addVertexWithUV(x + 1.0, y + 0.5 + yOffset, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
-        tess.addVertexWithUV(x + 0.0, y + 0.5 + yOffset, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
+        tess.setColorOpaque_F(1.0f * cr, 1.0f * cg, 1.0f * cb);
+        if (topHalf) {
+            // Normal faces down (-Y)
+            tess.addVertexWithUV(x + 0.0, y + 0.5 + yOffset, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 0.5 + yOffset, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 0.5 + yOffset, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 0.0, y + 0.5 + yOffset, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
+        } else {
+            // Normal faces up (+Y)
+            tess.addVertexWithUV(x + 0.0, y + 0.5 + yOffset, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 0.5 + yOffset, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 0.5 + yOffset, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 0.0, y + 0.5 + yOffset, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
+        }
     }
     
     /**
@@ -165,77 +180,93 @@ public class RenderHelper {
     public static void renderVerticalXCut(RenderBlocks renderer, Block block,
                                            int x, int y, int z, int meta, boolean eastHalf) {
         int brightness = block.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
-        
+
+        // Biome color multiplier
+        int colorMultiplier = block.colorMultiplier(renderer.blockAccess, x, y, z);
+        float cr = ((colorMultiplier >> 16) & 0xFF) / 255.0f;
+        float cg = ((colorMultiplier >> 8) & 0xFF) / 255.0f;
+        float cb = (colorMultiplier & 0xFF) / 255.0f;
+
         IIcon iconSide = block.getIcon(2, meta);
         IIcon iconTop = block.getIcon(1, meta);
         IIcon iconBottom = block.getIcon(0, meta);
-        
+
         double xMin = eastHalf ? 0.5 : 0.0;
         double xMax = eastHalf ? 1.0 : 0.5;
         double xOffset = eastHalf ? Z_FIGHT_OFFSET : -Z_FIGHT_OFFSET;
-        
+
         // West/East face
         if (!eastHalf) {
             tess.setBrightness(brightness);
-            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.setColorOpaque_F(0.6f * cr, 0.6f * cg, 0.6f * cb);
             tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, iconSide.getMinU(), iconSide.getMaxV());
             tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, iconSide.getMaxU(), iconSide.getMaxV());
             tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, iconSide.getMaxU(), iconSide.getMinV());
             tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, iconSide.getMinU(), iconSide.getMinV());
         } else {
             tess.setBrightness(brightness);
-            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.setColorOpaque_F(0.6f * cr, 0.6f * cg, 0.6f * cb);
             tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, iconSide.getMinU(), iconSide.getMaxV());
             tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, iconSide.getMaxU(), iconSide.getMaxV());
             tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, iconSide.getMaxU(), iconSide.getMinV());
             tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, iconSide.getMinU(), iconSide.getMinV());
         }
-        
+
         // Top/Bottom - half texture (clipped, not stretched)
         double uMin = iconTop.getMinU();
         double uMax = iconTop.getMaxU();
         double uMid = iconTop.getInterpolatedU(8.0);
-        
+
         double uLeft = eastHalf ? uMid : uMin;
         double uRight = eastHalf ? uMax : uMid;
-        
+
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.setColorOpaque_F(1.0f * cr, 1.0f * cg, 1.0f * cb);
         tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, uLeft, iconTop.getMaxV());
         tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, uRight, iconTop.getMaxV());
         tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconTop.getMinV());
         tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, uLeft, iconTop.getMinV());
-        
+
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.setColorOpaque_F(0.5f * cr, 0.5f * cg, 0.5f * cb);
         tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, uLeft, iconBottom.getMinV());
         tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconBottom.getMinV());
         tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, uRight, iconBottom.getMaxV());
         tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, uLeft, iconBottom.getMaxV());
-        
-        // North/South faces - half texture
+
+        // North face (Z-) - outward normal = -Z
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.setColorOpaque_F(0.8f * cr, 0.8f * cg, 0.8f * cb);
         tess.addVertexWithUV(x + xMin, y + 0.0, z + 0.0, uLeft, iconSide.getMaxV());
-        tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconSide.getMaxV());
-        tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconSide.getMinV());
         tess.addVertexWithUV(x + xMin, y + 1.0, z + 0.0, uLeft, iconSide.getMinV());
-        
+        tess.addVertexWithUV(x + xMax, y + 1.0, z + 0.0, uRight, iconSide.getMinV());
+        tess.addVertexWithUV(x + xMax, y + 0.0, z + 0.0, uRight, iconSide.getMaxV());
+
+        // South face (Z+) - outward normal = +Z
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+        tess.setColorOpaque_F(0.8f * cr, 0.8f * cg, 0.8f * cb);
         tess.addVertexWithUV(x + xMin, y + 0.0, z + 1.0, uLeft, iconSide.getMaxV());
         tess.addVertexWithUV(x + xMax, y + 0.0, z + 1.0, uRight, iconSide.getMaxV());
         tess.addVertexWithUV(x + xMax, y + 1.0, z + 1.0, uRight, iconSide.getMinV());
         tess.addVertexWithUV(x + xMin, y + 1.0, z + 1.0, uLeft, iconSide.getMinV());
-        
+
         // Cut face at X=0.5 with offset
         IIcon cutIcon = block.getIcon(4, meta);
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 0.5 + xOffset, y + 0.0, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
-        tess.addVertexWithUV(x + 0.5 + xOffset, y + 1.0, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
-        tess.addVertexWithUV(x + 0.5 + xOffset, y + 1.0, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
-        tess.addVertexWithUV(x + 0.5 + xOffset, y + 0.0, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
+        tess.setColorOpaque_F(0.6f * cr, 0.6f * cg, 0.6f * cb);
+        if (eastHalf) {
+            // Normal faces west (-X)
+            tess.addVertexWithUV(x + 0.5 + xOffset, y + 0.0, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 0.5 + xOffset, y + 1.0, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 0.5 + xOffset, y + 1.0, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 0.5 + xOffset, y + 0.0, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
+        } else {
+            // Normal faces east (+X)
+            tess.addVertexWithUV(x + 0.5 + xOffset, y + 0.0, z + 0.0, cutIcon.getMinU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 0.5 + xOffset, y + 1.0, z + 0.0, cutIcon.getMaxU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 0.5 + xOffset, y + 1.0, z + 1.0, cutIcon.getMaxU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 0.5 + xOffset, y + 0.0, z + 1.0, cutIcon.getMinU(), cutIcon.getMaxV());
+        }
     }
     
     /**
@@ -244,75 +275,98 @@ public class RenderHelper {
     public static void renderVerticalZCut(RenderBlocks renderer, Block block,
                                            int x, int y, int z, int meta, boolean southHalf) {
         int brightness = block.getMixedBrightnessForBlock(renderer.blockAccess, x, y, z);
-        
+
+        // Biome color multiplier
+        int colorMultiplier = block.colorMultiplier(renderer.blockAccess, x, y, z);
+        float cr = ((colorMultiplier >> 16) & 0xFF) / 255.0f;
+        float cg = ((colorMultiplier >> 8) & 0xFF) / 255.0f;
+        float cb = (colorMultiplier & 0xFF) / 255.0f;
+
         IIcon iconSide = block.getIcon(2, meta);
         IIcon iconTop = block.getIcon(1, meta);
         IIcon iconBottom = block.getIcon(0, meta);
-        
+
         double zMin = southHalf ? 0.5 : 0.0;
         double zMax = southHalf ? 1.0 : 0.5;
         double zOffset = southHalf ? Z_FIGHT_OFFSET : -Z_FIGHT_OFFSET;
-        
-        // North/South face
+
+        // North/South outer face - outward normals
         if (!southHalf) {
+            // North face (Z-) - outward normal = -Z
             tess.setBrightness(brightness);
-            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
+            tess.setColorOpaque_F(0.8f * cr, 0.8f * cg, 0.8f * cb);
             tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMaxU(), iconSide.getMaxV());
-            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMaxU(), iconSide.getMinV());
             tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMaxU(), iconSide.getMaxV());
         } else {
+            // South face (Z+) - outward normal = +Z
             tess.setBrightness(brightness);
-            tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-            tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMinU(), iconSide.getMinV());
-            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
-            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.setColorOpaque_F(0.8f * cr, 0.8f * cg, 0.8f * cb);
             tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconSide.getMinU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
+            tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMinU(), iconSide.getMinV());
         }
-        
-        // Top/Bottom - half texture (clipped)
-        double uMin = iconTop.getMinU();
-        double uMax = iconTop.getMaxU();
-        double uMid = iconTop.getInterpolatedU(8.0);
-        double uLeft = southHalf ? uMid : uMin;
-        double uRight = southHalf ? uMax : uMid;
-        
+
+        // Top/Bottom - half texture on Z axis, full on X axis
+        double vTopNear = southHalf ? iconTop.getInterpolatedV(8.0) : iconTop.getMinV();
+        double vTopFar = southHalf ? iconTop.getMaxV() : iconTop.getInterpolatedV(8.0);
+        double vBotNear = southHalf ? iconBottom.getInterpolatedV(8.0) : iconBottom.getMinV();
+        double vBotFar = southHalf ? iconBottom.getMaxV() : iconBottom.getInterpolatedV(8.0);
+
+        // Top face (Y+) - outward normal = +Y
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, uLeft, iconTop.getMaxV());
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, uRight, iconTop.getMaxV());
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, uRight, iconTop.getMinV());
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, uLeft, iconTop.getMinV());
-        
+        tess.setColorOpaque_F(1.0f * cr, 1.0f * cg, 1.0f * cb);
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconTop.getMinU(), vTopNear);
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconTop.getMinU(), vTopFar);
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconTop.getMaxU(), vTopFar);
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconTop.getMaxU(), vTopNear);
+
+        // Bottom face (Y-) - outward normal = -Y
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, uLeft, iconBottom.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, uRight, iconBottom.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, uRight, iconBottom.getMaxV());
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, uLeft, iconBottom.getMaxV());
-        
-        // West/East faces
+        tess.setColorOpaque_F(0.5f * cr, 0.5f * cg, 0.5f * cb);
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconBottom.getMinU(), vBotNear);
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconBottom.getMaxU(), vBotNear);
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconBottom.getMaxU(), vBotFar);
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconBottom.getMinU(), vBotFar);
+
+        // West/East faces - half texture on Z axis
+        double uSideNear = southHalf ? iconSide.getInterpolatedU(8.0) : iconSide.getMinU();
+        double uSideFar = southHalf ? iconSide.getMaxU() : iconSide.getInterpolatedU(8.0);
+
+        // West face (X-) - outward normal = -X
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
-        
+        tess.setColorOpaque_F(0.6f * cr, 0.6f * cg, 0.6f * cb);
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMin, uSideNear, iconSide.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 0.0, z + zMax, uSideFar, iconSide.getMaxV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMax, uSideFar, iconSide.getMinV());
+        tess.addVertexWithUV(x + 0.0, y + 1.0, z + zMin, uSideNear, iconSide.getMinV());
+
+        // East face (X+) - outward normal = +X
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, iconSide.getMinU(), iconSide.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, iconSide.getMaxU(), iconSide.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, iconSide.getMaxU(), iconSide.getMaxV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, iconSide.getMinU(), iconSide.getMaxV());
-        
+        tess.setColorOpaque_F(0.6f * cr, 0.6f * cg, 0.6f * cb);
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMin, uSideNear, iconSide.getMaxV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMin, uSideNear, iconSide.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 1.0, z + zMax, uSideFar, iconSide.getMinV());
+        tess.addVertexWithUV(x + 1.0, y + 0.0, z + zMax, uSideFar, iconSide.getMaxV());
+
         // Cut face at Z=0.5 with offset
         IIcon cutIcon = block.getIcon(2, meta);
         tess.setBrightness(brightness);
-        tess.setColorOpaque_F(1.0f, 1.0f, 1.0f);
-        tess.addVertexWithUV(x + 0.0, y + 0.0, z + 0.5 + zOffset, cutIcon.getMinU(), cutIcon.getMaxV());
-        tess.addVertexWithUV(x + 0.0, y + 1.0, z + 0.5 + zOffset, cutIcon.getMinU(), cutIcon.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 1.0, z + 0.5 + zOffset, cutIcon.getMaxU(), cutIcon.getMinV());
-        tess.addVertexWithUV(x + 1.0, y + 0.0, z + 0.5 + zOffset, cutIcon.getMaxU(), cutIcon.getMaxV());
+        tess.setColorOpaque_F(0.8f * cr, 0.8f * cg, 0.8f * cb);
+        if (southHalf) {
+            // Normal faces north (-Z)
+            tess.addVertexWithUV(x + 0.0, y + 0.0, z + 0.5 + zOffset, cutIcon.getMinU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 0.0, y + 1.0, z + 0.5 + zOffset, cutIcon.getMinU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 1.0, z + 0.5 + zOffset, cutIcon.getMaxU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 1.0, y + 0.0, z + 0.5 + zOffset, cutIcon.getMaxU(), cutIcon.getMaxV());
+        } else {
+            // Normal faces south (+Z)
+            tess.addVertexWithUV(x + 0.0, y + 0.0, z + 0.5 + zOffset, cutIcon.getMinU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 0.0, z + 0.5 + zOffset, cutIcon.getMaxU(), cutIcon.getMaxV());
+            tess.addVertexWithUV(x + 1.0, y + 1.0, z + 0.5 + zOffset, cutIcon.getMaxU(), cutIcon.getMinV());
+            tess.addVertexWithUV(x + 0.0, y + 1.0, z + 0.5 + zOffset, cutIcon.getMinU(), cutIcon.getMinV());
+        }
     }
 }
