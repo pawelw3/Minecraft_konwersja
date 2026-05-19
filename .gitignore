@@ -106,10 +106,14 @@ desktop.ini
 # ----------------------------------------------------------------------------
 *.csv
 *.json
+*.jsonl
 analysis_output/
 reports/
 *.nbt.dump
 *.schematic
+
+# Test scenarios - duże pliki danych (>100MB, nie do repo)
+test_scenarios/**/*.jsonl
 
 # ----------------------------------------------------------------------------
 # HEADLESS SERVER - Biblioteki i dane generowane
