@@ -1,5 +1,11 @@
 tile.cuttableBlock.name=Przyciety Blok
 tile.collapsibleBlock.name=Blok Skladany
+tile.carpenterBlock.name=Blok Stolarski
+tile.carpenterSlope.name=Skos Stolarski
+tile.carpenterStairs.name=Schody Stolarskie
+tile.carpenterBarrier.name=Barierka Stolarska
+tile.carpenterDoor.name=Drzwi Stolarskie
 item.cuttingTool.name=Narzedzie do Ciecia
 item.collapsibleHammer.name=Mlot Skladany
+item.carpenterHammer.name=Mlot Stolarski
 itemGroup.cuttableblocks=Cuttable Blocks

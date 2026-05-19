@@ -189,7 +189,66 @@ class ChunkData:
                 block_ids.add(full_id)
         
         return sorted(list(block_ids))
-    
+
+    def get_blocks_and_metadata_at_positions(self) -> Dict[Tuple[int, int, int], Tuple[int, int]]:
+        """Return {(local_x, global_y, local_z): (block_id, metadata)}.
+
+        local_x and local_z are 0-15 (position within the chunk).
+        metadata is the 4-bit value from the Data nibble array.
+        """
+        result: Dict[Tuple[int, int, int], Tuple[int, int]] = {}
+        for section in self.get_sections():
+            if not isinstance(section, dict):
+                continue
+
+            section_y = section.get('Y', 0)
+            if isinstance(section_y, NBTTag):
+                section_y = section_y.value
+            section_y = int(section_y) if section_y else 0
+
+            blocks = section.get('Blocks')
+            add = section.get('Add') or section.get('AddBlocks')
+            data_arr = section.get('Data')
+
+            if blocks is None:
+                continue
+            if isinstance(blocks, NBTTag):
+                blocks = blocks.value
+            if isinstance(add, NBTTag):
+                add = add.value
+            if isinstance(data_arr, NBTTag):
+                data_arr = data_arr.value
+            if not isinstance(blocks, (bytes, bytearray, list)):
+                continue
+
+            for y_in_section in range(16):
+                for z in range(16):
+                    for x in range(16):
+                        i = y_in_section * 256 + z * 16 + x
+                        if i >= len(blocks):
+                            break
+
+                        low = blocks[i] & 0xFF
+                        high = 0
+                        if add and i // 2 < len(add):
+                            if i % 2 == 0:
+                                high = add[i // 2] & 0x0F
+                            else:
+                                high = (add[i // 2] >> 4) & 0x0F
+                        full_id = (high << 8) | low
+
+                        meta = 0
+                        if data_arr and i // 2 < len(data_arr):
+                            if i % 2 == 0:
+                                meta = data_arr[i // 2] & 0x0F
+                            else:
+                                meta = (data_arr[i // 2] >> 4) & 0x0F
+
+                        global_y = section_y * 16 + y_in_section
+                        result[(x, global_y, z)] = (full_id, meta)
+
+        return result
+
     def get_blocks_at_positions(self) -> Dict[Tuple[int, int, int], int]:
         """
         Zwraca mapę pozycji bloków do ich ID.

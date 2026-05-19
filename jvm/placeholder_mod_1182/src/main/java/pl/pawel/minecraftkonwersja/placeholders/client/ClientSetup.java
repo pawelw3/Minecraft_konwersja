@@ -19,5 +19,9 @@ public final class ClientSetup {
             ModBlockEntities.BLOCK_ENTITY_PLACEHOLDER.get(),
             BlockEntityPlaceholderRenderer::new
         ));
+        event.enqueueWork(() -> net.minecraft.client.renderer.blockentity.BlockEntityRenderers.register(
+            ModBlockEntities.INVENTORY_PLACEHOLDER.get(),
+            BlockEntityPlaceholderRenderer::new
+        ));
     }
 }

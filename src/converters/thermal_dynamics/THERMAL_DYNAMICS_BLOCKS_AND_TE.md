@@ -12,9 +12,10 @@
 1. [Architektura Thermal Dynamics — przegląd](#1-architektura-thermal-dynamics--przegląd)
 2. [Bloki i Tile Entities — mapowanie 1.7.10 → 1.18.2](#2-bloki-i-tile-entities--mapowanie-1710--1182)
 3. [Szczegółowy opis funkcjonalności](#3-szczegółowy-opis-funkcjonalności)
-4. [Struktura NBT — kluczowe różnice](#4-struktura-nbt--kluczowe-różnice)
-5. [Itemy / Załączniki (Attachments)](#5-itemy--załączniki-attachments)
-6. [Weryfikacja na podstawie kodu źródłowego / dekompilacji](#6-weryfikacja-na-podstawie-kodu-źródłowego--dekompilacji)
+4. [Mekanism jako zamiennik — szczegóły](#4-mekanism-jako-zamiennik--szczegóły)
+5. [Struktura NBT — kluczowe różnice](#5-struktura-nbt--kluczowe-różnice)
+6. [Itemy / Załączniki (Attachments)](#6-itemy--załączniki-attachments)
+7. [Weryfikacja na podstawie kodu źródłowego / dekompilacji](#7-weryfikacja-na-podstawie-kodu-źródłowego--dekompilacji)
 
 ---
 
@@ -91,44 +92,51 @@ gdzie `offset ∈ {0, 16, 32, 48, 64}`.
 **Tile Entity 1.7.10:** `thermaldynamics.FluidDuct`, `thermaldynamics.FluidDuctFragile`, `thermaldynamics.FluidDuctFlux`, `thermaldynamics.FluidDuctSuper`
 **Tile Entity 1.18.2:** `thermal:fluid_duct`, `thermal:fluid_duct_windowed`
 
-### 2.4 Mapowanie Item Ducts (offset 32) — 🔴 PROBLEM
+### 2.4 Mapowanie Item Ducts (offset 32) — → Mekanism
 
 | Meta | ID wewn. | Nazwa 1.7.10 | Blok 1.18.2 | Uwagi |
 |------|----------|--------------|-------------|-------|
-| 0 | 32 | Itemduct | **BRAK** | 🔴 Nie ma `item_duct` w TD 9.2.2 |
-| 1 | 33 | Itemduct (opaque) | **BRAK** | 🔴 |
-| 2 | 34 | Impulse Itemduct | **BRAK** | 🔴 |
-| 3 | 35 | Impulse Itemduct (opaque) | **BRAK** | 🔴 |
-| 4 | 36 | Ender Itemduct | **BRAK** | 🔴 |
-| 5 | 37 | Ender Itemduct (opaque) | **BRAK** | 🔴 |
-| 6 | 38 | Flux-Plated Itemduct | **BRAK** | 🔴 |
-| 7 | 39 | Flux-Plated Itemduct (opaque) | **BRAK** | 🔴 |
+| 0 | 32 | Itemduct | `mekanism:basic_logistical_transporter` | Zamiennik z Mekanism |
+| 1 | 33 | Itemduct (opaque) | `mekanism:basic_logistical_transporter` | Opaque nie przenosi się |
+| 2 | 34 | Impulse Itemduct | `mekanism:advanced_logistical_transporter` | Szybszy tier |
+| 3 | 35 | Impulse Itemduct (opaque) | `mekanism:advanced_logistical_transporter` | |
+| 4 | 36 | Ender Itemduct | `mekanism:elite_logistical_transporter` | "Teleportacyjny" charakter → wysoki tier |
+| 5 | 37 | Ender Itemduct (opaque) | `mekanism:elite_logistical_transporter` | |
+| 6 | 38 | Flux-Plated Itemduct | `mekanism:ultimate_logistical_transporter` | Najwyższy tier (ale NIE przewodzi RF jednocześnie) |
+| 7 | 39 | Flux-Plated Itemduct (opaque) | `mekanism:ultimate_logistical_transporter` | |
 
 **Tile Entity 1.7.10:** `thermaldynamics.ItemDuct`, `thermaldynamics.ItemDuctEnder`, `thermaldynamics.ItemDuctFlux`
 
-> **Krytyczne odkrycie:** W analizowanej wersji Thermal Dynamics 1.18.2 (9.2.2.19) **nie istnieje blok `item_duct`**. Jest tylko `item_buffer` (blok bufora itemów). Oznacza to, że Itemducty z 1.7.10 wymagają:
-> - konwersji na inny mod (np. Pipez, Mekanism Logistical Transporter), lub
-> - zamiany na placeholdery + ręcznej rekonstrukcji.
+> **Uwaga:** Thermal Dynamics 1.18.2 (9.2.2.19) **nie ma** własnego bloku `item_duct`.  
+> Jako zamiennik funkcjonalny przyjęto **Mekanism Logistical Transporter** (`mekanism:*_logistical_transporter`).  
+> Mekanism oferuje 4 tiery: Basic → Advanced → Elite → Ultimate.  
+> Nie ma bezpośredniego odpowiednika "Flux-Plated" (transport itemów + energii w jednym bloku) — w Mekanism energia i itemy wymagają osobnych tras.
 
-### 2.5 Mapowanie Structural Ducts (offset 48)
+### 2.5 Mapowanie Structural Ducts (offset 48) — → Brak odpowiednika
 
 | Meta | ID wewn. | Nazwa 1.7.10 | Blok 1.18.2 | Uwagi |
 |------|----------|--------------|-------------|-------|
-| 0 | 48 | Structuralduct | **BRAK** | 🔴 Nie ma odpowiednika w TD 9.2.2 |
-| 1 | 49 | Glowstone Illuminator | **BRAK** | 🔴 |
+| 0 | 48 | Structuralduct | **BRAK** | Brak odpowiednika w TD i Mekanism |
+| 1 | 49 | Glowstone Illuminator | **BRAK** | Brak odpowiednika |
 
 **Tile Entity 1.7.10:** `thermaldynamics.StructuralDuct`
 
-### 2.6 Mapowanie Transport Ducts (offset 64) — 🔴 PROBLEM
+> **Decyzja:** Structuralduct służył głównie jako dekoracyjny/cover blok. W Mekanism 1.18.2 nie ma odpowiednika cover systemu. `mekanism:structural_glass` istnieje, ale jest przeznaczone wyłącznie do multibloków (Dynamic Tank, Induction Matrix) i nie pełni funkcji cover.  
+> **Strategia:** Placeholder dekoracyjny lub usunięcie.
+
+### 2.6 Mapowanie Transport Ducts (offset 64) — → Mekanism Teleporter
 
 | Meta | ID wewn. | Nazwa 1.7.10 | Blok 1.18.2 | Uwagi |
 |------|----------|--------------|-------------|-------|
-| 0 | 64 | Viaduct | **BRAK** | 🔴 Nie zaimplementowano |
-| 1 | 65 | Long-Range Viaduct | **BRAK** | 🔴 |
-| 2 | 66 | Accelerated Viaduct | **BRAK** | 🔴 |
-| 3 | 67 | Viaduct (crafting) | **BRAK** | 🔴 |
+| 0 | 64 | Viaduct | `mekanism:teleporter` | Teleporter Mekanism (wymaga ramy 4×5) |
+| 1 | 65 | Long-Range Viaduct | `mekanism:teleporter` | Teleporter działa na dowolną odległość |
+| 2 | 66 | Accelerated Viaduct | `mekanism:teleporter` | Teleporter to natychmiastowa teleportacja |
+| 3 | 67 | Viaduct (crafting) | `mekanism:teleporter_frame` | Rama teleportera |
 
 **Tile Entity 1.7.10:** `thermaldynamics.TransportDuct`, `thermaldynamics.TransportDuctLongRange`, `thermaldynamics.TransportDuctCrossover`
+
+> **Uwaga:** Viaducty transportowały byty (graczy/moby) **fizycznie przez rurę**. Mekanism Teleporter to **natychmiastowa teleportacja** między dwoma stacjami z częstotliwością. To nie jest 1:1 funkcjonalnie, ale najbliższy zamiennik w ekosystemie Mekanism.  
+> Konwersja wymaga ustawienia częstotliwości w NBT teleportera — może wymagać ręcznej konfiguracji po konwersji.
 
 ---
 
@@ -162,7 +170,7 @@ gdzie `offset ∈ {0, 16, 32, 48, 64}`.
 
 **Konwersja:** Mapowanie typu na odpowiedni blok. Załączniki (servo/fluid servo) wymagają osobnej konwersji.
 
-### 3.3 Item Ducts (Itemducts) — 🔴 KRYTYCZNE
+### 3.3 Item Ducts (Itemducts) — → Mekanism Logistical Transporter
 
 **1.7.10:**
 - Itemduct — podstawowy transport itemów
@@ -172,37 +180,93 @@ gdzie `offset ∈ {0, 16, 32, 48, 64}`.
 - System routingu: najkrótsza ścieżka, round-robin, losowo, itp.
 - Załączniki: Servo (ekstrakcja), Filter, Retriever
 
-**1.18.2:**
-- **Brak bloku item duct** w wersji 9.2.2
-- Jest `item_buffer` — bufor/item manifold, nie rura transportowa
+**1.18.2 — Zamiennik: Mekanism**
+- `mekanism:basic_logistical_transporter` → podstawowy transport
+- `mekanism:advanced_logistical_transporter` → szybszy
+- `mekanism:elite_logistical_transporter` → najszybszy
+- `mekanism:ultimate_logistical_transporter` → najwyższy tier
+- Dodatkowo: `mekanism:restrictive_transporter` (wymusza najkrótszą ścieżkę), `mekanism:diversion_transporter` (sterowany redstone)
 
-**Konwersja:** Wymaga decyzji architektonicznej — prawdopodobnie remap na `pipez:item_pipe` lub `mekanism:logistical_transporter`, albo placeholder.
+**Konwersja:**
+- Mapowanie tierów TD → tierów Mekanism (basic/advanced/elite/ultimate)
+- **NIE MA** bezpośredniego odpowiednika Ender Itemduct (teleportacja bez fizycznego połączenia) — najbliższe jest `elite/ultimate` + ew. `quantum_entangloporter` (ale to osobny blok)
+- **NIE MA** Flux-Plated (item + RF w jednym bloku) — w Mekanism wymagane są osobne kable (`mekanism:universal_cable`) i transportery
+- Załączniki (Servo/Filter) — w Mekanism transportery same "pullują" z inventory. Do filtrowania/ekstrakcji służy `mekanism:logistical_sorter` (osobny blok)
+- NBT sieci/routingu nie jest przenośne — Mekanism używa własnego systemu trasowania
 
-### 3.4 Structural / Light Ducts
+### 3.4 Structural / Light Ducts — → Brak odpowiednika
 
 **1.7.10:**
 - Structuralduct — dekoracyjny/blokujący, można nakładać cover'y
 - Glowstone Illuminator — świecący duct
 
 **1.18.2:**
-- Brak odpowiednika.
+- Thermal Dynamics: brak odpowiednika
+- Mekanism: `mekanism:structural_glass` istnieje, ale **wyłącznie** do budowy multibloków (Dynamic Tank, Induction Matrix). Nie pełni funkcji cover.
 
-**Konwersja:** Placeholder dekoracyjny lub usunięcie.
+**Konwersja:** Placeholder dekoracyjny lub usunięcie. Brak funkcjonalnego zamiennika.
 
-### 3.5 Transport Ducts (Viaducts)
+### 3.5 Transport Ducts (Viaducts) — → Mekanism Teleporter
 
 **1.7.10:**
 - Przenoszenie graczy i mobów przez rury
 - Viaduct, Long-Range, Crossover (przyspieszenie)
 
-**1.18.2:**
-- Brak odpowiednika.
+**1.18.2 — Zamiennik: Mekanism**
+- `mekanism:teleporter` — natychmiastowa teleportacja bytów między stacjami
+- `mekanism:teleporter_frame` — rama struktury teleportera (4×5)
+- Wymaga zasilania energią (FE) i skonfigurowania częstotliwości
 
-**Konwersja:** Placeholder lub usunięcie.
+**Konwersja:**
+- Viaduct → `mekanism:teleporter` (środek ramy)
+- Viaduct Frame → `mekanism:teleporter_frame` (pozostałe bloki ramy)
+- Należy uwzględnić, że Teleporter to **stacja**, nie rura — wymaga przestrzeni 3×4 lub 4×5
+- NBT z częstotliwością/połączeniami nie jest bezpośrednio przenośne — wymaga ręcznej konfiguracji
 
 ---
 
-## 4. Struktura NBT — kluczowe różnice
+## 4. Mekanism jako zamiennik — szczegóły
+
+W przypadkach gdy Thermal Dynamics 1.18.2 nie dostarcza odpowiednika, jako zamiennik funkcjonalny przyjęto bloki z **Mekanism 1.18.2** (v10.2.5).
+
+### 4.1 Transport itemów — Logistical Transporter
+
+| Blok Mekanism | Funkcja | Odpowiednik TD 1.7.10 |
+|---------------|---------|----------------------|
+| `mekanism:basic_logistical_transporter` | Podstawowy transport itemów | Itemduct |
+| `mekanism:advanced_logistical_transporter` | Szybszy transport | Impulse Itemduct |
+| `mekanism:elite_logistical_transporter` | Bardzo szybki transport | Ender Itemduct (bez teleportacji) |
+| `mekanism:ultimate_logistical_transporter` | Najwyższy tier | Flux-Plated Itemduct (bez RF) |
+| `mekanism:restrictive_transporter` | Wymusza najkrótszą ścieżkę | — |
+| `mekanism:diversion_transporter` | Sterowany redstone | — |
+
+**Różnice funkcjonalne:**
+- Mekanism **nie ma** systemu "ender" (teleportacja bez fizycznego połączenia) w transporterach
+- Mekanism **nie ma** "Flux-Plated" (połączonego transportu itemów + energii)
+- Załączniki (Servo/Filter) nie istnieją jako osobne bloki — transportery same pullują/pushują
+- Do zaawansowanego filtrowania służy `mekanism:logistical_sorter` (osobny blok)
+
+### 4.2 Teleportacja bytów — Teleporter
+
+| Blok Mekanism | Funkcja | Odpowiednik TD 1.7.10 |
+|---------------|---------|----------------------|
+| `mekanism:teleporter` | Natychmiastowa teleportacja | Viaduct |
+| `mekanism:teleporter_frame` | Rama teleportera | Viaduct Frame |
+
+**Różnice funkcjonalne:**
+- Viaduct = transport **fizyczny** przez rurę (gracz widział przejazd)
+- Teleporter = natychmiastowa teleportacja (efekt "przeskoku")
+- Teleporter wymaga zasilania energią i skonfigurowania częstotliwości
+- Teleporter wymaga struktury 4×5 (ramka z `teleporter_frame`)
+
+### 4.3 Structural / Cover
+
+W Mekanism **nie ma** systemu cover/structural do transporterów.
+`mekanism:structural_glass` istnieje, ale wyłącznie jako część multibloków (Dynamic Tank, Induction Matrix, Boiler).
+
+---
+
+## 5. Struktura NBT — kluczowe różnice
 
 ### 4.1 Ogólna struktura Tile Entity 1.7.10
 
@@ -247,7 +311,7 @@ gdzie `offset ∈ {0, 16, 32, 48, 64}`.
 
 ---
 
-## 5. Itemy / Załączniki (Attachments)
+## 6. Itemy / Załączniki (Attachments)
 
 ### 5.1 Załączniki 1.7.10
 
@@ -274,7 +338,7 @@ gdzie `offset ∈ {0, 16, 32, 48, 64}`.
 
 ---
 
-## 6. Weryfikacja na podstawie kodu źródłowego / dekompilacji
+## 7. Weryfikacja na podstawie kodu źródłowego / dekompilacji
 
 ### 6.1 Źródła
 
@@ -314,14 +378,14 @@ Wcześniejsza dokumentacja projektu (`docs/ANALIZA_MODOW_SZCZEGOLOWA.md`) zakła
 
 ## 7. Podsumowanie konwersji — priorytety
 
-| Priorytet | Element | Strategia |
-|-----------|---------|-----------|
-| 🟢 NISKI | Energy Ducts | `thermal:energy_duct` (bezpośrednia zamiana) |
-| 🟢 NISKI | Fluid Ducts | `thermal:fluid_duct` / `thermal:fluid_duct_windowed` |
-| 🔴 KRYTYCZNY | Item Ducts | **Brak odpowiednika** — wymaga decyzji (Pipez? Placeholder?) |
-| 🟡 WYSOKI | Załączniki (Servo/Filter) | Konwersja na nowe załączniki 1.18.2 lub zrzut do skrzyń |
-| 🟡 WYSOKI | Structural / Light | Placeholder / usunięcie |
-| 🔴 KRYTYCZNY | Transport (Viaduct) | **Brak odpowiednika** — usunięcie lub placeholder |
+| Priorytet | Element | Strategia | Docelowy blok |
+|-----------|---------|-----------|---------------|
+| 🟢 NISKI | Energy Ducts | Bezpośrednia zamiana | `thermal:energy_duct` |
+| 🟢 NISKI | Fluid Ducts | Bezpośrednia zamiana | `thermal:fluid_duct` / `thermal:fluid_duct_windowed` |
+| 🟡 WYSOKI | Item Ducts | Zamiana na Mekanism | `mekanism:basic/advanced/elite/ultimate_logistical_transporter` |
+| 🟡 WYSOKI | Załączniki (Servo/Filter) | Częściowo zrzut do skrzyń / `mekanism:logistical_sorter` | — |
+| 🟡 WYSOKI | Structural / Light | Placeholder / usunięcie | — |
+| 🟡 WYSOKI | Transport (Viaduct) | Zamiana na Mekanism Teleporter | `mekanism:teleporter` + `teleporter_frame` |
 
 ---
 

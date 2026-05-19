@@ -1,0 +1,4 @@
+blocks type: <class 'nbtlib.tag.ByteArray'>
+blocks len: 4096
+blocks truthy: False
+first 3: [110, 110, 110]

@@ -125,7 +125,7 @@ class WorldEditor1182(private val worldPath: Path) {
                     createNewFile()
                 }
             }, "rw")
-            OpenRegion(raf, RegionFile(raf, regionX, regionZ, 0, 255))
+            OpenRegion(raf, RegionFile(raf, regionX, regionZ, -64, 319))
         }
     }
 

@@ -56,6 +56,28 @@ def _enchanting():
     return _instances["ep"]
 
 
+def _betterstorage(world_path: str | None = None):
+    key = "bs"
+    if key not in _instances:
+        from converters.betterstorage.nbt_converter import BetterStorageConverter
+        _instances[key] = BetterStorageConverter(world_path=world_path)
+    return _instances[key]
+
+
+def _thermal_dynamics():
+    if "td" not in _instances:
+        from converters.thermal_dynamics.thermal_dynamics_converter import ThermalDynamicsConverter
+        _instances["td"] = ThermalDynamicsConverter()
+    return _instances["td"]
+
+
+def _ic2():
+    if "ic2" not in _instances:
+        from converters.ic2.ic2_converter import IC2Converter
+        _instances["ic2"] = IC2Converter()
+    return _instances["ic2"]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Mod detection
 # ──────────────────────────────────────────────────────────────────────────────
@@ -70,6 +92,24 @@ _AE2_TE_KEYWORDS = frozenset([
 _BLOODMAGIC_TE_IDS = frozenset([
     "containerAltar", "containerMasterStone", "BPAltar",
 ])
+
+_CARPENTERS_TE_IDS = frozenset([
+    "TileEntityCarpentersBlock",
+    "te.skinnable", "te.skinnableChild",
+    "te.mannequin", "te.armourLibrary",
+])
+
+_CFM_PREFIXES = (
+    "cfm", "TileEntityBath", "TileEntityKitchen",
+    "TileEntitySofa", "TileEntityCabinet",
+)
+
+_BIBLIOCRAFT_PREFIXES = (
+    "TileEntityFilingCabinet", "TileEntityBookcase", "TileEntitySeat",
+    "TileEntityLabel", "TileEntityPrintingPress", "TileEntityTypeMachine",
+    "TileEntityMap", "TileEntityAtlas", "TileEntityLantern",
+    "TileEntityBiblioDesk",
+)
 
 # TE ids that belong to vanilla Minecraft — Amulet handles these; skip them.
 VANILLA_TE_IDS = frozenset([
@@ -91,8 +131,7 @@ def detect_mod(te_id: str) -> str:
     if bare in VANILLA_TE_IDS or te_id.startswith("minecraft:"):
         return "vanilla"
 
-    # Applied Energistics 2 — TEs have no namespace prefix in 1.7.10, only the
-    # class name like "BlockDrive", "BlockInterface", "BlockCableBus" etc.
+    # Applied Energistics 2
     if te_id.startswith("Block") and any(kw in te_id for kw in _AE2_TE_KEYWORDS):
         return "ae2"
 
@@ -105,25 +144,92 @@ def detect_mod(te_id: str) -> str:
     if te_id.startswith("eplus:"):
         return "enchantingplus"
 
+    # Carpenter's Blocks
+    if te_id in _CARPENTERS_TE_IDS:
+        return "carpentersblocks"
+
+    # ProjectRed (multiparts, illumination, etc.)
+    if te_id == "savedMultipart" or te_id.startswith("tile.projectred.") or te_id.startswith("ProjectRed"):
+        return "projectred"
+
+    # Better Storage  (TE id format: container.betterstorage.<type>)
+    if te_id.startswith("container.betterstorage.") or te_id.lower().startswith("betterstorage"):
+        return "betterstorage"
+
+    # MrCrayfish's Furniture Mod
+    if te_id.lower().startswith("cfm") or any(te_id.startswith(p) for p in _CFM_PREFIXES):
+        return "mrcraysfish_furniture"
+
+    # BiblioCraft
+    if any(te_id.startswith(p) for p in _BIBLIOCRAFT_PREFIXES) or te_id.startswith("BiblioCraft"):
+        return "bibliocraft"
+
+    # Railcraft
+    if te_id.startswith("RC") or te_id.startswith("Railcraft") or te_id == "drum":
+        return "railcraft"
+
+    # CustomNPCs
+    if te_id.startswith("TileNPC"):
+        return "customnpcs"
+
+    # Thaumcraft
+    if te_id.startswith("TileMirror") or te_id.startswith("TileThaumcraft") or te_id.startswith("thaumcraft"):
+        return "thaumcraft"
+
+    # ComputerCraft
+    if te_id in ("monitor", "computer", "turtle", "drive", "speaker"):
+        return "computercraft"
+
+    # GrowthCraft
     if te_id.startswith("grc.") or te_id.startswith("Growthcraft"):
         return "growthcraft"
 
-    if te_id.lower().startswith("betterstorage") or te_id.startswith("BetterStorage"):
-        return "betterstorage"
-
-    if te_id.startswith("ProjectRed") or te_id.startswith("pr_"):
-        return "projectred"
-
+    # Ender Storage
     if te_id.startswith("EnderStorage") or te_id.startswith("enderStorage"):
         return "enderstorage"
 
+    # Jammy Furniture
     if te_id.startswith("JammyFurniture") or te_id.startswith("jammy"):
         return "jammyfurniture"
 
-    if te_id.startswith("BiblioCraft") or te_id.startswith("biblioCraft"):
-        return "bibliocraft"
+    # Thermal Dynamics
+    if te_id.startswith("thermaldynamics."):
+        return "thermaldynamics"
+
+    # ForgeMultipart bounding helpers
+    if te_id == "AdvancedBoundingBlock" or te_id == "BoundingBlock":
+        return "forgemultipart"
+
+    # Generic wooden/ceramic decorative blocks (various mods)
+    if te_id.startswith("TileEntityWoodBlocks") or te_id.startswith("TileEntityCeramicBlocks"):
+        return "decorative_blocks"
+
+    # Misc furniture/prop tiles without clear prefix
+    if te_id in ("TableTile", "LampTile", "seatTile"):
+        return "furniture_misc"
+
+    # IndustrialCraft 2 — TE ids are bare class names like TileEntityMacerator
+    if te_id.startswith("TileEntity") and te_id in _ic2_te_ids():
+        return "ic2"
 
     return "unknown"
+
+
+_IC2_TE_IDS: frozenset[str] | None = None
+
+
+def _ic2_te_ids() -> frozenset[str]:
+    global _IC2_TE_IDS
+    if _IC2_TE_IDS is None:
+        from converters.ic2.mappings.block_inventory import IC2_ALL_BLOCKS
+        ids = set()
+        for block_id, variants in IC2_ALL_BLOCKS.items():
+            for meta, info in variants.items():
+                te = info.get("te_class")
+                if te:
+                    ids.add(te)
+        _IC2_TE_IDS = frozenset(ids)
+    return _IC2_TE_IDS
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -203,6 +309,58 @@ def _bloodmagic_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
         else:
             eev["op"] = "set_block"
         events.append(eev)
+    return events
+
+
+def _ic2_to_events(result: Any) -> list[dict]:
+    """Serialise IC2BlockConversion -> Event JSON list."""
+    c = result.converted
+    if not c.success or not c.block_id_1182:
+        return []
+
+    pos = list(result.original_pos)
+    ev: dict = {"pos": pos, "block": c.block_id_1182}
+    if c.nbt_1182:
+        ev["op"] = "set_block_entity"
+        ev["nbt"] = c.nbt_1182
+    else:
+        ev["op"] = "set_block"
+    if c.blockstate_props:
+        ev["blockstate"] = c.blockstate_props
+    return [ev]
+
+
+def _thermal_dynamics_to_events(result: Any) -> list[dict]:
+    """Serialise TDBlockConversion -> Event JSON list."""
+    c = result.converted
+    if not c.success or not c.block_id_1182:
+        return []
+
+    pos = list(result.original_pos)
+    ev: dict = {"pos": pos, "block": c.block_id_1182}
+    if c.nbt_1182:
+        ev["op"] = "set_block_entity"
+        ev["nbt"] = c.nbt_1182
+    else:
+        ev["op"] = "set_block"
+    if c.blockstate_props:
+        ev["blockstate"] = c.blockstate_props
+
+    events = [ev]
+
+    # Dodatkowe itemy z załączników -> inventory placeholder obok bloku
+    if c.extra_items:
+        placeholder_ev = make_block_entity_placeholder_event(
+            position=(pos[0], pos[1] + 1, pos[2]),
+            source_mod="ThermalDynamics",
+            source_te_id=result.original_id,
+            source_metadata=result.metadata,
+            original_nbt={"Items": c.extra_items},
+            conversion_reason="attachment_drop",
+            inventory_placeholder=True,
+        )
+        events.append(placeholder_ev)
+
     return events
 
 
@@ -313,6 +471,53 @@ def convert_te_to_events(
                 position=global_pos,
             )
             events = _generic_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "betterstorage":
+            x, y, z = global_pos
+            try:
+                result = _betterstorage().convert_tile_entity(
+                    block_id=te_id,
+                    nbt_data=te_nbt,
+                    x=x, y=y, z=z,
+                )
+                new_block = result.get("block_id", "")
+                new_nbt = result.get("nbt")
+                if new_block and new_block != "minecraft:air":
+                    ev: dict = {"pos": list(global_pos), "block": new_block}
+                    if new_nbt:
+                        ev["op"] = "set_block_entity"
+                        ev["nbt"] = new_nbt
+                    else:
+                        ev["op"] = "set_block"
+                    return [ev]
+            except Exception as exc:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos,
+                                     f"converter_error:{type(exc).__name__}:{exc}")]
+            return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+
+        if mod == "thermaldynamics":
+            result = _thermal_dynamics().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _thermal_dynamics_to_events(result)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "ic2":
+            result = _ic2().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _ic2_to_events(result)
             if not events:
                 return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
             return events

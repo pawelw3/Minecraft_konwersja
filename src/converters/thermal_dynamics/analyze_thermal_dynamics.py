@@ -3,6 +3,13 @@ Szczegółowa analiza bloków Thermal Dynamics w mapie 1.7.10.
 
 Krok 1 konwersji: wypisanie wszystkich bloków i Tile Entities moda
 Thermal Dynamics na podstawie danych z rzeczywistej mapy.
+
+Mapowanie docelowe:
+- Energy Ducts → thermal:energy_duct
+- Fluid Ducts → thermal:fluid_duct / thermal:fluid_duct_windowed
+- Item Ducts → mekanism:*_logistical_transporter
+- Transport Ducts → mekanism:teleporter / mekanism:teleporter_frame
+- Structural Ducts → BRAK (placeholder)
 """
 
 import sys
@@ -14,54 +21,55 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from minecraft_map_parser import ModBlockExtractor
 
 
-# Mapowanie metadata → nazwa ductu dla każdego offsetu BlockDuct
+# Mapowanie metadata → (internal_name, display_name, category, target_block_1.18.2)
 # Źródło: dekompilacja TDDucts.java z ThermalDynamics-[1.7.10]1.2.1-172.jar
+# Target: weryfikacja kodu TD 1.18.2 + Mekanism 1.18.2
 DUCT_OFFSETS = {
     0: {
-        0: ("energyBasic", "Leadstone Fluxduct", "energy"),
-        1: ("energyHardened", "Hardened Fluxduct", "energy"),
-        2: ("energyReinforced", "Redstone Energy Fluxduct", "energy"),
-        3: ("energyReinforcedEmpty", "Reinforced Fluxduct (empty)", "crafting"),
-        4: ("energyResonant", "Signalum Fluxduct", "energy"),
-        5: ("energyResonantEmpty", "Resonant Fluxduct (empty)", "crafting"),
-        6: ("energySuperCond", "Cryo-Stabilized Fluxduct", "energy"),
-        7: ("energySuperCondEmpty", "Cryo-Stabilized Fluxduct (empty)", "crafting"),
+        0: ("energyBasic", "Leadstone Fluxduct", "energy", "thermal:energy_duct"),
+        1: ("energyHardened", "Hardened Fluxduct", "energy", "thermal:energy_duct"),
+        2: ("energyReinforced", "Redstone Energy Fluxduct", "energy", "thermal:energy_duct"),
+        3: ("energyReinforcedEmpty", "Reinforced Fluxduct (empty)", "crafting", None),
+        4: ("energyResonant", "Signalum Fluxduct", "energy", "thermal:energy_duct"),
+        5: ("energyResonantEmpty", "Resonant Fluxduct (empty)", "crafting", None),
+        6: ("energySuperCond", "Cryo-Stabilized Fluxduct", "energy", "thermal:energy_duct"),
+        7: ("energySuperCondEmpty", "Cryo-Stabilized Fluxduct (empty)", "crafting", None),
     },
     16: {
-        0: ("fluidBasic", "Temperate Fluiduct", "fluid"),
-        1: ("fluidBasicOpaque", "Temperate Fluiduct (opaque)", "fluid"),
-        2: ("fluidHardened", "Hardened Fluiduct", "fluid"),
-        3: ("fluidHardenedOpaque", "Hardened Fluiduct (opaque)", "fluid"),
-        4: ("fluidFlux", "Flux-Plated Fluiduct", "fluid"),
-        5: ("fluidFluxOpaque", "Flux-Plated Fluiduct (opaque)", "fluid"),
-        6: ("fluidSuper", "Super-Laminar Fluiduct", "fluid"),
-        7: ("fluidSuperOpaque", "Super-Laminar Fluiduct (opaque)", "fluid"),
+        0: ("fluidBasic", "Temperate Fluiduct", "fluid", "thermal:fluid_duct"),
+        1: ("fluidBasicOpaque", "Temperate Fluiduct (opaque)", "fluid", "thermal:fluid_duct"),
+        2: ("fluidHardened", "Hardened Fluiduct", "fluid", "thermal:fluid_duct"),
+        3: ("fluidHardenedOpaque", "Hardened Fluiduct (opaque)", "fluid", "thermal:fluid_duct"),
+        4: ("fluidFlux", "Flux-Plated Fluiduct", "fluid", "thermal:fluid_duct"),
+        5: ("fluidFluxOpaque", "Flux-Plated Fluiduct (opaque)", "fluid", "thermal:fluid_duct"),
+        6: ("fluidSuper", "Super-Laminar Fluiduct", "fluid", "thermal:fluid_duct_windowed"),
+        7: ("fluidSuperOpaque", "Super-Laminar Fluiduct (opaque)", "fluid", "thermal:fluid_duct_windowed"),
     },
     32: {
-        0: ("itemBasic", "Itemduct", "item"),
-        1: ("itemBasicOpaque", "Itemduct (opaque)", "item"),
-        2: ("itemFast", "Impulse Itemduct", "item"),
-        3: ("itemFastOpaque", "Impulse Itemduct (opaque)", "item"),
-        4: ("itemEnder", "Ender Itemduct", "item"),
-        5: ("itemEnderOpaque", "Ender Itemduct (opaque)", "item"),
-        6: ("itemEnergy", "Flux-Plated Itemduct", "item"),
-        7: ("itemEnergyOpaque", "Flux-Plated Itemduct (opaque)", "item"),
+        0: ("itemBasic", "Itemduct", "item", "mekanism:basic_logistical_transporter"),
+        1: ("itemBasicOpaque", "Itemduct (opaque)", "item", "mekanism:basic_logistical_transporter"),
+        2: ("itemFast", "Impulse Itemduct", "item", "mekanism:advanced_logistical_transporter"),
+        3: ("itemFastOpaque", "Impulse Itemduct (opaque)", "item", "mekanism:advanced_logistical_transporter"),
+        4: ("itemEnder", "Ender Itemduct", "item", "mekanism:elite_logistical_transporter"),
+        5: ("itemEnderOpaque", "Ender Itemduct (opaque)", "item", "mekanism:elite_logistical_transporter"),
+        6: ("itemEnergy", "Flux-Plated Itemduct", "item", "mekanism:ultimate_logistical_transporter"),
+        7: ("itemEnergyOpaque", "Flux-Plated Itemduct (opaque)", "item", "mekanism:ultimate_logistical_transporter"),
     },
     48: {
-        0: ("structure", "Structuralduct", "structural"),
-        1: ("lightDuct", "Glowstone Illuminator", "structural"),
+        0: ("structure", "Structuralduct", "structural", None),
+        1: ("lightDuct", "Glowstone Illuminator", "structural", None),
     },
     64: {
-        0: ("transportBasic", "Viaduct", "transport"),
-        1: ("transportLongRange", "Long-Range Viaduct", "transport"),
-        2: ("transportCrossover", "Accelerated Viaduct", "transport"),
-        3: ("transportFrame", "Viaduct Frame", "crafting"),
+        0: ("transportBasic", "Viaduct", "transport", "mekanism:teleporter"),
+        1: ("transportLongRange", "Long-Range Viaduct", "transport", "mekanism:teleporter"),
+        2: ("transportCrossover", "Accelerated Viaduct", "transport", "mekanism:teleporter"),
+        3: ("transportFrame", "Viaduct Frame", "crafting", "mekanism:teleporter_frame"),
     },
 }
 
 
 def resolve_duct(block_id: str, metadata: int):
-    """Rozwija block_id + metadata na konkretny typ ductu."""
+    """Rozwija block_id + metadata na konkretny typ ductu i cel konwersji."""
     if not block_id.startswith("ThermalDynamics:thermaldynamics.Duct"):
         return None
     try:
@@ -70,7 +78,10 @@ def resolve_duct(block_id: str, metadata: int):
         return None
 
     mapping = DUCT_OFFSETS.get(offset, {})
-    return mapping.get(metadata, (f"unknown_{offset + metadata}", f"Unknown duct (offset={offset}, meta={metadata})", "unknown"))
+    return mapping.get(
+        metadata,
+        (f"unknown_{offset + metadata}", f"Unknown duct (offset={offset}, meta={metadata})", "unknown", None)
+    )
 
 
 def analyze_thermal_dynamics():
@@ -125,18 +136,21 @@ def analyze_thermal_dynamics():
         print(f"   {block_id}: {count} bloków")
 
     # Analiza z rozwiązaniem typów ductów
-    print("\n3. Rozkład typów ductów (block_id + metadata → nazwa):")
+    print("\n3. Rozkład typów ductów (block_id + metadata → nazwa → cel):")
     duct_type_counts = Counter()
     duct_category_counts = Counter()
+    target_block_counts = Counter()
     problematic_ducts = []
 
     for b in all_td_blocks:
         resolved = resolve_duct(b.block_id, b.metadata)
         if resolved:
-            internal_name, display_name, category = resolved
+            internal_name, display_name, category, target = resolved
             duct_type_counts[display_name] += 1
             duct_category_counts[category] += 1
-            if category in ("item", "structural", "transport"):
+            if target:
+                target_block_counts[target] += 1
+            else:
                 problematic_ducts.append((b.x, b.y, b.z, display_name))
         else:
             duct_type_counts[f"{b.block_id}:{b.metadata}"] += 1
@@ -164,11 +178,14 @@ def analyze_thermal_dynamics():
         ys = [c[1] for c in coords]
         print(f"   {cat}: {len(coords)} bloków, Y={min(ys)}–{max(ys)}")
 
-    # Problematyczne bloki
+    # Mapowanie docelowe
+    print("\n7. Mapowanie docelowe (bloki 1.18.2):")
+    for target, count in target_block_counts.most_common():
+        print(f"   → {target}: {count} bloków")
+
+    # Problematyczne bloki (bez odpowiednika)
     if problematic_ducts:
-        print(f"\n7. ⚠️ Bloki wymagające decyzji konwersyjnej ({len(problematic_ducts)}):")
-        print("   (Itemducty, Structural, Transport — brak odpowiedników w TD 1.18.2)")
-        # Wypisz pierwsze 10 jako przykład
+        print(f"\n8. ⚠️ Bloki BEZ odpowiednika 1.18.2 ({len(problematic_ducts)}):")
         for x, y, z, name in problematic_ducts[:10]:
             print(f"      [{x}, {y}, {z}] {name}")
         if len(problematic_ducts) > 10:
@@ -186,6 +203,7 @@ def analyze_thermal_dynamics():
         "by_raw_id": dict(id_counts),
         "by_duct_type": dict(duct_type_counts),
         "by_category": dict(duct_category_counts),
+        "target_blocks": dict(target_block_counts),
         "tile_entities": dict(te_counts),
         "problematic_positions": [
             {"x": x, "y": y, "z": z, "type": name}

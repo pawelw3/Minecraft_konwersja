@@ -1,45 +1,51 @@
-# Handoff: Growthcraft strict 1.18.2 - start modyfikacji kodu
+# Handoff: CuttableBlocks 1.7.10 - MVP Carpenter's Blocks
 
 ## Podsumowanie sesji
 
-Rozpoczeto modyfikacje konwertera Growthcraft zgodnie z nowa specyfikacja funkcjonalna. Domyslny profil konwersji nie celuje juz w Growthcraft CE, tylko w zamienniki strict 1.18.2, a poprzednia sciezka Growthcraft CE zostala zachowana jako profil eksperymentalny.
+Rozbudowano `new_mod_trial` o pierwsza wersje MVP dla Carpenter's Blocks w modzie `CuttableBlocks` 1.7.10. Istniejace wlasne funkcje `cuttable_block`, `cutting_tool`, `collapsible_block` i `collapsible_hammer` zostaly zachowane bez usuwania.
 
-## Ukończono
+## Ukonczono
 
-- [x] Dodano profile `strict_1182_functional` i `growthcraft_ce_experimental`.
-- [x] Ustawiono profil strict jako domyslny w `GrowthcraftConverter`.
-- [x] Dodano strict mapowanie blokow Growthcraft na Brewin' and Chewin', Farmer's Delight, Create, vanilla beehive/barrel i inne bezpieczne zamienniki.
-- [x] Dodano zachowanie danych procesow, itemow i plynow w `legacy_growthcraft` dla strict NBT.
-- [x] Zachowano stare konwertery NBT jako profil `growthcraft_ce_experimental`.
-- [x] Zaktualizowano testy integracyjne Growthcraft pod oba profile.
-- [x] Zweryfikowano lokalne JAR-y dla Create, Mekanism, Supplementaries i Productive Bees.
-- [x] Poprawiono `grcbees:bee_box` na potwierdzone `productivebees:advanced_*_beehive`.
+- [x] Dodano wspolny `TileEntityCoverable` z cover block/meta, facing, shape, flags i sourceCarpentersTeId.
+- [x] Dodano bloki MVP: carpenter block, slope, stairs, barrier i door.
+- [x] Dodano `carpenter_hammer` do ustawiania covera i przelaczania wariantow/orientacji.
+- [x] Dodano renderer coverable dla pelnego bloku, slope, stairs, barrier i door.
+- [x] Poprawiono `carpenter_slope` z aproksymacji schodkowej na prawdziwy klin renderowany recznie w tessellatorze.
+- [x] Zweryfikowano, ze klasy istniejacych `cuttable_block` i `collapsible_block` nie zostaly bezposrednio zmienione.
+- [x] Dodano testowy migrator raportujacy Carpenter MVP do `cuttableblocks:*`.
+- [x] Podpieto rejestracje blokow, itemow, TE, renderera i wpisy lang.
 
 ## Nowe pliki
 
-- `docs/sprawdzenie_codex/growthcraft_modyfikacja_kodu_strict_1182_2026-05-19.md`
+- `new_mod_trial/src/main/java/com/cuttableblocks/tileentities/TileEntityCoverable.java`
+- `new_mod_trial/src/main/java/com/cuttableblocks/blocks/BlockCoverable.java`
+- `new_mod_trial/src/main/java/com/cuttableblocks/blocks/BlockCoverableDoor.java`
+- `new_mod_trial/src/main/java/com/cuttableblocks/items/ItemCarpenterHammer.java`
+- `new_mod_trial/src/main/java/com/cuttableblocks/client/CoverableBlockRenderer.java`
+- `new_mod_trial/migrate_carpenters_mvp.py`
 
 ## Zmodyfikowane pliki
 
-- `src/converters/growthcraft/mappings/__init__.py`
-- `src/converters/growthcraft/growthcraft_converter.py`
-- `src/converters/growthcraft/nbt_converters/base_converter.py`
-- `src/converters/growthcraft/tests/test_growthcraft_converter.py`
+- `new_mod_trial/src/main/java/com/cuttableblocks/blocks/ModBlocks.java`
+- `new_mod_trial/src/main/java/com/cuttableblocks/items/ModItems.java`
+- `new_mod_trial/src/main/java/com/cuttableblocks/tileentities/ModTileEntities.java`
+- `new_mod_trial/src/main/java/com/cuttableblocks/client/ClientProxy.java`
+- `new_mod_trial/src/main/resources/assets/cuttableblocks/lang/en_US.lang`
+- `new_mod_trial/src/main/resources/assets/cuttableblocks/lang/pl_PL.lang`
 
 ## Testy
 
 Uruchomiono:
 
 ```powershell
-python -m unittest src.converters.growthcraft.tests.test_growthcraft_converter src.converters.growthcraft.tests.test_nbt_converters
+new_mod_trial\gradlew.bat -p new_mod_trial build --no-daemon --console=plain
+python new_mod_trial\migrate_carpenters_mvp.py new_mod_trial\build\tmp\carpenters_mvp_sample.json new_mod_trial\build\tmp\carpenters_mvp_report.json
 ```
 
-Wynik: 34 testy, OK.
+Wynik: build OK. Migrator: 1/2 converted, 1 unsupported dla `GarageDoor`, zgodnie z zakresem MVP. Po poprawce slope ponownie uruchomiono build Gradle: OK.
 
-Ponownie uruchomiono po poprawce Productive Bees: 34 testy, OK.
+## Nastepne kroki
 
-## Następne kroki
-
-1. [ ] Dostarczyc albo pobrac docelowe JAR-y Brewin' and Chewin' i Farmer's Delight, jesli maja byc twardym celem konwersji strict.
-2. [ ] Dodac raport wystapien Growthcraft na mapie z agregacja `legacy_growthcraft`, bez ladowania calej mapy.
-3. [ ] Przygotowac postprocessor dla Productive Bees/Brewin' and Chewin' tam, gdzie format NBT docelowego moda jest potwierdzony.
+1. [ ] Odpalic smoke test w kliencie/serwerze 1.7.10 i sprawdzic rendering nowych blokow w swiecie.
+2. [ ] Doprecyzowac realne pola NBT oryginalnego Carpenter's Blocks dla cover/shape/facing i podpiac je do migratora.
+3. [ ] Rozszerzyc migrator z raportu JSON do patchera MCA dopiero po potwierdzeniu mapowania NBT na malej mapie testowej.

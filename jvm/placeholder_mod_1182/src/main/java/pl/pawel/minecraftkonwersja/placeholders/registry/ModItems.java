@@ -17,6 +17,12 @@ public final class ModItems {
             new Item.Properties().tab(ConversionPlaceholdersMod.TAB))
     );
 
+    public static final RegistryObject<Item> INVENTORY_PLACEHOLDER = ITEMS.register(
+        "inventory_placeholder",
+        () -> new BlockItem(ModBlocks.INVENTORY_PLACEHOLDER.get(),
+            new Item.Properties().tab(ConversionPlaceholdersMod.TAB))
+    );
+
     private ModItems() {
     }
 }

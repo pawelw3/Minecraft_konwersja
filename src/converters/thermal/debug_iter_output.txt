@@ -1,0 +1,12 @@
+Direct access:
+  type: <class 'nbtlib.tag.ByteArray'>
+  len: 4096
+  first 3: [110, 110, 110]
+Iteration:
+  [0] type=<class 'nbtlib.tag.ByteArray'> len=4096 first3=[110, 110, 110]
+  [0] same_as_sec0=True
+ID check:
+  id(sec0): 2590907575872
+  id(sec): 2590907575872
+  id(b0): 2590906293200
+  id(b): 2590906293200

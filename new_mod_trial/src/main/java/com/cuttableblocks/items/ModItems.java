@@ -8,6 +8,7 @@ public class ModItems {
 
     public static Item cuttingTool;
     public static Item collapsibleHammer;
+    public static Item carpenterHammer;
 
     public static void registerItems() {
         cuttingTool = new ItemCuttingTool()
@@ -21,5 +22,11 @@ public class ModItems {
             .setTextureName("cuttableblocks:collapsible_hammer")
             .setCreativeTab(CreativeTabCuttableBlocks.tabCuttableBlocks);
         GameRegistry.registerItem(collapsibleHammer, "collapsible_hammer");
+
+        carpenterHammer = new ItemCarpenterHammer()
+            .setUnlocalizedName("carpenterHammer")
+            .setTextureName("cuttableblocks:collapsible_hammer")
+            .setCreativeTab(CreativeTabCuttableBlocks.tabCuttableBlocks);
+        GameRegistry.registerItem(carpenterHammer, "carpenter_hammer");
     }
 }

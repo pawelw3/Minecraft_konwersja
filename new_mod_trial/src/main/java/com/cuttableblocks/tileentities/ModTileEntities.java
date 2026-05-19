@@ -7,5 +7,6 @@ public class ModTileEntities {
     public static void registerTileEntities() {
         GameRegistry.registerTileEntity(TileEntityCuttable.class, "CuttableTE");
         GameRegistry.registerTileEntity(TileEntityCollapsible.class, "CollapsibleTE");
+        GameRegistry.registerTileEntity(TileEntityCoverable.class, "CoverableTE");
     }
 }

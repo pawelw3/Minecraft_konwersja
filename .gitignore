@@ -65,6 +65,10 @@ logs/
 tmp/
 temp/
 .cache/
+output/run_log*.txt
+output/**/*_log.txt
+output/**/*.log
+temp_td_decomp/
 
 # ----------------------------------------------------------------------------
 # PYTHON
@@ -201,6 +205,3 @@ headless_server/1.7.10/zsrr_placeholder_test/
 *.jpg
 *.jpeg
 *.gif
-!**/textures/**/*.png
-!**/texture/**/*.png
-!src/**/*.png

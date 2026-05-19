@@ -1,0 +1,3 @@
+before import: len= 3 bool= True
+after import: len= 3 bool= True
+after ThermalConverter import: len= 3 bool= True

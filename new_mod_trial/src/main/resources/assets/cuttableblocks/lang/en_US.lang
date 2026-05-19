@@ -1,5 +1,11 @@
 tile.cuttableBlock.name=Cut Block
 tile.collapsibleBlock.name=Collapsible Block
+tile.carpenterBlock.name=Carpenter Block
+tile.carpenterSlope.name=Carpenter Slope
+tile.carpenterStairs.name=Carpenter Stairs
+tile.carpenterBarrier.name=Carpenter Barrier
+tile.carpenterDoor.name=Carpenter Door
 item.cuttingTool.name=Cutting Tool
 item.collapsibleHammer.name=Collapsible Hammer
+item.carpenterHammer.name=Carpenter Hammer
 itemGroup.cuttableblocks=Cuttable Blocks

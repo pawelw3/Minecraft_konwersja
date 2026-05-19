@@ -20,6 +20,14 @@ public final class ModBlocks {
             .noOcclusion())
     );
 
+    public static final RegistryObject<Block> INVENTORY_PLACEHOLDER = BLOCKS.register(
+        "inventory_placeholder",
+        () -> new pl.pawel.minecraftkonwersja.placeholders.world.InventoryPlaceholderBlock(
+            BlockBehaviour.Properties.of(Material.METAL)
+                .strength(0.7F, 6.0F)
+                .noOcclusion())
+    );
+
     private ModBlocks() {
     }
 }

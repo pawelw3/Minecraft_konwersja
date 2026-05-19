@@ -17,9 +17,6 @@ import net.minecraft.world.inventory.InventoryMenu;
 import pl.pawel.minecraftkonwersja.placeholders.world.BlockEntityPlaceholderBlockEntity;
 
 public class BlockEntityPlaceholderRenderer implements BlockEntityRenderer<BlockEntityPlaceholderBlockEntity> {
-    private static final float MIN = 6.0F / 16.0F;
-    private static final float MAX = 10.0F / 16.0F;
-    private static final float HEIGHT = 12.0F / 16.0F;
     private static final Material WHITE_CONCRETE =
         new Material(InventoryMenu.BLOCK_ATLAS, new ResourceLocation("minecraft:block/white_concrete"));
 
@@ -43,38 +40,49 @@ public class BlockEntityPlaceholderRenderer implements BlockEntityRenderer<Block
         TextureAtlasSprite sprite = WHITE_CONCRETE.sprite();
         VertexConsumer consumer = buffers.getBuffer(RenderType.solid());
         int light = Math.max(packedLight, LightTexture.FULL_BRIGHT);
+        boolean inventory = blockEntity instanceof pl.pawel.minecraftkonwersja.placeholders.world.InventoryPlaceholderBlockEntity;
 
-        renderColumn(poseStack, consumer, sprite, colors, light, packedOverlay);
+        renderBox(poseStack, consumer, sprite, colors, light, packedOverlay,
+            inventory ? 2 : 6,
+            inventory ? 14 : 10,
+            inventory ? 14 : 12);
     }
 
-    private static void renderColumn(
+    private static void renderBox(
         PoseStack poseStack,
         VertexConsumer consumer,
         TextureAtlasSprite sprite,
         int[] colors,
         int light,
-        int overlay
+        int overlay,
+        int minPixel,
+        int maxPixel,
+        int heightPixel
     ) {
         PoseStack.Pose pose = poseStack.last();
         Matrix4f matrix = pose.pose();
         Matrix3f normal = pose.normal();
+        float min = minPixel / 16.0F;
+        float max = maxPixel / 16.0F;
+        float height = heightPixel / 16.0F;
 
-        renderSideX(matrix, normal, consumer, sprite, colors, light, overlay, MIN, false);
-        renderSideX(matrix, normal, consumer, sprite, colors, light, overlay, MAX, true);
-        renderSideZ(matrix, normal, consumer, sprite, colors, light, overlay, MIN, true);
-        renderSideZ(matrix, normal, consumer, sprite, colors, light, overlay, MAX, false);
-        renderTopOrBottom(matrix, normal, consumer, sprite, colors, light, overlay, 0.0F, false);
-        renderTopOrBottom(matrix, normal, consumer, sprite, colors, light, overlay, HEIGHT, true);
+        renderSideX(matrix, normal, consumer, sprite, colors, light, overlay, min, false, minPixel, maxPixel, heightPixel);
+        renderSideX(matrix, normal, consumer, sprite, colors, light, overlay, max, true, minPixel, maxPixel, heightPixel);
+        renderSideZ(matrix, normal, consumer, sprite, colors, light, overlay, min, true, minPixel, maxPixel, heightPixel);
+        renderSideZ(matrix, normal, consumer, sprite, colors, light, overlay, max, false, minPixel, maxPixel, heightPixel);
+        renderTopOrBottom(matrix, normal, consumer, sprite, colors, light, overlay, 0.0F, false, minPixel, maxPixel);
+        renderTopOrBottom(matrix, normal, consumer, sprite, colors, light, overlay, height, true, minPixel, maxPixel);
     }
 
     private static void renderSideX(Matrix4f matrix, Matrix3f normal, VertexConsumer consumer, TextureAtlasSprite sprite,
-                                    int[] colors, int light, int overlay, float x, boolean east) {
-        for (int y = 0; y < 12; y++) {
-            for (int z = 0; z < 4; z++) {
+                                    int[] colors, int light, int overlay, float x, boolean east,
+                                    int minPixel, int maxPixel, int heightPixel) {
+        for (int y = 0; y < heightPixel; y++) {
+            for (int z = minPixel; z < maxPixel; z++) {
                 float y0 = y / 16.0F;
                 float y1 = (y + 1) / 16.0F;
-                float z0 = (6 + z) / 16.0F;
-                float z1 = (7 + z) / 16.0F;
+                float z0 = z / 16.0F;
+                float z1 = (z + 1) / 16.0F;
                 int color = patternColor(colors, z, y);
                 if (east) {
                     quad(matrix, normal, consumer, sprite, color, light, overlay, x, y0, z0, x, y0, z1, x, y1, z1, x, y1, z0, 1, 0, 0);
@@ -86,11 +94,12 @@ public class BlockEntityPlaceholderRenderer implements BlockEntityRenderer<Block
     }
 
     private static void renderSideZ(Matrix4f matrix, Matrix3f normal, VertexConsumer consumer, TextureAtlasSprite sprite,
-                                    int[] colors, int light, int overlay, float z, boolean north) {
-        for (int y = 0; y < 12; y++) {
-            for (int x = 0; x < 4; x++) {
-                float x0 = (6 + x) / 16.0F;
-                float x1 = (7 + x) / 16.0F;
+                                    int[] colors, int light, int overlay, float z, boolean north,
+                                    int minPixel, int maxPixel, int heightPixel) {
+        for (int y = 0; y < heightPixel; y++) {
+            for (int x = minPixel; x < maxPixel; x++) {
+                float x0 = x / 16.0F;
+                float x1 = (x + 1) / 16.0F;
                 float y0 = y / 16.0F;
                 float y1 = (y + 1) / 16.0F;
                 int color = patternColor(colors, x, y);
@@ -104,13 +113,14 @@ public class BlockEntityPlaceholderRenderer implements BlockEntityRenderer<Block
     }
 
     private static void renderTopOrBottom(Matrix4f matrix, Matrix3f normal, VertexConsumer consumer, TextureAtlasSprite sprite,
-                                          int[] colors, int light, int overlay, float y, boolean top) {
-        for (int x = 0; x < 4; x++) {
-            for (int z = 0; z < 4; z++) {
-                float x0 = (6 + x) / 16.0F;
-                float x1 = (7 + x) / 16.0F;
-                float z0 = (6 + z) / 16.0F;
-                float z1 = (7 + z) / 16.0F;
+                                          int[] colors, int light, int overlay, float y, boolean top,
+                                          int minPixel, int maxPixel) {
+        for (int x = minPixel; x < maxPixel; x++) {
+            for (int z = minPixel; z < maxPixel; z++) {
+                float x0 = x / 16.0F;
+                float x1 = (x + 1) / 16.0F;
+                float z0 = z / 16.0F;
+                float z1 = (z + 1) / 16.0F;
                 int color = patternColor(colors, x, z);
                 if (top) {
                     quad(matrix, normal, consumer, sprite, color, light, overlay, x0, y, z0, x1, y, z0, x1, y, z1, x0, y, z1, 0, 1, 0);

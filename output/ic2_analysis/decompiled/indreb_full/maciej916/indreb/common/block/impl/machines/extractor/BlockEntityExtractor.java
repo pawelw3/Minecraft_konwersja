@@ -1,0 +1,31 @@
+package com.maciej916.indreb.common.block.impl.machines.extractor;
+
+import com.maciej916.indreb.common.config.ServerConfig;
+import com.maciej916.indreb.common.entity.block.BlockEntityStandardMachine;
+import com.maciej916.indreb.common.recipe.impl.ExtractingRecipe;
+import com.maciej916.indreb.common.registries.ModBlockEntities;
+import com.maciej916.indreb.common.registries.ModRecipeType;
+import com.maciej916.indreb.common.registries.ModSounds;
+import java.util.Optional;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.level.block.state.BlockState;
+
+public class BlockEntityExtractor extends BlockEntityStandardMachine {
+   public BlockEntityExtractor(BlockPos pWorldPosition, BlockState pBlockState) {
+      super(ModBlockEntities.EXTRACTOR, pWorldPosition, pBlockState, (Integer)ServerConfig.extractor_energy_capacity.get());
+   }
+
+   @Override
+   protected Optional<ExtractingRecipe> getRecipe(ItemStack input) {
+      return this.f_58857_.m_7465_().m_44015_((RecipeType)ModRecipeType.EXTRACTING.get(), new SimpleContainer(new ItemStack[]{input}), this.f_58857_);
+   }
+
+   @Override
+   public SoundEvent getSoundEvent() {
+      return ModSounds.EXTRACTOR;
+   }
+}

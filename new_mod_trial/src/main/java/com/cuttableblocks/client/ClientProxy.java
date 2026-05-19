@@ -9,6 +9,7 @@ public class ClientProxy extends CommonProxy {
 
     public static int cuttableRenderId;
     public static int collapsibleRenderId;
+    public static int coverableRenderId;
 
     @Override
     public void preInit() {
@@ -19,6 +20,7 @@ public class ClientProxy extends CommonProxy {
         // IDs must be allocated before blocks are registered (they reference them)
         cuttableRenderId   = RenderingRegistry.getNextAvailableRenderId();
         collapsibleRenderId = RenderingRegistry.getNextAvailableRenderId();
+        coverableRenderId = RenderingRegistry.getNextAvailableRenderId();
     }
 
     @Override
@@ -27,6 +29,7 @@ public class ClientProxy extends CommonProxy {
 
         RenderingRegistry.registerBlockHandler(new CuttableBlockRenderer());
         RenderingRegistry.registerBlockHandler(new CollapsibleBlockRenderer());
+        RenderingRegistry.registerBlockHandler(new CoverableBlockRenderer());
     }
     
     @Override

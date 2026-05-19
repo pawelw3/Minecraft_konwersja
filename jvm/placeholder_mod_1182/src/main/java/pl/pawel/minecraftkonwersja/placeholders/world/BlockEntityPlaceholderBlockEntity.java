@@ -5,6 +5,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import pl.pawel.minecraftkonwersja.placeholders.registry.ModBlockEntities;
 
@@ -23,6 +24,10 @@ public class BlockEntityPlaceholderBlockEntity extends BlockEntity {
 
     public BlockEntityPlaceholderBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.BLOCK_ENTITY_PLACEHOLDER.get(), pos, state);
+    }
+
+    protected BlockEntityPlaceholderBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
     }
 
     @Override

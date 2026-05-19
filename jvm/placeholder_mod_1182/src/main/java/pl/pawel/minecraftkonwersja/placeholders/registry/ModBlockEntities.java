@@ -20,6 +20,15 @@ public final class ModBlockEntities {
             ).build(null)
         );
 
+    public static final RegistryObject<BlockEntityType<pl.pawel.minecraftkonwersja.placeholders.world.InventoryPlaceholderBlockEntity>> INVENTORY_PLACEHOLDER =
+        BLOCK_ENTITIES.register(
+            "inventory_placeholder",
+            () -> BlockEntityType.Builder.of(
+                pl.pawel.minecraftkonwersja.placeholders.world.InventoryPlaceholderBlockEntity::new,
+                ModBlocks.INVENTORY_PLACEHOLDER.get()
+            ).build(null)
+        );
+
     private ModBlockEntities() {
     }
 }
