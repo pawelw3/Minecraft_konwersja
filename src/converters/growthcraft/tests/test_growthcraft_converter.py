@@ -104,7 +104,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "minecraft:beehive")
+        self.assertEqual(result.block_id_1182, "productivebees:advanced_oak_beehive")
     
     def test_convert_mixing_vat(self):
         """Test konwersji MixingVat (CheeseVat)"""

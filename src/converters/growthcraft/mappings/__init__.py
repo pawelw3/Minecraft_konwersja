@@ -542,7 +542,18 @@ STRICT_BLOCK_MAPPINGS: Dict[str, BlockMapping] = {
     "grcmilk:butter_churn": BlockMapping("grcmilk:butter_churn", "farmersdelight:cooking_pot"),
     "grcmilk:cheese_press": BlockMapping("grcmilk:cheese_press", "farmersdelight:cooking_pot"),
     "grcmilk:hanging_curds": BlockMapping("grcmilk:hanging_curds", "minecraft:white_wool"),
-    "grcbees:bee_box": BlockMapping("grcbees:bee_box", "minecraft:beehive"),
+    "grcbees:bee_box": BlockMapping(
+        "grcbees:bee_box",
+        "productivebees:advanced_oak_beehive",
+        metadata_map={
+            0: "productivebees:advanced_oak_beehive",
+            1: "productivebees:advanced_spruce_beehive",
+            2: "productivebees:advanced_birch_beehive",
+            3: "productivebees:advanced_jungle_beehive",
+            4: "productivebees:advanced_acacia_beehive",
+            5: "productivebees:advanced_dark_oak_beehive",
+        }
+    ),
     "grcbees:bee_hive": BlockMapping("grcbees:bee_hive", "minecraft:bee_nest"),
     "grcfishtrap:fish_trap": BlockMapping("grcfishtrap:fish_trap", "minecraft:barrel"),
     "growthcraft:rope": BlockMapping("growthcraft:rope", "supplementaries:rope"),
@@ -576,7 +587,7 @@ STRICT_ITEM_MAPPINGS: Dict[str, ItemMapping] = {
     "grcbees:honey_comb": ItemMapping("grcbees:honey_comb", "minecraft:honeycomb"),
     "grcbees:honey_comb_full": ItemMapping("grcbees:honey_comb_full", "minecraft:honeycomb"),
     "grcbees:honey_jar": ItemMapping("grcbees:honey_jar", "minecraft:honey_bottle"),
-    "grcbees:bees_wax": ItemMapping("grcbees:bees_wax", "minecraft:honeycomb"),
+    "grcbees:bees_wax": ItemMapping("grcbees:bees_wax", "productivebees:wax"),
     "grcmilk:rennet": ItemMapping("grcmilk:rennet", "minecraft:milk_bucket"),
     "grcmilk:starter_culture": ItemMapping("grcmilk:starter_culture", "minecraft:milk_bucket"),
     "grcmilk:butter": ItemMapping("grcmilk:butter", "farmersdelight:butter"),

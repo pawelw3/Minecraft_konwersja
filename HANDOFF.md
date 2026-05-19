@@ -12,6 +12,8 @@ Rozpoczeto modyfikacje konwertera Growthcraft zgodnie z nowa specyfikacja funkcj
 - [x] Dodano zachowanie danych procesow, itemow i plynow w `legacy_growthcraft` dla strict NBT.
 - [x] Zachowano stare konwertery NBT jako profil `growthcraft_ce_experimental`.
 - [x] Zaktualizowano testy integracyjne Growthcraft pod oba profile.
+- [x] Zweryfikowano lokalne JAR-y dla Create, Mekanism, Supplementaries i Productive Bees.
+- [x] Poprawiono `grcbees:bee_box` na potwierdzone `productivebees:advanced_*_beehive`.
 
 ## Nowe pliki
 
@@ -34,8 +36,10 @@ python -m unittest src.converters.growthcraft.tests.test_growthcraft_converter s
 
 Wynik: 34 testy, OK.
 
+Ponownie uruchomiono po poprawce Productive Bees: 34 testy, OK.
+
 ## Następne kroki
 
-1. [ ] Zweryfikowac dokladne ID itemow/blokow z lokalnych JAR/zasobow docelowych modow.
+1. [ ] Dostarczyc albo pobrac docelowe JAR-y Brewin' and Chewin' i Farmer's Delight, jesli maja byc twardym celem konwersji strict.
 2. [ ] Dodac raport wystapien Growthcraft na mapie z agregacja `legacy_growthcraft`, bez ladowania calej mapy.
 3. [ ] Przygotowac postprocessor dla Productive Bees/Brewin' and Chewin' tam, gdzie format NBT docelowego moda jest potwierdzony.

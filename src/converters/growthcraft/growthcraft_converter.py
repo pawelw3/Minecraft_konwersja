@@ -282,7 +282,7 @@ class GrowthcraftConverter:
 
     def _preferred_functional_mod(self, block_id: str) -> Optional[str]:
         if block_id.startswith("grcbees:"):
-            return "Productive Bees (vanilla beehive jako bezpieczny blok strict)"
+            return "Productive Bees"
         if block_id.startswith("grcmilk:"):
             return "Farmer's Delight / addon kulinarny"
         if block_id in {"grccellar:ferment_barrel", "grccellar:brew_kettle"}:
