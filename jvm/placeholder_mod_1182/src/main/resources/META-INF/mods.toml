@@ -1,0 +1,26 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="MIT"
+
+[[mods]]
+modId="conversion_placeholders"
+version="${file.jarVersion}"
+displayName="Conversion Placeholders"
+authors="pawel"
+description='''
+Placeholder BlockEntities for Minecraft 1.7.10 to 1.18.2 map conversion.
+'''
+
+[[dependencies.conversion_placeholders]]
+modId="forge"
+mandatory=true
+versionRange="[40,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.conversion_placeholders]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.18.2,1.19)"
+ordering="NONE"
+side="BOTH"

@@ -1,0 +1,15 @@
+[
+  {
+    "modid": "conversionplaceholders1710",
+    "name": "Conversion Placeholders 1.7.10",
+    "description": "Safe placeholders for non-target legacy mod blocks and tile entities during conversion tests.",
+    "version": "1.0.0",
+    "mcversion": "1.7.10",
+    "authorList": ["pawel"],
+    "credits": "",
+    "url": "",
+    "updateUrl": "",
+    "screenshots": [],
+    "dependencies": []
+  }
+]

@@ -14,11 +14,11 @@ from dataclasses import dataclass, field
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 from .mappings import (
-    get_block_mapping,
+    STRICT_1182_FUNCTIONAL,
+    SUPPORTED_PROFILES,
     convert_block_id,
     get_all_growthcraft_blocks,
     get_all_growthcraft_items,
-    get_all_growthcraft_fluids,
 )
 from .nbt_converters import (
     FermentationBarrelNBTConverter,
@@ -93,7 +93,10 @@ class GrowthcraftConverter:
         "TileEntityFishTrap": "grcfishtrap:fish_trap",
     }
     
-    def __init__(self):
+    def __init__(self, profile: str = STRICT_1182_FUNCTIONAL):
+        if profile not in SUPPORTED_PROFILES:
+            raise ValueError(f"Nieznany profil GrowthCraft: {profile}")
+        self.profile = profile
         self.errors: List[str] = []
         self.warnings: List[str] = []
         self.stats = {
@@ -145,7 +148,7 @@ class GrowthcraftConverter:
             )
         
         # Konwertuj ID bloku
-        block_id_1182 = convert_block_id(resolved_id, metadata)
+        block_id_1182 = convert_block_id(resolved_id, metadata, profile=self.profile)
         
         # Jeśli nie ma NBT, zwróć tylko konwersję ID
         if not nbt:
@@ -157,7 +160,7 @@ class GrowthcraftConverter:
             )
         
         # Konwertuj NBT jeśli dostępne (użyj rozwiązanego ID)
-        nbt_result = self._convert_nbt(resolved_id, nbt, metadata)
+        nbt_result = self._convert_nbt(resolved_id, nbt, metadata, block_id_1182)
         
         if nbt_result.success:
             self.stats["converted"] += 1
@@ -188,11 +191,14 @@ class GrowthcraftConverter:
         return self.convert_block(te_id, metadata, nbt)
     
     def _convert_nbt(self, block_id: str, nbt: Dict[str, Any],
-                    metadata: int = 0) -> NBTConversionResult:
+                    metadata: int = 0, target_block_id: Optional[str] = None) -> NBTConversionResult:
         """
         Konwertuje NBT używając odpowiedniego konwertera.
         """
         # Znajdź odpowiedni konwerter
+        if self.profile == STRICT_1182_FUNCTIONAL:
+            return self._convert_nbt_strict(block_id, nbt, metadata, target_block_id or block_id)
+
         converter_class = self.TE_CONVERTERS.get(block_id)
         
         if not converter_class:
@@ -207,6 +213,83 @@ class GrowthcraftConverter:
         # Utwórz instancję konwertera i wykonaj konwersję
         converter = converter_class()
         return converter.convert(nbt, block_id, metadata)
+
+    def _convert_nbt_strict(self, block_id: str, nbt: Dict[str, Any],
+                            metadata: int, target_block_id: str) -> NBTConversionResult:
+        """
+        Strict 1.18.2: mapuje funkcje Growthcraft na aktualne zamienniki i
+        zachowuje stare dane procesu jako payload ratunkowy.
+        """
+        converted = {
+            "id": target_block_id,
+            "x": nbt.get("x", 0),
+            "y": nbt.get("y", 0),
+            "z": nbt.get("z", 0),
+            "conversion_profile": self.profile,
+            "legacy_growthcraft": self._extract_legacy_growthcraft_payload(block_id, nbt, metadata),
+        }
+        warnings = [
+            "GC-W-FUNCTIONAL-REBUILD: Growthcraft CE nie jest domyslnym celem strict 1.18.2; "
+            "NBT procesu zapisano w legacy_growthcraft do postprocessingu/review."
+        ]
+        preferred_mod = self._preferred_functional_mod(block_id)
+        if preferred_mod:
+            warnings.append(f"GC-W-PREFERRED-MOD: preferowany zamiennik funkcji: {preferred_mod}")
+        return NBTConversionResult(success=True, converted_nbt=converted, warnings=warnings)
+
+    def _extract_legacy_growthcraft_payload(self, block_id: str, nbt: Dict[str, Any],
+                                            metadata: int) -> Dict[str, Any]:
+        payload = {
+            "source_block_id": block_id,
+            "source_te_id": nbt.get("id"),
+            "metadata": metadata,
+            "process": self._extract_process_fields(nbt),
+            "items": self._extract_legacy_items(nbt),
+            "fluids": self._extract_legacy_fluids(nbt),
+        }
+        for key in ("bee_box", "brew_kettle", "vat_state", "heat_component", "lid_on"):
+            if key in nbt:
+                payload[key] = nbt[key]
+        return payload
+
+    def _extract_process_fields(self, nbt: Dict[str, Any]) -> Dict[str, Any]:
+        process = {}
+        for key in ("time", "progress", "progress_max", "CurrentProcessTicks", "MaxProcessTicks"):
+            if key in nbt:
+                process[key] = nbt[key]
+        brew = nbt.get("brew_kettle")
+        if isinstance(brew, dict):
+            for key in ("time", "time_max", "heat_multiplier"):
+                if key in brew:
+                    process[f"brew_kettle.{key}"] = brew[key]
+        return process
+
+    def _extract_legacy_items(self, nbt: Dict[str, Any]) -> List[Dict[str, Any]]:
+        items = nbt.get("items") or nbt.get("Items") or []
+        return [dict(item) for item in items if isinstance(item, dict)]
+
+    def _extract_legacy_fluids(self, nbt: Dict[str, Any]) -> List[Dict[str, Any]]:
+        fluids = []
+        for key, value in nbt.items():
+            if isinstance(value, dict) and ("FluidName" in value or "Amount" in value):
+                fluids.append({
+                    "source_field": key,
+                    "FluidName": value.get("FluidName"),
+                    "Amount": value.get("Amount", 0),
+                    "Tag": value.get("Tag"),
+                })
+        return fluids
+
+    def _preferred_functional_mod(self, block_id: str) -> Optional[str]:
+        if block_id.startswith("grcbees:"):
+            return "Productive Bees (vanilla beehive jako bezpieczny blok strict)"
+        if block_id.startswith("grcmilk:"):
+            return "Farmer's Delight / addon kulinarny"
+        if block_id in {"grccellar:ferment_barrel", "grccellar:brew_kettle"}:
+            return "Brewin' and Chewin'"
+        if block_id == "grccellar:fruit_press":
+            return "Create"
+        return None
     
     def is_growthcraft_block(self, block_id: str) -> bool:
         """Sprawdza czy blok jest blokiem GrowthCraft"""
@@ -247,11 +330,11 @@ class GrowthcraftConverter:
     
     def get_supported_blocks(self) -> List[str]:
         """Zwraca listę obsługiwanych bloków GrowthCraft"""
-        return get_all_growthcraft_blocks()
+        return get_all_growthcraft_blocks(self.profile)
     
     def get_supported_items(self) -> List[str]:
         """Zwraca listę obsługiwanych itemów GrowthCraft"""
-        return get_all_growthcraft_items()
+        return get_all_growthcraft_items(self.profile)
     
     def get_stats(self) -> Dict[str, int]:
         """Zwraca statystyki konwersji"""

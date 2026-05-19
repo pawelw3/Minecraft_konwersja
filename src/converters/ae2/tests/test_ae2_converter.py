@@ -13,7 +13,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..', '..
 
 from src.converters.ae2 import AE2Converter
 from src.converters.ae2.mappings import get_block_mapping, get_item_mapping
-from src.converters.ae2.mappings.block_mappings import resolve_crafting_storage_variant
+from src.converters.ae2.mappings.block_mappings import (
+    normalize_block_id,
+    resolve_crafting_storage_variant,
+)
 from src.converters.ae2.nbt_converters import PatternData
 
 
@@ -46,6 +49,26 @@ class TestBlockMappings(unittest.TestCase):
         self.assertEqual(mapping.id_1182, 'ae2:drive')
         self.assertEqual(mapping.nbt_converter, 'drive')
 
+    def test_raw_nbt_id_alias_mapping(self):
+        """Sprawdza aliasy surowych ID TileEntity z mapy"""
+        self.assertEqual(
+            normalize_block_id('BlockDrive'),
+            'appliedenergistics2:tile.BlockDrive'
+        )
+        mapping = get_block_mapping('BlockCableBus')
+        self.assertIsNotNone(mapping)
+        self.assertEqual(mapping.id_1182, 'ae2:fluix_block')
+
+    def test_quartz_torch_fixture_alias(self):
+        """1.7.10 zapisuje Quartz Fixture jako BlockQuartzTorch"""
+        self.assertEqual(
+            normalize_block_id('appliedenergistics2:tile.BlockQuartzFixture'),
+            'appliedenergistics2:tile.BlockQuartzTorch'
+        )
+        mapping = get_block_mapping('appliedenergistics2:tile.BlockQuartzTorch')
+        self.assertIsNotNone(mapping)
+        self.assertEqual(mapping.id_1182, 'ae2:quartz_fixture')
+
 
 class TestCraftingStorageVariants(unittest.TestCase):
     """Testy wariantow Crafting Storage"""
@@ -53,10 +76,12 @@ class TestCraftingStorageVariants(unittest.TestCase):
     def test_crafting_storage_variants(self):
         """Sprawdza rozwiazywanie wariantow"""
         test_cases = [
-            (0, 'ae2:crafting_unit_1k'),
-            (1, 'ae2:crafting_unit_4k'),
-            (2, 'ae2:crafting_unit_16k'),
-            (3, 'ae2:crafting_unit_64k'),
+            (0, 'ae2:1k_crafting_storage'),
+            (1, 'ae2:4k_crafting_storage'),
+            (2, 'ae2:16k_crafting_storage'),
+            (3, 'ae2:64k_crafting_storage'),
+            (4, 'ae2:1k_crafting_storage'),
+            (7, 'ae2:64k_crafting_storage'),
         ]
         
         for metadata, expected_id in test_cases:
@@ -65,6 +90,19 @@ class TestCraftingStorageVariants(unittest.TestCase):
                 metadata
             )
             self.assertEqual(result, expected_id)
+
+    def test_crafting_unit_accelerator_variant(self):
+        """Sprawdza metadata Crafting Unit -> Crafting Accelerator"""
+        converter = AE2Converter()
+        result = converter.convert_block(
+            'BlockCraftingUnit',
+            {'core': False},
+            metadata=1,
+            position=(0, 0, 0)
+        )
+
+        self.assertTrue(result.converted.success)
+        self.assertEqual(result.converted.block_id_1182, 'ae2:crafting_accelerator')
 
 
 class TestNBTConverters(unittest.TestCase):
@@ -149,13 +187,27 @@ class TestAE2Converter(unittest.TestCase):
     def test_convert_controller(self):
         """Test konwersji Controller"""
         result = self.converter.convert_block(
-            'appliedenergistics2:tile.BlockController',
+            'BlockController',
             {'forward': 2, 'up': 1},
             position=(0, 0, 0)
         )
         
         self.assertTrue(result.converted.success)
         self.assertEqual(result.converted.block_id_1182, 'ae2:controller')
+
+    def test_convert_crafting_storage_1182_ids(self):
+        """Test poprawnych ID wariantow Crafting Storage z AE2 11.7.6"""
+        result = self.converter.convert_block(
+            'BlockCraftingStorage',
+            {'customName': 'CPU storage'},
+            metadata=6,
+            position=(0, 0, 0)
+        )
+
+        self.assertTrue(result.converted.success)
+        self.assertEqual(result.converted.block_id_1182, 'ae2:16k_crafting_storage')
+        self.assertEqual(result.converted.nbt_1182.get('size_variant'), 2)
+        self.assertTrue(result.converted.nbt_1182.get('formed'))
     
     def test_convert_drive(self):
         """Test konwersji Drive"""
@@ -188,6 +240,82 @@ class TestAE2Converter(unittest.TestCase):
         
         self.assertFalse(result.converted.success)
         self.assertTrue(len(result.converted.errors) > 0)
+
+    def test_interface_patterns_create_pattern_provider(self):
+        """Interface z patternami tworzy dodatkowy Pattern Provider"""
+        result = self.converter.convert_block(
+            'BlockInterface',
+            {
+                'patterns': [
+                    {
+                        'id': 'appliedenergistics2:item.ItemEncodedPattern',
+                        'Count': 1,
+                        'tag': {
+                            'crafting': False,
+                            'in': [{'id': 'minecraft:iron_ingot', 'Count': 1}],
+                            'out': [{'id': 'minecraft:gold_ingot', 'Count': 1}]
+                        }
+                    }
+                ],
+                'forward': 5,
+            },
+            position=(10, 64, 10)
+        )
+
+        self.assertTrue(result.converted.success)
+        self.assertEqual(result.converted.block_id_1182, 'ae2:interface')
+        self.assertEqual(len(result.converted.additional_blocks), 1)
+        provider = result.converted.additional_blocks[0]
+        self.assertEqual(provider.converted.block_id_1182, 'ae2:pattern_provider')
+        self.assertEqual(provider.original_pos, (11, 64, 10))
+        self.assertNotIn('__patterns_for_provider', result.converted.nbt_1182)
+
+    def test_sky_chest_converter_registered(self):
+        """SkyChest zachowuje inventory i ma zarejestrowany konwerter"""
+        result = self.converter.convert_block(
+            'BlockSkyChest',
+            {
+                'inv': {
+                    'item0': {'id': 'minecraft:diamond', 'Count': 3},
+                },
+            },
+            position=(0, 0, 0)
+        )
+
+        self.assertTrue(result.converted.success)
+        self.assertEqual(result.converted.block_id_1182, 'ae2:sky_stone_chest')
+        self.assertIn('inv', result.converted.nbt_1182)
+
+    def test_lossy_fallbacks(self):
+        """Crank i Grinder maja jawne fallbacki poza AE2"""
+        crank = self.converter.convert_block('BlockCrank', {}, position=(0, 0, 0))
+        grinder = self.converter.convert_block('BlockGrinder', {}, position=(0, 0, 0))
+
+        self.assertTrue(crank.converted.success)
+        self.assertEqual(crank.converted.block_id_1182, 'minecraft:lever')
+        self.assertTrue(any('LOSSY' in warning for warning in crank.converted.warnings))
+        self.assertTrue(grinder.converted.success)
+        self.assertEqual(grinder.converted.block_id_1182, 'minecraft:grindstone')
+
+    def test_real_map_utility_converters_accept_metadata(self):
+        """Realne typy utility z mapy przechodza przez glowny konwerter"""
+        cases = {
+            'BlockQuantumLinkChamber': 'ae2:quantum_link',
+            'BlockSecurity': 'ae2:security_station',
+            'BlockWireless': 'ae2:wireless_access_point',
+        }
+
+        for block_id, target in cases.items():
+            with self.subTest(block_id=block_id):
+                result = self.converter.convert_block(
+                    block_id,
+                    {'id': block_id, 'x': 0, 'y': 64, 'z': 0},
+                    metadata=0,
+                    position=(0, 64, 0)
+                )
+
+                self.assertTrue(result.converted.success)
+                self.assertEqual(result.converted.block_id_1182, target)
 
 
 class TestItemConversion(unittest.TestCase):

@@ -1,0 +1,13 @@
+============================================================
+RAPORT POKRYCIA KODU KONWERSJI AE2
+============================================================
+
+PODSUMOWANIE:
+  Pokrycie mapowań: 100.0%
+  Bloki źródłowe: 30
+  Bloki zmapowane: 30
+  Konwertery NBT: 26
+
+REKOMENDACJE:
+  ✅ Wszystkie bloki 1.7.10 mają mapowania
+  ✅ Wszystkie cele 1.18.2 są prawidłowe

@@ -19,6 +19,9 @@ fun main(args: Array<String>) {
     // Parsuj argumenty
     var worldPath: String? = null
     var patchPath: String? = null
+    var applyEventsPath: String? = null
+    var targetWorldPath: String? = null
+    var dryRunEvents = false
     var listRegions = false
     var testRoundtrip = false
     var verifyBlock = false
@@ -34,6 +37,9 @@ fun main(args: Array<String>) {
         when (args[i]) {
             "--world" -> worldPath = args.getOrNull(++i)
             "--patch" -> patchPath = args.getOrNull(++i)
+            "--apply-events" -> applyEventsPath = args.getOrNull(++i)
+            "--target-world" -> targetWorldPath = args.getOrNull(++i)
+            "--dry-run" -> dryRunEvents = true
             "--list-regions" -> listRegions = true
             "--test-roundtrip" -> testRoundtrip = true
             "--verify-block" -> {
@@ -52,6 +58,23 @@ fun main(args: Array<String>) {
     if (showHelp || args.isEmpty()) {
         printHelp()
         System.exit(0)
+        return
+    }
+
+    if (applyEventsPath != null) {
+        if (targetWorldPath == null) {
+            println("Blad: --target-world jest wymagane dla --apply-events")
+            System.exit(1)
+            return
+        }
+        val eventPath = Paths.get(applyEventsPath)
+        val report = if (applyEventsPath.lowercase().endsWith(".jsonl")) {
+            applyEvents1182Jsonl(eventPath, Paths.get(targetWorldPath), dryRunEvents)
+        } else {
+            applyEvents1182(eventPath, Paths.get(targetWorldPath), dryRunEvents)
+        }
+        println(report.toString(2))
+        System.exit(if (report.getInt("failed") == 0) 0 else 1)
         return
     }
     
@@ -299,6 +322,7 @@ fun main(args: Array<String>) {
     // Normalna operacja edycji
     if (worldPath == null || patchPath == null) {
         println("Użycie: java -jar worker.jar --world <path> --patch <path>")
+        println("Lub: java -jar worker.jar --apply-events <events.json> --target-world <path>")
         println("Lub: java -jar worker.jar --world <path> --list-regions")
         println("Lub: java -jar worker.jar --world <path> --test-roundtrip")
         System.exit(1)
@@ -344,6 +368,12 @@ fun main(args: Array<String>) {
                 val nbt = edit.getJSONObject("nbt")
                 editor.setTileEntity(x, y, z, nbt)
             }
+            "remove_te" -> {
+                val x = edit.getInt("x")
+                val y = edit.getInt("y")
+                val z = edit.getInt("z")
+                editor.removeTileEntity(x, y, z)
+            }
             else -> println("Nieznana operacja: $op")
         }
     }
@@ -366,6 +396,7 @@ fun printHelp() {
         
         UŻYCIE:
           java -jar worker.jar --world <path> --patch <path>
+          java -jar worker.jar --apply-events <events.json> --target-world <path> [--dry-run]
           java -jar worker.jar --world <path> --list-regions
           java -jar worker.jar --world <path> --test-roundtrip
           java -jar worker.jar --world <path> --validate-world
@@ -374,6 +405,9 @@ fun printHelp() {
         OPCJE:
           --world <path>           Ścieżka do katalogu świata Minecraft
           --patch <path>           Ścieżka do pliku JSON z opisem zmian
+          --apply-events <path>    Aplikuje Event JSON na świat 1.18.2
+          --target-world <path>    Docelowy katalog świata 1.18.2
+          --dry-run                Walidacja bez zapisu
           --list-regions           Wyświetla listę regionów (Test 1)
           --test-roundtrip         Testuje read/write roundtrip (Test 2)
           --validate-world         Sprawdza świat przed uruchomieniem serwera

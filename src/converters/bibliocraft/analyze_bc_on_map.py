@@ -5,12 +5,12 @@ Zadanie 4: Sprawdzenie pokrycia kodu konwersji
 
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import json
 from pathlib import Path
 from typing import Dict, List, Set, Tuple
-from src.converters.bibliocraft import BiblioCraftChunkParser, find_bc_blocks_in_world
+from converters.bibliocraft import BiblioCraftChunkParser, find_bc_blocks_in_world
 
 # Definicje stref
 STREFY = {
@@ -21,22 +21,9 @@ STREFY = {
     "zsrr": {"x_range": (-2948, -2086), "z_range": (-2857, -1759)},
 }
 
-# Obsługiwane bloki w kodzie (z edge_cases_handler.py)
-OBSŁUGIWANE_BLOKI = {
-    "BiblioCraft:Bookcase", "BiblioCraft:ArmorStand", "BiblioCraft:WeaponCase",
-    "BiblioCraft:PotionShelf", "BiblioCraft:WeaponRack", "BiblioCraft:GenericShelf",
-    "BiblioCraft:Label", "BiblioCraft:WritingDesk", "BiblioCraft:TypeMachine",
-    "BiblioCraft:PrintPress", "BiblioCraft:Table", "BiblioCraft:Seat",
-    "BiblioCraft:Lantern", "BiblioCraft:Lamp", "BiblioCraft:CookieJar",
-    "BiblioCraft:DinnerPlate", "BiblioCraft:DiscRack", "BiblioCraft:MapFrame",
-    "BiblioCraft:FancySign", "BiblioCraft:FancyWorkbench", "BiblioCraft:SwordPedestal",
-    "BiblioCraft:FramedChest", "BiblioCraft:FurniturePaneler", "BiblioCraft:Clock",
-    "BiblioCraft:Painting", "BiblioCraft:PaintPress", "BiblioCraft:Bell",
-    "BiblioCraft:Clipboard", "BiblioCraft:FramedBookcase", "BiblioCraft:FramedShelf",
-    "BiblioCraft:FramedLabel", "BiblioCraft:FramedTable", "BiblioCraft:FramedDesk",
-    "BiblioCraft:FramedSeat", "BiblioCraft:FramedSign", "BiblioCraft:FramedDoor",
-    "BiblioCraft:FramedTrapDoor", "BiblioCraft:FramedFence", "BiblioCraft:FramedGate",
-}
+# Obsługiwane TE IDs (rzeczywiste klucze z MCA 1.7.10)
+from converters.bibliocraft.bc_chunk_parser import BiblioCraftChunkParser
+OBSŁUGIWANE_BLOKI = BiblioCraftChunkParser.KNOWN_BC_TE_IDS
 
 def get_chunks_in_range(x_range: Tuple[int, int], z_range: Tuple[int, int]) -> List[Tuple[int, int]]:
     """Zwraca listę chunków w zakresie"""

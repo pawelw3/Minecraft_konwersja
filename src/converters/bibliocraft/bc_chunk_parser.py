@@ -69,53 +69,45 @@ class BiblioCraftChunkParser:
     Integruje się z AnvilParser aby wykrywać i ekstrahować bloki BC.
     """
     
-    # Prefixy ID bloków BC
-    BC_PREFIXES = [
-        "BiblioCraft",
-        "bibliocraft",
-    ]
-    
-    # Mapowanie nazw bloków
+    # Rzeczywiste ID TileEntity BiblioCraft z plików MCA 1.7.10
+    KNOWN_BC_TE_IDS = {
+        "BookcaseTile", "GenericShelfTile", "PotionShelfTile", "ToolRackTile",
+        "WeaponCaseTile", "SwordPedestalTile", "TableTile", "seatTile",
+        "CookieJarTile", "dinnerPlateTile", "DiscRackTile", "MapFrameTile",
+        "fancySignTile", "WritingDeskTile", "biblioBellTile", "biblioClipboardTile",
+        "biblioTypewriterTile", "PrintPressTile", "biblioPaintingTile", "biblioPaintPressTile",
+        "ArmorStandTile", "biblioClockTile", "LanternTile", "LampTile",
+        "WoodLabelTile", "FramedChestTile",
+    }
+
+    # Mapowanie TE ID → czytelna nazwa bloku
     BC_BLOCK_NAMES = {
-        "BiblioCraft:Bookcase": "Bookcase",
-        "BiblioCraft:ArmorStand": "Armor Stand",
-        "BiblioCraft:WeaponCase": "Display Case",
-        "BiblioCraft:PotionShelf": "Potion Shelf",
-        "BiblioCraft:WeaponRack": "Tool Rack",
-        "BiblioCraft:GenericShelf": "Shelf",
-        "BiblioCraft:Label": "Wood Label",
-        "BiblioCraft:WritingDesk": "Desk",
-        "BiblioCraft:TypeMachine": "Typesetting Table",
-        "BiblioCraft:PrintPress": "Printing Press",
-        "BiblioCraft:Table": "Table",
-        "BiblioCraft:Seat": "Seat",
-        "BiblioCraft:Lantern": "Fancy Lantern",
-        "BiblioCraft:Lamp": "Fancy Lamp",
-        "BiblioCraft:CookieJar": "Cookie Jar",
-        "BiblioCraft:DinnerPlate": "Dinner Plate",
-        "BiblioCraft:DiscRack": "Disc Rack",
-        "BiblioCraft:MapFrame": "Map Frame",
-        "BiblioCraft:FancySign": "Fancy Sign",
-        "BiblioCraft:FancyWorkbench": "Fancy Workbench",
-        "BiblioCraft:SwordPedestal": "Sword Pedestal",
-        "BiblioCraft:FramedChest": "Framed Chest",
-        "BiblioCraft:FurniturePaneler": "Furniture Paneler",
-        "BiblioCraft:Clock": "Clock",
-        "BiblioCraft:Painting": "Painting",
-        "BiblioCraft:PaintPress": "Paint Press",
-        "BiblioCraft:Bell": "Bell",
-        "BiblioCraft:Clipboard": "Clipboard",
-        "BiblioCraft:FramedBookcase": "Framed Bookcase",
-        "BiblioCraft:FramedShelf": "Framed Shelf",
-        "BiblioCraft:FramedLabel": "Framed Label",
-        "BiblioCraft:FramedTable": "Framed Table",
-        "BiblioCraft:FramedDesk": "Framed Desk",
-        "BiblioCraft:FramedSeat": "Framed Seat",
-        "BiblioCraft:FramedSign": "Framed Sign",
-        "BiblioCraft:FramedDoor": "Framed Door",
-        "BiblioCraft:FramedTrapDoor": "Framed TrapDoor",
-        "BiblioCraft:FramedFence": "Framed Fence",
-        "BiblioCraft:FramedGate": "Framed Gate",
+        "BookcaseTile":        "Bookcase",
+        "ArmorStandTile":      "Armor Stand",
+        "WeaponCaseTile":      "Display Case",
+        "PotionShelfTile":     "Potion Shelf",
+        "ToolRackTile":        "Tool Rack",
+        "GenericShelfTile":    "Shelf",
+        "WoodLabelTile":       "Wood Label",
+        "WritingDeskTile":     "Writing Desk",
+        "biblioTypewriterTile":"Typewriter",
+        "PrintPressTile":      "Printing Press",
+        "TableTile":           "Table",
+        "seatTile":            "Seat",
+        "LanternTile":         "Fancy Lantern",
+        "LampTile":            "Fancy Lamp",
+        "CookieJarTile":       "Cookie Jar",
+        "dinnerPlateTile":     "Dinner Plate",
+        "DiscRackTile":        "Disc Rack",
+        "MapFrameTile":        "Map Frame",
+        "fancySignTile":       "Fancy Sign",
+        "SwordPedestalTile":   "Sword Pedestal",
+        "FramedChestTile":     "Framed Chest",
+        "biblioClockTile":     "Clock",
+        "biblioPaintingTile":  "Painting",
+        "biblioPaintPressTile":"Paint Press",
+        "biblioBellTile":      "Bell",
+        "biblioClipboardTile": "Clipboard",
     }
     
     def __init__(self, world_path: str):
@@ -165,8 +157,10 @@ class BiblioCraftChunkParser:
             if not parser:
                 return result
             
-            # Pobierz dane chunka
-            chunk_data = parser.get_chunk(chunk_x, chunk_z)
+            # Pobierz dane chunka — AnvilParser używa lokalnych współrzędnych (0-31)
+            local_x = chunk_x % 32
+            local_z = chunk_z % 32
+            chunk_data = parser.get_chunk(local_x, local_z)
             if not chunk_data:
                 return result
             
@@ -266,15 +260,7 @@ class BiblioCraftChunkParser:
     def _is_bc_tile_entity(self, te_data: Dict) -> bool:
         """Sprawdza czy TileEntity należy do BiblioCraft"""
         te_id = self._get_te_id(te_data)
-        if not te_id:
-            return False
-        
-        # Sprawdź prefixy
-        for prefix in self.BC_PREFIXES:
-            if te_id.startswith(prefix):
-                return True
-        
-        return False
+        return te_id in self.KNOWN_BC_TE_IDS
     
     def _get_te_id(self, te_data: Dict) -> str:
         """Wyciąga ID z danych TileEntity"""

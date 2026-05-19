@@ -1,0 +1,1 @@
+"""Testy konwertera Mekanism."""

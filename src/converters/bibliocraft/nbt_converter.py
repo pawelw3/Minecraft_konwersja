@@ -42,24 +42,26 @@ class BC1170NBTReader:
     BLOCK_ID_MAP = {
         # Bloki podstawowe
         "BiblioCraft:Bookcase": "supplementaries:book_pile",
-        "BiblioCraft:ArmorStand": "minecraft:armor_stand",  # Vanilla
+        "BiblioCraft:ArmorStand": "minecraft:air",  # Encja w 1.18.2 — blok usuwany, dane do spawnu encji w tile_entity
         "BiblioCraft:WeaponCase": "supplementaries:pedestal",
         "BiblioCraft:PotionShelf": "supplementaries:item_shelf",
         "BiblioCraft:WeaponRack": "supplementaries:item_shelf",
         "BiblioCraft:GenericShelf": "supplementaries:item_shelf",
         "BiblioCraft:Label": "supplementaries:sign_post",  # Alternatywa
         "BiblioCraft:WritingDesk": "minecraft:oak_planks",  # Brak odpowiednika
-        "BiblioCraft:TypeMachine": "minecraft:oak_planks",  # Brak funkcji
+        "BiblioCraft:TypeMachine": "minecraft:oak_planks",      # Brak funkcji (alias historyczny)
+        "BiblioCraft:Typewriter": "minecraft:oak_planks",       # Poprawna nazwa bloku w BC source
+        "BiblioCraft:TypesettingTable": "minecraft:oak_planks", # Osobny blok BC (stół składu)
         "BiblioCraft:PrintPress": "minecraft:oak_planks",   # Brak funkcji
         "BiblioCraft:Table": "supplementaries:pedestal",
         "BiblioCraft:Seat": "minecraft:oak_stairs",  # Alternatywa
         "BiblioCraft:Lantern": "supplementaries:wall_lantern",
-        "BiblioCraft:Lamp": "supplementaries:end_lamp",
+        "BiblioCraft:Lamp": "supplementaries:end_stone_lamp",
         "BiblioCraft:CookieJar": "supplementaries:jar",
-        "BiblioCraft:DinnerPlate": "supplementaries:plate",
+        "BiblioCraft:DinnerPlate": "supplementaries:pedestal",
         "BiblioCraft:DiscRack": "minecraft:jukebox",
-        "BiblioCraft:MapFrame": "supplementaries:frame",
-        "BiblioCraft:FancySign": "supplementaries:hanging_sign",
+        "BiblioCraft:MapFrame": "supplementaries:timber_frame",  # Brak odpowiednika funkcjonalnego; dane mapy utracone
+        "BiblioCraft:FancySign": "supplementaries:hanging_sign_oak",
         "BiblioCraft:FancyWorkbench": "minecraft:crafting_table",
         "BiblioCraft:SwordPedestal": "supplementaries:pedestal",
         "BiblioCraft:FramedChest": "framedblocks:framed_chest",
@@ -81,6 +83,33 @@ class BC1170NBTReader:
         "BiblioCraft:FramedTrapDoor": "framedblocks:framed_trapdoor",
         "BiblioCraft:FramedFence": "framedblocks:framed_fence",
         "BiblioCraft:FramedGate": "framedblocks:framed_gate",
+        # Mapowania po rzeczywistym ID TileEntity z plików MCA 1.7.10
+        "BookcaseTile": "supplementaries:book_pile",
+        "GenericShelfTile": "supplementaries:item_shelf",
+        "PotionShelfTile": "supplementaries:item_shelf",
+        "ToolRackTile": "supplementaries:item_shelf",
+        "WeaponCaseTile": "supplementaries:pedestal",
+        "SwordPedestalTile": "supplementaries:pedestal",
+        "TableTile": "supplementaries:pedestal",
+        "seatTile": "minecraft:oak_stairs",
+        "CookieJarTile": "supplementaries:jar",
+        "dinnerPlateTile": "supplementaries:pedestal",
+        "DiscRackTile": "minecraft:jukebox",
+        "MapFrameTile": "supplementaries:timber_frame",
+        "fancySignTile": "supplementaries:hanging_sign_oak",
+        "WritingDeskTile": "minecraft:oak_planks",
+        "biblioBellTile": "minecraft:bell",
+        "biblioClipboardTile": "supplementaries:notice_board",
+        "biblioTypewriterTile": "minecraft:oak_planks",
+        "PrintPressTile": "minecraft:oak_planks",
+        "biblioPaintingTile": "immersive_paintings:painting",
+        "biblioPaintPressTile": "minecraft:oak_planks",
+        "ArmorStandTile": "minecraft:air",
+        "biblioClockTile": "supplementaries:clock_block",
+        "LanternTile": "supplementaries:wall_lantern",
+        "LampTile": "supplementaries:end_stone_lamp",
+        "WoodLabelTile": "supplementaries:sign_post",
+        "FramedChestTile": "framedblocks:framed_chest",
     }
     
     def __init__(self):
@@ -115,10 +144,10 @@ class BC1170NBTReader:
         elif "ArmorStand" in te_id:
             result["armor_items"] = self._read_items(nbt_data.get("armorItems", []))
             
-        elif "Shelf" in te_id or "WeaponRack" in te_id:
-            result["items"] = self._read_items(nbt_data.get("shelfItems", []))
+        elif "Shelf" in te_id or "WeaponRack" in te_id or "ToolRack" in te_id:
+            result["items"] = self._read_items(nbt_data.get("Items", nbt_data.get("shelfItems", [])))
             
-        elif "FancySign" in te_id:
+        elif "FancySign" in te_id or "fancySign" in te_id:
             result["sign_text"] = nbt_data.get("signText", "")
             result["text_scale"] = nbt_data.get("textScale", 1.0)
             
@@ -131,9 +160,16 @@ class BC1170NBTReader:
             result["items"] = self._read_items(nbt_data.get("Items", []))
             
         elif "Label" in te_id:
-            result["slot_item"] = self._read_item(nbt_data.get("slotItem", {}))
+            result["items"] = self._read_items(nbt_data.get("Items", []))
             result["text"] = nbt_data.get("text", "")
-            
+
+        elif "Clipboard" in te_id:
+            result["text"] = nbt_data.get("text", "")
+            result["title"] = nbt_data.get("title", "")
+
+        elif "DiscRack" in te_id:
+            result["items"] = self._read_items(nbt_data.get("Items", []))
+
         elif "Painting" in te_id:
             result["resource_location"] = nbt_data.get("resourceLocation", "")
             result["painting_type"] = nbt_data.get("paintingType", "custom")
@@ -321,6 +357,62 @@ class BC1182NBTWriter:
         
         return nbt
     
+    def write_sign_post_label(self, bc_data: Dict, pos: Tuple[int, int, int]) -> Dict:
+        """
+        Zapisuje Label z BC jako SignPost z Supplementaries.
+
+        BC Label (3 display items + text) -> supplementaries:sign_post (tekst).
+        Przedmioty są tracone — sign_post nie przechowuje itemów w NBT.
+        """
+        text = bc_data.get("text", "")
+        return {
+            "id": "supplementaries:sign_post",
+            "x": pos[0],
+            "y": pos[1],
+            "z": pos[2],
+            "Text": f'{{"text":"{text}"}}',
+        }
+
+    def write_notice_board(self, bc_data: Dict, pos: Tuple[int, int, int]) -> Dict:
+        """
+        Zapisuje Clipboard z BC jako NoticeBoard z Supplementaries.
+
+        BC Clipboard (tekst notatki) -> supplementaries:notice_board.
+        """
+        text = bc_data.get("text", "")
+        title = bc_data.get("title", "")
+        return {
+            "id": "supplementaries:notice_board",
+            "x": pos[0],
+            "y": pos[1],
+            "z": pos[2],
+            "Text": text,
+            "Title": title,
+        }
+
+    def write_jukebox_disc(self, bc_data: Dict, pos: Tuple[int, int, int]) -> Dict:
+        """
+        Zapisuje DiscRack z BC jako Jukebox vanilla.
+
+        BC DiscRack (9 dysków) -> minecraft:jukebox (1 slot).
+        Tylko pierwsza płyta jest zachowana; pozostałe są tracone.
+        """
+        items = bc_data.get("items", [])
+        nbt = {
+            "id": "minecraft:jukebox",
+            "x": pos[0],
+            "y": pos[1],
+            "z": pos[2],
+            "IsPlaying": False,
+        }
+        first = next((i for i in items if i and i.get("id")), None)
+        if first:
+            nbt["RecordItem"] = {
+                "id": self._convert_item_id(first["id"]),
+                "Count": 1,
+            }
+        return nbt
+
     def _write_items_with_slots(self, items: List[Dict]) -> List[Dict]:
         """Zapisuje itemy z polami Slot dla BlockEntity"""
         result = []
@@ -362,6 +454,18 @@ class BC1182NBTWriter:
             return f"minecraft:{item_id_1710.lower()}"
         return item_id_1710
     
+    def write_simple_block(self, bc_data: Dict, pos: Tuple[int, int, int], target_id: str) -> Dict:
+        """
+        Zapisuje blok bez złożonych danych NBT — tylko pozycja i ID.
+        Używane dla bloków, których stan nie wymaga migracji danych (Clock, Lantern, itp.)
+        """
+        return {
+            "id": target_id,
+            "x": pos[0],
+            "y": pos[1],
+            "z": pos[2],
+        }
+
     def _convert_bc_texture_to_camo_state(self, bc_texture: str) -> Dict:
         """Konwertuje teksturę BC na camo_state FramedBlocks"""
         if not bc_texture:
@@ -413,25 +517,28 @@ class BiblioCraftNBTConverter:
     Koordynuje proces konwersji między readerem a writerem.
     """
     
-    # Mapowanie typów BC na metody writer
+    # Mapowanie rzeczywistych TE IDs z MCA 1.7.10 na metody writer
     CONVERSION_MAP = {
-        "TileEntityBookcase": ("supplementaries", "write_supplementaries_book_pile"),
-        "TileEntityGenericShelf": ("supplementaries", "write_supplementaries_item_shelf"),
-        "TileEntityPotionShelf": ("supplementaries", "write_supplementaries_item_shelf"),
-        "TileEntityWeaponRack": ("supplementaries", "write_supplementaries_item_shelf"),
-        "TileEntityWeaponCase": ("supplementaries", "write_supplementaries_pedestal"),
-        "TileEntitySwordPedestal": ("supplementaries", "write_supplementaries_pedestal"),
-        "TileEntityTable": ("supplementaries", "write_supplementaries_pedestal"),
-        "TileEntityCookieJar": ("supplementaries", "write_supplementaries_jar"),
-        "TileEntityDinnerPlate": ("supplementaries", "write_supplementaries_pedestal"),
-        "TileEntityFramedChest": ("framedblocks", "write_framed_block", "framed_chest"),
-        "TileEntityArmorStand": ("vanilla_entity", "write_vanilla_armor_stand"),
-        "TileEntityPainting": ("immersive_paintings", "write_immersive_painting"),
-        "TileEntityClock": ("supplementaries", "write_simple_block", "supplementaries:clock_block"),
-        "TileEntityFancySign": ("supplementaries", "write_simple_block", "supplementaries:hanging_sign"),
-        "TileEntityMapFrame": ("supplementaries", "write_simple_block", "supplementaries:frame"),
-        "TileEntityLantern": ("supplementaries", "write_simple_block", "supplementaries:wall_lantern"),
-        "TileEntityLamp": ("supplementaries", "write_simple_block", "supplementaries:end_lamp"),
+        "BookcaseTile":        ("supplementaries",      "write_supplementaries_book_pile"),
+        "GenericShelfTile":    ("supplementaries",      "write_supplementaries_item_shelf"),
+        "PotionShelfTile":     ("supplementaries",      "write_supplementaries_item_shelf"),
+        "ToolRackTile":        ("supplementaries",      "write_supplementaries_item_shelf"),
+        "WeaponCaseTile":      ("supplementaries",      "write_supplementaries_pedestal"),
+        "SwordPedestalTile":   ("supplementaries",      "write_supplementaries_pedestal"),
+        "TableTile":           ("supplementaries",      "write_supplementaries_pedestal"),
+        "CookieJarTile":       ("supplementaries",      "write_supplementaries_jar"),
+        "dinnerPlateTile":     ("supplementaries",      "write_supplementaries_pedestal"),
+        "FramedChestTile":     ("framedblocks",         "write_framed_block", "framed_chest"),
+        "ArmorStandTile":      ("vanilla_entity",       "write_vanilla_armor_stand"),
+        "biblioPaintingTile":  ("immersive_paintings",  "write_immersive_painting"),
+        "WoodLabelTile":       ("supplementaries",      "write_sign_post_label"),
+        "biblioClipboardTile": ("supplementaries",      "write_notice_board"),
+        "DiscRackTile":        ("supplementaries",      "write_jukebox_disc"),
+        "biblioClockTile":     ("supplementaries",      "write_simple_block", "supplementaries:clock_block"),
+        "fancySignTile":       ("supplementaries",      "write_simple_block", "supplementaries:hanging_sign_oak"),
+        "MapFrameTile":        ("supplementaries",      "write_simple_block", "supplementaries:timber_frame"),
+        "LanternTile":         ("supplementaries",      "write_simple_block", "supplementaries:wall_lantern"),
+        "LampTile":            ("supplementaries",      "write_simple_block", "supplementaries:end_stone_lamp"),
     }
     
     def __init__(self):
@@ -503,10 +610,23 @@ class BiblioCraftNBTConverter:
         target_block_id = self.reader.get_target_block_id(block_id)
         
         notes = []
-        if "Bookcase" in bc_data.get("id", ""):
+        te_id = bc_data.get("id", "")
+        if "Bookcase" in te_id:
             book_count = bc_data.get("book_count", 0)
             if book_count > 4:
                 notes.append(f"UWAGA: Tylko 4 z {book_count} książek zmieściły się")
+        elif "MapFrame" in te_id:
+            notes.append("STRATA DANYCH: Dane mapy utracone — brak odpowiednika funkcjonalnego w 1.18.2. Zamieniono na supplementaries:timber_frame")
+        elif "Label" in te_id:
+            item_count = len(bc_data.get("items", []))
+            if item_count:
+                notes.append(f"STRATA DANYCH: {item_count} przedmiot(ów) z Label utracono — supplementaries:sign_post nie przechowuje itemów")
+        elif "DiscRack" in te_id:
+            disc_count = len([i for i in bc_data.get("items", []) if i and i.get("id")])
+            if disc_count > 1:
+                notes.append(f"STRATA DANYCH: Tylko 1 z {disc_count} płyt zmieściła się w jukebox")
+        elif "ArmorStand" in te_id:
+            notes.append("ENCJA: Armor Stand to encja w 1.18.2 — blok usunięty (minecraft:air), dane zbroi w tile_entity do spawnu encji osobnym narzędziem")
         
         return ConvertedBlock(
             x=pos[0],

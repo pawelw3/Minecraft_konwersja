@@ -1,0 +1,209 @@
+"""Glowny konwerter Mekanism core 1.7.10 -> 1.18.2."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+from .conversion_event import ConversionEvent
+from .mappings import BlockMapping, get_block_mapping, get_mapping_for_te_id, is_mekanism_block
+from .nbt_converters import (
+    BinConverter,
+    DigitalMinerConverter,
+    EnergyCubeConverter,
+    FactoryConverter,
+    FrequencyConverter,
+    GasTankConverter,
+    IdentityMekanismConverter,
+    MachineConverter,
+    MultiblockConverter,
+    NBTConversionResult,
+)
+from .nbt_converters.machine_converters import ChemicalMachineConverter
+
+
+@dataclass
+class ConversionResult:
+    success: bool
+    block_id_1182: str | None = None
+    blockstate_props: dict[str, str] = field(default_factory=dict)
+    nbt_1182: dict[str, Any] | None = None
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+    event: ConversionEvent | None = None
+
+
+@dataclass
+class MekanismBlockConversion:
+    original_id: str
+    original_pos: tuple[int, int, int]
+    metadata: int
+    converted: ConversionResult
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "original_id": self.original_id,
+            "original_pos": self.original_pos,
+            "metadata": self.metadata,
+            "new_id": self.converted.block_id_1182,
+            "blockstate_props": self.converted.blockstate_props,
+            "nbt": self.converted.nbt_1182,
+            "errors": self.converted.errors,
+            "warnings": self.converted.warnings,
+            "event": self.converted.event.to_dict() if self.converted.event else None,
+        }
+
+
+class MekanismConverter:
+    SOURCE_VERSION = "1.7.10"
+    TARGET_VERSION = "1.18.2"
+
+    def __init__(self) -> None:
+        self.nbt_converters = {
+            "identity": IdentityMekanismConverter(),
+            "machine": MachineConverter(),
+            "chemical_machine": ChemicalMachineConverter(),
+            "factory": FactoryConverter(),
+            "energy_cube": EnergyCubeConverter(),
+            "gas_tank": GasTankConverter(),
+            "bin": BinConverter(),
+            "digital_miner": DigitalMinerConverter(),
+            "frequency": FrequencyConverter(),
+            "multiblock": MultiblockConverter(),
+            "fluid_tank": MachineConverter(),
+        }
+        self.events: list[ConversionEvent] = []
+        self.stats = {"processed": 0, "converted": 0, "failed": 0, "warnings": 0}
+
+    def convert_block(
+        self,
+        block_id_1710: str,
+        metadata: int = 0,
+        nbt_1710: dict[str, Any] | None = None,
+        position: tuple[int, int, int] = (0, 0, 0),
+    ) -> MekanismBlockConversion:
+        self.stats["processed"] += 1
+        mapping = self._resolve_mapping(block_id_1710, metadata, nbt_1710)
+        if not mapping:
+            message = f"MEK-E-BLOCK-NOT-MAPPED: brak mapowania dla {block_id_1710} meta={metadata}"
+            self.stats["failed"] += 1
+            result = ConversionResult(False, errors=[message])
+            return MekanismBlockConversion(block_id_1710, position, metadata, result)
+
+        nbt_result = (
+            self._convert_nbt(mapping, nbt_1710, block_id_1710, metadata)
+            if nbt_1710 and mapping.has_block_entity
+            else None
+        )
+        warnings = list(mapping.notes and [f"MEK-W-MAPPING-NOTE: {mapping.notes}"] or [])
+        errors: list[str] = []
+        if nbt_result:
+            warnings.extend(nbt_result.warnings)
+            errors.extend(nbt_result.errors)
+
+        success = not errors
+        self.stats["converted" if success else "failed"] += 1
+        self.stats["warnings"] += len(warnings)
+
+        event = self._make_event(
+            mapping=mapping,
+            source_block_id=block_id_1710,
+            metadata=metadata,
+            position=position,
+            nbt_1710=nbt_1710,
+            nbt_result=nbt_result,
+            warnings=warnings,
+            errors=errors,
+        )
+        self.events.append(event)
+
+        return MekanismBlockConversion(
+            original_id=block_id_1710,
+            original_pos=position,
+            metadata=metadata,
+            converted=ConversionResult(
+                success=success,
+                block_id_1182=mapping.target_block_id,
+                blockstate_props=nbt_result.blockstate_props if nbt_result else {},
+                nbt_1182=nbt_result.converted_nbt if nbt_result else None,
+                errors=errors,
+                warnings=warnings,
+                event=event,
+            ),
+        )
+
+    def convert_tile_entity(
+        self,
+        te_id: str,
+        nbt_1710: dict[str, Any],
+        metadata: int = 0,
+        position: tuple[int, int, int] = (0, 0, 0),
+    ) -> MekanismBlockConversion:
+        return self.convert_block(te_id, metadata, nbt_1710, position)
+
+    def convert_item(self, item_id_1710: str, damage: int = 0, nbt: dict[str, Any] | None = None) -> ConversionResult:
+        converter = IdentityMekanismConverter()
+        item_id_1182 = converter._convert_item_id(item_id_1710, damage)
+        return ConversionResult(True, block_id_1182=item_id_1182, nbt_1182=nbt)
+
+    def _resolve_mapping(self, block_id_1710: str, metadata: int, nbt_1710: dict[str, Any] | None) -> BlockMapping | None:
+        if nbt_1710 and nbt_1710.get("id"):
+            by_te = get_mapping_for_te_id(str(nbt_1710["id"]), metadata, nbt_1710)
+            if by_te:
+                return by_te
+        if block_id_1710 in self._known_te_ids():
+            return get_mapping_for_te_id(block_id_1710, metadata, nbt_1710)
+        return get_block_mapping(block_id_1710, metadata, nbt_1710)
+
+    def _convert_nbt(
+        self,
+        mapping: BlockMapping,
+        nbt_1710: dict[str, Any],
+        block_id_1710: str,
+        metadata: int,
+    ) -> NBTConversionResult:
+        converter = self.nbt_converters.get(mapping.nbt_converter, self.nbt_converters["identity"])
+        return converter.convert(nbt_1710, mapping.target_block_id, block_id_1710, metadata)
+
+    def _make_event(
+        self,
+        mapping: BlockMapping,
+        source_block_id: str,
+        metadata: int,
+        position: tuple[int, int, int],
+        nbt_1710: dict[str, Any] | None,
+        nbt_result: NBTConversionResult | None,
+        warnings: list[str],
+        errors: list[str],
+    ) -> ConversionEvent:
+        return ConversionEvent(
+            mod="mekanism",
+            source_version=self.SOURCE_VERSION,
+            target_version=self.TARGET_VERSION,
+            event_type="block_entity" if mapping.has_block_entity else "block",
+            source_block_id=source_block_id,
+            source_metadata=metadata,
+            target_block_id=mapping.target_block_id,
+            position=position,
+            source_te_id=str(nbt_1710.get("id")) if nbt_1710 and nbt_1710.get("id") else None,
+            target_te_id=mapping.target_block_id if mapping.has_block_entity else None,
+            nbt_1182=nbt_result.converted_nbt if nbt_result else None,
+            blockstate_props=nbt_result.blockstate_props if nbt_result else {},
+            warnings=warnings,
+            errors=errors,
+        )
+
+    def is_mekanism_block(self, block_id: str) -> bool:
+        return is_mekanism_block(block_id)
+
+    def get_events(self) -> list[ConversionEvent]:
+        return list(self.events)
+
+    def reset(self) -> None:
+        self.events.clear()
+        self.stats = {"processed": 0, "converted": 0, "failed": 0, "warnings": 0}
+
+    def _known_te_ids(self) -> set[str]:
+        from .mappings import TE_ID_TO_MAPPING_KEY
+
+        return set(TE_ID_TO_MAPPING_KEY)

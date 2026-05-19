@@ -12,6 +12,7 @@ import json
 
 from .mappings import get_block_mapping, get_item_mapping
 from .mappings.block_mappings import (
+    normalize_block_id,
     resolve_crafting_storage_variant,
     resolve_crafting_unit_variant,
     ALL_AE2_BLOCK_IDS_1710
@@ -132,6 +133,7 @@ class AE2Converter:
             'controller': IdentityConverter(),
             'drive': DriveConverter(),
             'chest': DriveConverter(),  # Chest dziedziczy z Drive
+            'sky_chest': ChestConverter(),
             'energy_acceptor': IdentityConverter(),
             'energy_cell': IdentityConverter(),
             
@@ -204,8 +206,10 @@ class AE2Converter:
         self.errors.clear()
         self.warnings.clear()
         
+        normalized_block_id = normalize_block_id(block_id_1710)
+
         # Krok 1: Znajdź mapowanie bloku
-        mapping = get_block_mapping(block_id_1710)
+        mapping = get_block_mapping(normalized_block_id)
         if not mapping:
             error_msg = f"AE2C-E-BLOCK-NOT-MAPPED: Nie znaleziono mapowania dla {block_id_1710}"
             self.errors.append(error_msg)
@@ -219,9 +223,7 @@ class AE2Converter:
             )
         
         # Krok 2: Rozwiąż warianty (np. Crafting Storage)
-        block_id_1182 = mapping.id_1182
-        if metadata > 0:
-            block_id_1182 = self._resolve_variant(block_id_1710, metadata)
+        block_id_1182 = self._resolve_variant(normalized_block_id, metadata)
         
         # Krok 3: Konwertuj NBT (z metadata!)
         nbt_result = None
@@ -229,7 +231,7 @@ class AE2Converter:
             nbt_result = self._convert_nbt(
                 mapping.nbt_converter or 'default',
                 nbt_1710,
-                block_id_1710,
+                normalized_block_id,
                 metadata
             )
         
@@ -256,6 +258,12 @@ class AE2Converter:
                 
                 # Usuń patterny z Interface (bo są w Provider)
                 del nbt_result.converted_nbt['__patterns_for_provider']
+
+        if block_id_1182 in {'minecraft:lever', 'minecraft:grindstone'}:
+            self.warnings.append(
+                f"AE2C-W-LOSSY-FALLBACK: {normalized_block_id} -> {block_id_1182}; "
+                "AE2 11.7.6 nie ma odpowiednika 1:1"
+            )
         
         # Krok 5: Ekstrahuj blockstate_props (orientacja z NBT)
         blockstate_props = {}
@@ -274,7 +282,7 @@ class AE2Converter:
             nbt_1182=nbt_result.converted_nbt if nbt_result else None,
             additional_blocks=additional_blocks,
             errors=nbt_result.errors if nbt_result else [],
-            warnings=nbt_result.warnings if nbt_result else []
+            warnings=(nbt_result.warnings if nbt_result else []) + self.warnings
         )
         
         return AE2BlockConversion(
@@ -342,7 +350,7 @@ class AE2Converter:
             return new_id
         
         # Domyślnie zwróć bazowe mapowanie
-        mapping = get_block_mapping(block_id_1710)
+        mapping = get_block_mapping(normalize_block_id(block_id_1710))
         return mapping.id_1182 if mapping else block_id_1710
     
     def _find_adjacent_position(self, pos: Tuple[int, int, int], 
@@ -378,7 +386,7 @@ class AE2Converter:
     
     def is_ae2_block(self, block_id: str) -> bool:
         """Sprawdza czy blok należy do AE2"""
-        return block_id in ALL_AE2_BLOCK_IDS_1710
+        return normalize_block_id(block_id) in ALL_AE2_BLOCK_IDS_1710
     
     def get_supported_blocks(self) -> List[str]:
         """Zwraca listę obsługiwanych bloków AE2"""

@@ -62,7 +62,7 @@ AE2_BLOCKS_1710_FROM_SOURCE = {
     "appliedenergistics2:tile.BlockSkyChest",
     "appliedenergistics2:tile.BlockTinyTNT",
     "appliedenergistics2:tile.BlockLightDetector",
-    "appliedenergistics2:tile.BlockQuartzFixture",
+    "appliedenergistics2:tile.BlockQuartzTorch",
     
     # Wireless & Security
     "appliedenergistics2:tile.BlockWireless",
@@ -86,11 +86,11 @@ AE2_BLOCKS_1182_FROM_SOURCE = {
     # Crafting
     "ae2:crafting_unit",
     "ae2:crafting_accelerator",
-    "ae2:crafting_unit_1k",
-    "ae2:crafting_unit_4k",
-    "ae2:crafting_unit_16k",
-    "ae2:crafting_unit_64k",
-    "ae2:crafting_unit_256k",  # Nowy w 1.18.2!
+    "ae2:1k_crafting_storage",
+    "ae2:4k_crafting_storage",
+    "ae2:16k_crafting_storage",
+    "ae2:64k_crafting_storage",
+    "ae2:256k_crafting_storage",  # Nowy w 1.18.2!
     "ae2:crafting_monitor",
     "ae2:molecular_assembler",
     
@@ -114,8 +114,8 @@ AE2_BLOCKS_1182_FROM_SOURCE = {
     "ae2:vibration_chamber",
     "ae2:quartz_growth_accelerator",
     "ae2:condenser",
-    "ae2:grindstone",
-    "ae2:crank",
+    "minecraft:grindstone",
+    "minecraft:lever",
     "ae2:sky_stone_chest",
     "ae2:tiny_tnt",
     "ae2:light_detector",
@@ -127,7 +127,7 @@ AE2_BLOCKS_1182_FROM_SOURCE = {
     "ae2:security_station",
     
     # Cable Bus
-    "ae2:cable_bus",
+    "ae2:fluix_block",
 }
 
 
@@ -139,11 +139,12 @@ def check_mapping_coverage():
     print("="*60)
     
     # 1. Sprawdź czy wszystkie bloki 1.7.10 mają mapowania
-    missing_1710 = AE2_BLOCKS_1710_FROM_SOURCE - ALL_AE2_BLOCK_IDS_1710
+    canonical_mapped_1710 = set(BLOCK_MAPPINGS_1710_TO_1182.keys())
+    missing_1710 = AE2_BLOCKS_1710_FROM_SOURCE - canonical_mapped_1710
     
     print("\n1. Bloki 1.7.10 z kodu źródłowego:")
     print(f"   Oczekiwane: {len(AE2_BLOCKS_1710_FROM_SOURCE)}")
-    print(f"   Zmapowane:  {len(ALL_AE2_BLOCK_IDS_1710)}")
+    print(f"   Zmapowane:  {len(canonical_mapped_1710)}")
     
     if missing_1710:
         print(f"\n   ❌ BRAKUJE mapowań dla {len(missing_1710)} bloków:")
@@ -216,6 +217,7 @@ def check_nbt_converters():
         'condenser': 'Matter Condenser',
         'wireless_ap': 'Wireless Access Point',
         'security_station': 'Security Station',
+        'sky_chest': 'Sky Chest',
         'cable_bus': 'Cable Bus',
     }
     
@@ -306,7 +308,7 @@ def generate_coverage_report():
     report = {
         'block_mappings': {
             'source_1710_blocks': len(AE2_BLOCKS_1710_FROM_SOURCE),
-            'mapped_blocks': len(ALL_AE2_BLOCK_IDS_1710),
+            'mapped_blocks': len(BLOCK_MAPPINGS_1710_TO_1182),
             'missing_mappings': list(mapping_results['missing_1710']),
             'target_1182_blocks': len(AE2_BLOCKS_1182_FROM_SOURCE),
             'defined_targets': len(ALL_AE2_BLOCK_IDS_1182),
@@ -318,17 +320,17 @@ def generate_coverage_report():
             'count': len(converters)
         },
         'coverage_percentage': (
-            (len(ALL_AE2_BLOCK_IDS_1710) / len(AE2_BLOCKS_1710_FROM_SOURCE) * 100)
+            (len(BLOCK_MAPPINGS_1710_TO_1182) / len(AE2_BLOCKS_1710_FROM_SOURCE) * 100)
             if AE2_BLOCKS_1710_FROM_SOURCE else 0
         )
     }
     
     import json
-    with open(output_dir / "coverage_report.json", 'w') as f:
+    with open(output_dir / "coverage_report.json", 'w', encoding='utf-8') as f:
         json.dump(report, f, indent=2)
     
     # Zapisz raport tekstowy
-    with open(output_dir / "coverage_report.txt", 'w') as f:
+    with open(output_dir / "coverage_report.txt", 'w', encoding='utf-8') as f:
         f.write("="*60 + "\n")
         f.write("RAPORT POKRYCIA KODU KONWERSJI AE2\n")
         f.write("="*60 + "\n\n")

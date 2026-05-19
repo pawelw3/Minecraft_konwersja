@@ -1,3 +1,5 @@
-tile.cuttableBlock.name=Przycięty Blok
-item.cuttingTool.name=Narzędzie do Cięcia
+tile.cuttableBlock.name=Przyciety Blok
+tile.collapsibleBlock.name=Blok Skladany
+item.cuttingTool.name=Narzedzie do Ciecia
+item.collapsibleHammer.name=Mlot Skladany
 itemGroup.cuttableblocks=Cuttable Blocks

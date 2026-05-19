@@ -233,7 +233,8 @@ class SecurityStationConverter(BaseNBTConverter):
     def converter_name(self) -> str:
         return "security_station"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT Security Station.
         
@@ -296,7 +297,8 @@ class WirelessAccessPointConverter(BaseNBTConverter):
     def converter_name(self) -> str:
         return "wireless_ap"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT Wireless Access Point.
         
@@ -335,7 +337,8 @@ class QuantumBridgeConverter(BaseNBTConverter):
     def converter_name(self) -> str:
         return "quantum_link"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT Quantum Link Chamber.
         
@@ -377,7 +380,8 @@ class SpatialIOPortConverter(BaseNBTConverter):
     def converter_name(self) -> str:
         return "spatial_io_port"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """Konwertuje NBT Spatial IO Port"""
         self.reset()
         

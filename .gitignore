@@ -171,10 +171,18 @@ old/
 # Dystrybucje JVM workera (generowane przez gradle)
 jvm/worker/build/distributions/
 
+# Forge placeholder mod build artifacts
+jvm/placeholder_mod_1182/build/
+jvm/placeholder_mod_1182/.gradle/
+jvm/placeholder_mod_1182/run/
+
 # Backupy światów (duże ZIPy)
 headless_server/*/*.zip
 headless_server/*/world-*/
 headless_server/*/spiral_*/
+
+# ZSRR placeholder test world
+headless_server/1.7.10/zsrr_placeholder_test/
 
 # ----------------------------------------------------------------------------
 # ARCHIWA (duże pliki binarne)

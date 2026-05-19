@@ -41,7 +41,10 @@ class BaseGrowthcraftNBTConverter(ABC):
     SOURCE_VERSION = "1.7.10"
     TARGET_VERSION = "1.18.2"
     
-    def __init__(self):
+    def __init__(self, profile: str = None):
+        from ..mappings import GROWTHCRAFT_CE_EXPERIMENTAL
+
+        self.profile = profile or GROWTHCRAFT_CE_EXPERIMENTAL
         self.errors: List[str] = []
         self.warnings: List[str] = []
     
@@ -93,7 +96,7 @@ class BaseGrowthcraftNBTConverter(ABC):
         from ..mappings import convert_item_id
         
         result = {
-            'id': convert_item_id(item_nbt.get('id', '')),
+            'id': convert_item_id(item_nbt.get('id', ''), profile=self.profile),
             'Count': item_nbt.get('Count', 1)
         }
         
@@ -161,7 +164,7 @@ class BaseGrowthcraftNBTConverter(ABC):
         from ..mappings import convert_fluid_id
         
         result = {
-            'FluidName': convert_fluid_id(fluid_nbt.get('FluidName', '')),
+            'FluidName': convert_fluid_id(fluid_nbt.get('FluidName', ''), profile=self.profile),
             'Amount': fluid_nbt.get('Amount', 0)
         }
         

@@ -11,6 +11,12 @@ from typing import Dict, Optional, List
 from dataclasses import dataclass
 
 
+STRICT_1182_FUNCTIONAL = "strict_1182_functional"
+GROWTHCRAFT_CE_EXPERIMENTAL = "growthcraft_ce_experimental"
+DEFAULT_PROFILE = STRICT_1182_FUNCTIONAL
+SUPPORTED_PROFILES = {STRICT_1182_FUNCTIONAL, GROWTHCRAFT_CE_EXPERIMENTAL}
+
+
 @dataclass
 class BlockMapping:
     """Pojedyncze mapowanie bloku"""
@@ -525,22 +531,101 @@ FLUID_MAPPINGS: Dict[str, FluidMapping] = {
 }
 
 
-def get_block_mapping(id_1710: str) -> Optional[BlockMapping]:
+STRICT_BLOCK_MAPPINGS: Dict[str, BlockMapping] = {
+    "grccellar:ferment_barrel": BlockMapping("grccellar:ferment_barrel", "brewinandchewin:keg"),
+    "grccellar:brew_kettle": BlockMapping("grccellar:brew_kettle", "brewinandchewin:keg"),
+    "grccellar:fruit_press": BlockMapping("grccellar:fruit_press", "create:mechanical_press"),
+    "grccellar:culture_jar": BlockMapping("grccellar:culture_jar", "farmersdelight:cooking_pot"),
+    "grccellar:roaster": BlockMapping("grccellar:roaster", "farmersdelight:cooking_pot"),
+    "grcmilk:cheese_vat": BlockMapping("grcmilk:cheese_vat", "farmersdelight:cooking_pot"),
+    "grcmilk:pancheon": BlockMapping("grcmilk:pancheon", "farmersdelight:cooking_pot"),
+    "grcmilk:butter_churn": BlockMapping("grcmilk:butter_churn", "farmersdelight:cooking_pot"),
+    "grcmilk:cheese_press": BlockMapping("grcmilk:cheese_press", "farmersdelight:cooking_pot"),
+    "grcmilk:hanging_curds": BlockMapping("grcmilk:hanging_curds", "minecraft:white_wool"),
+    "grcbees:bee_box": BlockMapping("grcbees:bee_box", "minecraft:beehive"),
+    "grcbees:bee_hive": BlockMapping("grcbees:bee_hive", "minecraft:bee_nest"),
+    "grcfishtrap:fish_trap": BlockMapping("grcfishtrap:fish_trap", "minecraft:barrel"),
+    "growthcraft:rope": BlockMapping("growthcraft:rope", "supplementaries:rope"),
+    "growthcraft:fence_rope": BlockMapping("growthcraft:fence_rope", "supplementaries:rope"),
+    "growthcraft:salt_block": BlockMapping("growthcraft:salt_block", "mekanism:block_salt"),
+    "grcbamboo:bamboo": BlockMapping("grcbamboo:bamboo", "minecraft:bamboo"),
+    "grcbamboo:bamboo_stalk": BlockMapping("grcbamboo:bamboo_stalk", "minecraft:bamboo"),
+    "grcbamboo:bamboo_fence": BlockMapping("grcbamboo:bamboo_fence", "minecraft:jungle_fence"),
+    "grcbamboo:bamboo_door": BlockMapping("grcbamboo:bamboo_door", "minecraft:jungle_door"),
+    "grcbamboo:bamboo_slab": BlockMapping("grcbamboo:bamboo_slab", "minecraft:jungle_slab"),
+    "grcbamboo:bamboo_stairs": BlockMapping("grcbamboo:bamboo_stairs", "minecraft:jungle_stairs"),
+    "grcrice:paddy": BlockMapping("grcrice:paddy", "farmersdelight:rice_crop"),
+    "grcgrapes:grape_vine": BlockMapping("grcgrapes:grape_vine", "minecraft:vine"),
+    "grchops:hops_vine": BlockMapping("grchops:hops_vine", "minecraft:vine"),
+}
+
+
+STRICT_ITEM_MAPPINGS: Dict[str, ItemMapping] = {
+    "grccellar:yeast": ItemMapping("grccellar:yeast", "brewinandchewin:yeast"),
+    "grccellar:brewers_yeast": ItemMapping("grccellar:brewers_yeast", "brewinandchewin:yeast"),
+    "grccellar:lager_yeast": ItemMapping("grccellar:lager_yeast", "brewinandchewin:yeast"),
+    "grccellar:bayanus_yeast": ItemMapping("grccellar:bayanus_yeast", "brewinandchewin:yeast"),
+    "grccellar:bottle": ItemMapping("grccellar:bottle", "minecraft:glass_bottle"),
+    "grccellar:bottle_apple_cider": ItemMapping("grccellar:bottle_apple_cider", "minecraft:glass_bottle"),
+    "grccellar:bottle_wine": ItemMapping("grccellar:bottle_wine", "minecraft:glass_bottle"),
+    "grccellar:bottle_ale": ItemMapping("grccellar:bottle_ale", "minecraft:glass_bottle"),
+    "grccellar:bottle_lager": ItemMapping("grccellar:bottle_lager", "minecraft:glass_bottle"),
+    "grccellar:grain": ItemMapping("grccellar:grain", "minecraft:wheat"),
+    "grccellar:hops": ItemMapping("grccellar:hops", "minecraft:wheat_seeds"),
+    "grcbees:bee": ItemMapping("grcbees:bee", "minecraft:bee_spawn_egg"),
+    "grcbees:honey_comb": ItemMapping("grcbees:honey_comb", "minecraft:honeycomb"),
+    "grcbees:honey_comb_full": ItemMapping("grcbees:honey_comb_full", "minecraft:honeycomb"),
+    "grcbees:honey_jar": ItemMapping("grcbees:honey_jar", "minecraft:honey_bottle"),
+    "grcbees:bees_wax": ItemMapping("grcbees:bees_wax", "minecraft:honeycomb"),
+    "grcmilk:rennet": ItemMapping("grcmilk:rennet", "minecraft:milk_bucket"),
+    "grcmilk:starter_culture": ItemMapping("grcmilk:starter_culture", "minecraft:milk_bucket"),
+    "grcmilk:butter": ItemMapping("grcmilk:butter", "farmersdelight:butter"),
+    "grcmilk:cheese_cloth": ItemMapping("grcmilk:cheese_cloth", "minecraft:string"),
+    "grcmilk:cheese": ItemMapping("grcmilk:cheese", "farmersdelight:milk_bottle"),
+    "grcapples:apple": ItemMapping("grcapples:apple", "minecraft:apple"),
+    "grcgrapes:grapes": ItemMapping("grcgrapes:grapes", "minecraft:sweet_berries"),
+    "grcgrapes:grape_seeds": ItemMapping("grcgrapes:grape_seeds", "minecraft:sweet_berries"),
+    "grchops:hops": ItemMapping("grchops:hops", "minecraft:wheat_seeds"),
+    "grchops:hop_seeds": ItemMapping("grchops:hop_seeds", "minecraft:wheat_seeds"),
+    "grcrice:rice": ItemMapping("grcrice:rice", "farmersdelight:rice"),
+    "grcrice:rice_cooked": ItemMapping("grcrice:rice_cooked", "minecraft:bowl"),
+    "grcrice:sake": ItemMapping("grcrice:sake", "minecraft:glass_bottle"),
+    "grcbamboo:bamboo": ItemMapping("grcbamboo:bamboo", "minecraft:bamboo"),
+    "grcbamboo:bamboo_stalk": ItemMapping("grcbamboo:bamboo_stalk", "minecraft:bamboo"),
+    "grcbamboo:bamboo_shoot": ItemMapping("grcbamboo:bamboo_shoot", "minecraft:bamboo"),
+    "grcbamboo:bamboo_door": ItemMapping("grcbamboo:bamboo_door", "minecraft:jungle_door"),
+    "growthcraft:salt": ItemMapping("growthcraft:salt", "mekanism:salt"),
+}
+
+
+STRICT_FLUID_MAPPINGS: Dict[str, FluidMapping] = {
+    fluid_id: FluidMapping(fluid_id, "minecraft:water")
+    for fluid_id in FLUID_MAPPINGS.keys()
+}
+
+
+def _mapping_set(profile: str, strict: Dict[str, object], ce: Dict[str, object]) -> Dict[str, object]:
+    if profile == GROWTHCRAFT_CE_EXPERIMENTAL:
+        return ce
+    return strict
+
+
+def get_block_mapping(id_1710: str, profile: str = DEFAULT_PROFILE) -> Optional[BlockMapping]:
     """Zwraca mapowanie bloku dla podanego ID 1.7.10"""
-    return BLOCK_MAPPINGS.get(id_1710)
+    return _mapping_set(profile, STRICT_BLOCK_MAPPINGS, BLOCK_MAPPINGS).get(id_1710)
 
 
-def get_item_mapping(id_1710: str) -> Optional[ItemMapping]:
+def get_item_mapping(id_1710: str, profile: str = DEFAULT_PROFILE) -> Optional[ItemMapping]:
     """Zwraca mapowanie itemu dla podanego ID 1.7.10"""
-    return ITEM_MAPPINGS.get(id_1710)
+    return _mapping_set(profile, STRICT_ITEM_MAPPINGS, ITEM_MAPPINGS).get(id_1710)
 
 
-def get_fluid_mapping(id_1710: str) -> Optional[FluidMapping]:
+def get_fluid_mapping(id_1710: str, profile: str = DEFAULT_PROFILE) -> Optional[FluidMapping]:
     """Zwraca mapowanie płynu dla podanego ID 1.7.10"""
-    return FLUID_MAPPINGS.get(id_1710)
+    return _mapping_set(profile, STRICT_FLUID_MAPPINGS, FLUID_MAPPINGS).get(id_1710)
 
 
-def convert_block_id(id_1710: str, metadata: int = 0) -> str:
+def convert_block_id(id_1710: str, metadata: int = 0, profile: str = DEFAULT_PROFILE) -> str:
     """
     Konwertuje ID bloku z 1.7.10 na 1.18.2
     
@@ -551,14 +636,14 @@ def convert_block_id(id_1710: str, metadata: int = 0) -> str:
     Returns:
         ID bloku w formacie 1.18.2
     """
-    mapping = get_block_mapping(id_1710)
+    mapping = get_block_mapping(id_1710, profile)
     if mapping:
         return mapping.get_1182_id(metadata)
     # Domyślnie zwróć oryginalne ID (może być już w formacie 1.18.2)
     return id_1710
 
 
-def convert_item_id(id_1710: str, damage: int = 0) -> str:
+def convert_item_id(id_1710: str, damage: int = 0, profile: str = DEFAULT_PROFILE) -> str:
     """
     Konwertuje ID itemu z 1.7.10 na 1.18.2
     
@@ -569,14 +654,14 @@ def convert_item_id(id_1710: str, damage: int = 0) -> str:
     Returns:
         ID itemu w formacie 1.18.2
     """
-    mapping = get_item_mapping(id_1710)
+    mapping = get_item_mapping(id_1710, profile)
     if mapping:
         return mapping.get_1182_id(damage)
     # Domyślnie zwróć oryginalne ID
     return id_1710
 
 
-def convert_fluid_id(id_1710: str) -> str:
+def convert_fluid_id(id_1710: str, profile: str = DEFAULT_PROFILE) -> str:
     """
     Konwertuje ID płynu z 1.7.10 na 1.18.2
     
@@ -586,23 +671,23 @@ def convert_fluid_id(id_1710: str) -> str:
     Returns:
         ID płynu w formacie 1.18.2
     """
-    mapping = get_fluid_mapping(id_1710)
+    mapping = get_fluid_mapping(id_1710, profile)
     if mapping:
         return mapping.id_1182
     # Domyślnie zwróć oryginalne ID
     return id_1710
 
 
-def get_all_growthcraft_blocks() -> List[str]:
+def get_all_growthcraft_blocks(profile: str = DEFAULT_PROFILE) -> List[str]:
     """Zwraca listę wszystkich bloków GrowthCraft 1.7.10"""
-    return list(BLOCK_MAPPINGS.keys())
+    return list(_mapping_set(profile, STRICT_BLOCK_MAPPINGS, BLOCK_MAPPINGS).keys())
 
 
-def get_all_growthcraft_items() -> List[str]:
+def get_all_growthcraft_items(profile: str = DEFAULT_PROFILE) -> List[str]:
     """Zwraca listę wszystkich itemów GrowthCraft 1.7.10"""
-    return list(ITEM_MAPPINGS.keys())
+    return list(_mapping_set(profile, STRICT_ITEM_MAPPINGS, ITEM_MAPPINGS).keys())
 
 
-def get_all_growthcraft_fluids() -> List[str]:
+def get_all_growthcraft_fluids(profile: str = DEFAULT_PROFILE) -> List[str]:
     """Zwraca listę wszystkich płynów GrowthCraft 1.7.10"""
-    return list(FLUID_MAPPINGS.keys())
+    return list(_mapping_set(profile, STRICT_FLUID_MAPPINGS, FLUID_MAPPINGS).keys())

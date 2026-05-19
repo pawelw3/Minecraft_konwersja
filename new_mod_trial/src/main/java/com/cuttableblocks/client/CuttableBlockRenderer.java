@@ -14,21 +14,35 @@ public class CuttableBlockRenderer implements ISimpleBlockRenderingHandler {
     
     @Override
     public void renderInventoryBlock(Block block, int metadata, int modelId, RenderBlocks renderer) {
-        // Render a simple cube for inventory
-        Tessellator tessellator = Tessellator.instance;
-        
-        GL11.glTranslatef(-0.5F, -0.5F, -0.5F);
-        
+        Tessellator tess = Tessellator.instance;
         IIcon icon = block.getIcon(0, metadata);
-        
-        // Render all 6 faces
-        renderer.renderFaceYNeg(block, 0.0D, 0.0D, 0.0D, icon);
-        renderer.renderFaceYPos(block, 0.0D, 0.0D, 0.0D, icon);
-        renderer.renderFaceZNeg(block, 0.0D, 0.0D, 0.0D, icon);
-        renderer.renderFaceZPos(block, 0.0D, 0.0D, 0.0D, icon);
-        renderer.renderFaceXNeg(block, 0.0D, 0.0D, 0.0D, icon);
-        renderer.renderFaceXPos(block, 0.0D, 0.0D, 0.0D, icon);
-        
+
+        GL11.glTranslatef(-0.5F, -0.5F, -0.5F);
+
+        tess.startDrawingQuads(); tess.setNormal(0, -1, 0);
+        renderer.renderFaceYNeg(block, 0, 0, 0, icon);
+        tess.draw();
+
+        tess.startDrawingQuads(); tess.setNormal(0, 1, 0);
+        renderer.renderFaceYPos(block, 0, 0, 0, icon);
+        tess.draw();
+
+        tess.startDrawingQuads(); tess.setNormal(0, 0, -1);
+        renderer.renderFaceZNeg(block, 0, 0, 0, icon);
+        tess.draw();
+
+        tess.startDrawingQuads(); tess.setNormal(0, 0, 1);
+        renderer.renderFaceZPos(block, 0, 0, 0, icon);
+        tess.draw();
+
+        tess.startDrawingQuads(); tess.setNormal(-1, 0, 0);
+        renderer.renderFaceXNeg(block, 0, 0, 0, icon);
+        tess.draw();
+
+        tess.startDrawingQuads(); tess.setNormal(1, 0, 0);
+        renderer.renderFaceXPos(block, 0, 0, 0, icon);
+        tess.draw();
+
         GL11.glTranslatef(0.5F, 0.5F, 0.5F);
     }
     

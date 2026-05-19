@@ -16,6 +16,7 @@ from converters.growthcraft.growthcraft_converter import (
     convert_growthcraft_te,
     get_converter_for_te,
 )
+from converters.growthcraft.mappings import GROWTHCRAFT_CE_EXPERIMENTAL, STRICT_1182_FUNCTIONAL
 
 
 class TestGrowthcraftConverter(unittest.TestCase):
@@ -27,6 +28,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
     def test_converter_initialization(self):
         """Test inicjalizacji konwertera"""
         self.assertIsNotNone(self.converter)
+        self.assertEqual(self.converter.profile, STRICT_1182_FUNCTIONAL)
         self.assertEqual(self.converter.stats["processed"], 0)
         self.assertEqual(self.converter.stats["converted"], 0)
     
@@ -64,9 +66,11 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft_cellar:fermentation_barrel")
+        self.assertEqual(result.block_id_1182, "brewinandchewin:keg")
         self.assertIsNotNone(result.nbt_1182)
-        self.assertEqual(result.nbt_1182["id"], "growthcraft_cellar:fermentation_barrel")
+        self.assertEqual(result.nbt_1182["id"], "brewinandchewin:keg")
+        self.assertIn("legacy_growthcraft", result.nbt_1182)
+        self.assertTrue(any("GC-W-FUNCTIONAL-REBUILD" in w for w in result.warnings))
     
     def test_convert_brew_kettle(self):
         """Test konwersji BrewKettle"""
@@ -83,7 +87,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft_cellar:brew_kettle")
+        self.assertEqual(result.block_id_1182, "brewinandchewin:keg")
     
     def test_convert_bee_box(self):
         """Test konwersji BeeBox"""
@@ -100,7 +104,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft_apiary:bee_box_oak")
+        self.assertEqual(result.block_id_1182, "minecraft:beehive")
     
     def test_convert_mixing_vat(self):
         """Test konwersji MixingVat (CheeseVat)"""
@@ -119,8 +123,8 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft_milk:mixing_vat")
-        self.assertTrue(result.nbt_1182["IsActivated"])
+        self.assertEqual(result.block_id_1182, "farmersdelight:cooking_pot")
+        self.assertEqual(result.nbt_1182["legacy_growthcraft"]["vat_state"], "preparing_cheese")
     
     def test_convert_block_without_nbt(self):
         """Test konwersji bloku bez NBT"""
@@ -131,7 +135,7 @@ class TestGrowthcraftConverter(unittest.TestCase):
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.block_id_1182, "growthcraft_cellar:fermentation_barrel")
+        self.assertEqual(result.block_id_1182, "brewinandchewin:keg")
         self.assertIsNone(result.nbt_1182)
     
     def test_convert_non_growthcraft_block(self):
@@ -196,9 +200,10 @@ class TestHelperFunctions(unittest.TestCase):
             metadata=0
         )
         
-        self.assertEqual(new_id, "growthcraft_cellar:fermentation_barrel")
+        self.assertEqual(new_id, "brewinandchewin:keg")
         self.assertIsNotNone(new_nbt)
-        self.assertEqual(new_nbt["id"], "growthcraft_cellar:fermentation_barrel")
+        self.assertEqual(new_nbt["id"], "brewinandchewin:keg")
+        self.assertIn("legacy_growthcraft", new_nbt)
     
     def test_get_converter_for_te(self):
         """Test funkcji get_converter_for_te"""
@@ -217,7 +222,7 @@ class TestInventoryConversion(unittest.TestCase):
     """Testy konwersji inventory"""
     
     def setUp(self):
-        self.converter = GrowthcraftConverter()
+        self.converter = GrowthcraftConverter(profile=GROWTHCRAFT_CE_EXPERIMENTAL)
     
     def test_item_conversion_in_nbt(self):
         """Test konwersji itemów w NBT"""
@@ -253,7 +258,7 @@ class TestEdgeCases(unittest.TestCase):
     """Testy przypadków brzegowych"""
     
     def setUp(self):
-        self.converter = GrowthcraftConverter()
+        self.converter = GrowthcraftConverter(profile=GROWTHCRAFT_CE_EXPERIMENTAL)
     
     def test_empty_nbt(self):
         """Test konwersji pustego NBT"""

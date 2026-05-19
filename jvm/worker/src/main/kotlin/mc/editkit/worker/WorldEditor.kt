@@ -2,6 +2,7 @@ package mc.editkit.worker
 
 import org.jglrxavpok.hephaistos.mca.RegionFile
 import org.jglrxavpok.hephaistos.nbt.*
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
@@ -100,9 +101,13 @@ class WorldEditor(private val worldPath: String) {
         
         val dataArray = section.getByteArray("Data")
         val data = if (dataArray != null) dataArray.copyArray() else ByteArray(2048)
+
+        val addArray = section.getByteArray("Add") ?: section.getByteArray("AddBlocks")
+        val add = if (addArray != null) addArray.copyArray() else ByteArray(2048)
         
         val index = (localY * 16 + localZ) * 16 + localX
         blocks[index] = (blockId and 0xFF).toByte()
+        setNibble(add, index, (blockId shr 8) and 0x0F)
         
         // Nibble array dla metadata
         val dataIndex = index shr 1
@@ -119,6 +124,9 @@ class WorldEditor(private val worldPath: String) {
             sec.setByte("Y", sectionY.toByte())
             sec.setByteArray("Blocks", blocks)
             sec.setByteArray("Data", data)
+            if (add.any { it.toInt() != 0 }) {
+                sec.setByteArray("Add", add)
+            }
             
             // Zachowaj istniejące światło jeśli istnieje
             val skyLight = section.getByteArray("SkyLight")
@@ -169,6 +177,17 @@ class WorldEditor(private val worldPath: String) {
         trackEdit(x, y, z, blockId, meta)
         
         println("setBlock($x, $y, $z): id=$blockId meta=$meta")
+    }
+
+    private fun setNibble(array: ByteArray, index: Int, value: Int) {
+        val dataIndex = index shr 1
+        val oldData = array[dataIndex].toInt() and 0xFF
+        val newNibble = if (index and 1 == 0) {
+            (oldData and 0xF0) or (value and 0x0F)
+        } else {
+            (oldData and 0x0F) or ((value and 0x0F) shl 4)
+        }
+        array[dataIndex] = newNibble.toByte()
     }
     
     private fun trackEdit(x: Int, y: Int, z: Int, blockId: Int, meta: Int) {
@@ -222,14 +241,9 @@ class WorldEditor(private val worldPath: String) {
             te.setInt("z", z)
             
             for (key in nbtData.keys()) {
-                val value = nbtData.get(key)
-                when (value) {
-                    is String -> te.setString(key, value)
-                    is Int -> te.setInt(key, value)
-                    is Long -> te.setLong(key, value)
-                    is Byte -> te.setByte(key, value)
-                    is Double -> te.setDouble(key, value)
-                    is Float -> te.setFloat(key, value)
+                val tag = jsonToNbt(nbtData.get(key))
+                if (tag != null) {
+                    te[key] = tag
                 }
             }
         }
@@ -264,6 +278,103 @@ class WorldEditor(private val worldPath: String) {
         trackTileEntityEdit(x, y, z, teId, nbtData.keys().asSequence().toList())
         
         println("setTileEntity($x, $y, $z): id=$teId")
+    }
+
+    fun removeTileEntity(x: Int, y: Int, z: Int) {
+        val chunkX = chunkCoordFromBlock(x)
+        val chunkZ = chunkCoordFromBlock(z)
+        val regionX = regionCoordFromChunk(chunkX)
+        val regionZ = regionCoordFromChunk(chunkZ)
+        val localChunkX = localChunkFromChunk(chunkX)
+        val localChunkZ = localChunkFromChunk(chunkZ)
+
+        val regionFilePath = regionPath.resolve("r.$regionX.$regionZ.mca")
+        val chunk = getOrCreateChunk(regionFilePath, regionX, regionZ, localChunkX, localChunkZ, chunkX, chunkZ)
+        val level = chunk.nbt?.getCompound("Level")
+            ?: throw IllegalStateException("Chunk nie ma tagu Level")
+
+        val teList = level.getList<NBTCompound>("TileEntities")
+        val tileEntities = if (teList != null) {
+            mutableListOf<NBTCompound>().apply {
+                for (i in 0 until teList.size) {
+                    add(teList[i])
+                }
+            }
+        } else mutableListOf()
+
+        val filtered = tileEntities.filter { te ->
+            val tex = te.getInt("x") ?: 0
+            val tey = te.getInt("y") ?: 0
+            val tez = te.getInt("z") ?: 0
+            !(tex == x && tey == y && tez == z)
+        }
+
+        val newLevel = NBT.Compound { lvl ->
+            for (key in level.keys) {
+                if (key != "TileEntities") {
+                    lvl[key] = level[key]!!
+                }
+            }
+            lvl["TileEntities"] = NBT.List(NBTType.TAG_Compound, filtered)
+        }
+
+        val newChunk = NBT.Compound { root ->
+            for (key in (chunk.nbt?.keys ?: emptySet())) {
+                if (key != "Level") {
+                    root[key] = chunk.nbt!![key]!!
+                }
+            }
+            root["Level"] = newLevel
+        }
+
+        chunk.nbt = newChunk
+        chunk.modified = true
+        modifiedChunks.add(EditMetadata.ChunkCoord(regionX, regionZ, localChunkX, localChunkZ))
+        println("removeTileEntity($x, $y, $z)")
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun jsonToNbt(value: Any?): NBT? {
+        if (value == null || value == JSONObject.NULL) {
+            return null
+        }
+        return when (value) {
+            is JSONObject -> {
+                NBT.Compound { compound ->
+                    for (key in value.keys()) {
+                        val tag = jsonToNbt(value.get(key))
+                        if (tag != null) {
+                            compound[key] = tag
+                        }
+                    }
+                }
+            }
+            is JSONArray -> {
+                val tags = mutableListOf<NBT>()
+                for (i in 0 until value.length()) {
+                    val tag = jsonToNbt(value.get(i))
+                    if (tag != null) {
+                        tags.add(tag)
+                    }
+                }
+                val subtagType = tags.firstOrNull()?.ID ?: NBTType.TAG_Compound
+                if (tags.any { it.ID != subtagType }) {
+                    NBT.List(NBTType.TAG_String, tags.map { NBT.String(it.toSNBT()) })
+                } else {
+                    NBTList(subtagType as NBTType<NBT>, tags)
+                }
+            }
+            is Boolean -> NBT.Boolean(value)
+            is String -> NBT.String(value)
+            is Byte -> NBT.Byte(value)
+            is Short -> NBT.Short(value)
+            is Int -> NBT.Int(value)
+            is Long -> NBT.Long(value)
+            is Float -> NBT.Float(value)
+            is Double -> NBT.Double(value)
+            is Number -> NBT.Int(value.toInt())
+            else -> NBT.String(value.toString())
+        }
     }
     
     private fun trackTileEntityEdit(x: Int, y: Int, z: Int, id: String, keys: List<String>) {

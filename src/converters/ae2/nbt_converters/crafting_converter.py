@@ -146,7 +146,8 @@ class CraftingStorageConverter(BaseNBTConverter):
         self.reset()
         
         converted = {
-            'size_variant': metadata,  # Zachowaj info o rozmiarze
+            'size_variant': metadata & 3,  # bit 4 to formed, nie rozmiar
+            'formed': bool(metadata & 4),
             'size_bytes': self._get_size_bytes(metadata)
         }
         
@@ -167,7 +168,7 @@ class CraftingStorageConverter(BaseNBTConverter):
             2: 16384,     # 16k
             3: 65536,     # 64k
         }
-        return sizes.get(metadata, 1024)
+        return sizes.get(metadata & 3, 1024)
     
     def resolve_block_id(self, base_id: str, metadata: int) -> str:
         """
@@ -219,7 +220,8 @@ class MolecularAssemblerConverter(BaseNBTConverter):
     def converter_name(self) -> str:
         return "molecular_assembler"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """
         Konwertuje NBT Molecular Assembler.
         
@@ -264,7 +266,8 @@ class CraftingMonitorConverter(BaseNBTConverter):
     def converter_name(self) -> str:
         return "crafting_monitor"
     
-    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None) -> NBTConversionResult:
+    def convert(self, nbt_1710: Dict[str, Any], block_id: str = None,
+                metadata: int = 0) -> NBTConversionResult:
         """Konwertuje NBT Crafting Monitor"""
         self.reset()
         

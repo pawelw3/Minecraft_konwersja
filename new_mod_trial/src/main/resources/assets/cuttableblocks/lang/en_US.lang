@@ -1,3 +1,5 @@
 tile.cuttableBlock.name=Cut Block
+tile.collapsibleBlock.name=Collapsible Block
 item.cuttingTool.name=Cutting Tool
+item.collapsibleHammer.name=Collapsible Hammer
 itemGroup.cuttableblocks=Cuttable Blocks
