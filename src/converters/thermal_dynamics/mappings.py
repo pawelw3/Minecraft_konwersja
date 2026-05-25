@@ -144,13 +144,14 @@ def get_block_mapping(block_id: str, metadata: int = 0) -> BlockMapping | None:
     return STATIC_MAPPINGS.get((block_id, metadata))
 
 
-def get_mapping_for_te_id(te_id: str, metadata: int = 0) -> BlockMapping | None:
+def get_mapping_for_te_id(te_id: str, metadata: int | None = None) -> BlockMapping | None:
     """Zwróć mapowanie na podstawie TileEntity ID z NBT."""
     key = TE_ID_TO_BLOCK.get(te_id)
     if not key:
         return None
     block_id, default_meta = key
-    return STATIC_MAPPINGS.get((block_id, metadata if metadata is not None else default_meta))
+    effective_meta = default_meta if metadata in (None, 0) else metadata
+    return STATIC_MAPPINGS.get((block_id, effective_meta))
 
 
 def is_thermal_dynamics_block(block_id: str) -> bool:

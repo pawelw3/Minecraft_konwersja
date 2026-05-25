@@ -1,0 +1,40 @@
+============================================================
+TESTOWA MAPA BETTER STORAGE - PODSUMOWANIE
+============================================================
+
+Wygenerowane bloki:
+  betterstorage:armorStand: 1
+  betterstorage:backpack: 2
+  betterstorage:cardboardBox: 2
+  betterstorage:craftingStation: 2
+  betterstorage:crate: 5
+  betterstorage:enderBackpack: 1
+  betterstorage:flintBlock: 1
+  betterstorage:lockableDoor: 2
+  betterstorage:locker: 3
+  betterstorage:present: 1
+  betterstorage:reinforcedChest: 7
+  betterstorage:reinforcedLocker: 2
+  betterstorage:thaumcraftBackpack: 1
+  betterstorage:thaumiumChest: 1
+
+Crate piles: 1
+
+Testowe scenariusze:
+  - Pojedynczy crate
+  - Stos 4 crate z wspólnym inventory
+  - Reinforced Chest (5 materiałów)
+  - Podwójny Reinforced Chest
+  - Locker (pojedynczy i podwójny)
+  - Reinforced Locker (2 materiały)
+  - Cardboard Box (zwykły i pokolorowany)
+  - Crafting Station (pusta i z itemami)
+  - Armor Stand (z zbroją)
+  - Backpack (zwykły i pokolorowany)
+  - Ender Backpack
+  - Present (z prezentami)
+  - Lockable Door
+  - Flint Block
+  - Thaumium Chest
+  - Thaumcraft Backpack
+============================================================

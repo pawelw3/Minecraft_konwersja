@@ -25,6 +25,7 @@ from converters.common.inventory_helpers import (
 )
 from converters.common.uuid_helpers import uuid_string_to_int_array
 from converters.common.placeholders import make_block_entity_placeholder_event
+from converters.common.item_id_resolver import resolve_item_id
 
 
 # ============================================================
@@ -182,9 +183,18 @@ class MrCrayfishConverter:
     SOURCE_VERSION = "1.7.10"
     TARGET_VERSION = "1.18.2"
 
-    def __init__(self):
+    def __init__(self, level_dat_path: str | None = None):
         self.warnings: List[str] = []
         self.errors: List[str] = []
+        self.level_dat_path = level_dat_path
+        self._item_resolver = None
+        if level_dat_path:
+            try:
+                from converters.common.item_id_resolver import load_item_id_mapping
+                load_item_id_mapping(level_dat_path)
+                self._item_resolver = resolve_item_id
+            except Exception:
+                pass  # Brak mapowania - zostaw numeryczne ID
 
     # ------------------------------------------------------------------
     # Bloki (bez TE)
@@ -424,7 +434,10 @@ class MrCrayfishConverter:
                 te_nbt, possible_keys, [slot_tag, "Slot", "slot"]
             )
             if items:
-                converted = convert_inventory_1710_to_1182(items, found_tag or "Slot", target_size)
+                converted = convert_inventory_1710_to_1182(
+                    items, found_tag or "Slot", target_size,
+                    item_id_resolver=self._item_resolver,
+                )
                 nbt_1182["Items"] = converted
 
         # --- MailBox specyficzne ---

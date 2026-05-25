@@ -21,14 +21,19 @@ class BaseTDNBTConverter:
         raise NotImplementedError
 
 
+def _base_block_entity_nbt(nbt_1710: dict[str, Any], target_block_id: str) -> dict[str, Any]:
+    nbt_1182: dict[str, Any] = {"id": target_block_id}
+    for key in ("x", "y", "z"):
+        if key in nbt_1710:
+            nbt_1182[key] = nbt_1710[key]
+    return nbt_1182
+
+
 class IdentityTDConverter(BaseTDNBTConverter):
     """Minimalny konwerter: zachowuje tylko pozycję x,y,z."""
 
     def convert(self, nbt_1710: dict[str, Any], target_block_id: str) -> NBTConversionResult:
-        nbt_1182: dict[str, Any] = {}
-        for key in ("x", "y", "z"):
-            if key in nbt_1710:
-                nbt_1182[key] = nbt_1710[key]
+        nbt_1182 = _base_block_entity_nbt(nbt_1710, target_block_id)
         return NBTConversionResult(True, nbt_1182)
 
 
@@ -41,10 +46,7 @@ class DuctNBTConverter(BaseTDNBTConverter):
     """
 
     def convert(self, nbt_1710: dict[str, Any], target_block_id: str) -> NBTConversionResult:
-        nbt_1182: dict[str, Any] = {}
-        for key in ("x", "y", "z"):
-            if key in nbt_1710:
-                nbt_1182[key] = nbt_1710[key]
+        nbt_1182 = _base_block_entity_nbt(nbt_1710, target_block_id)
 
         warnings: list[str] = []
         extra_items: list[dict[str, Any]] = []
@@ -137,10 +139,7 @@ class MekanismTransporterConverter(BaseTDNBTConverter):
     """
 
     def convert(self, nbt_1710: dict[str, Any], target_block_id: str) -> NBTConversionResult:
-        nbt_1182: dict[str, Any] = {}
-        for key in ("x", "y", "z"):
-            if key in nbt_1710:
-                nbt_1182[key] = nbt_1710[key]
+        nbt_1182 = _base_block_entity_nbt(nbt_1710, target_block_id)
 
         warnings: list[str] = []
         extra_items: list[dict[str, Any]] = []
@@ -207,10 +206,7 @@ class MekanismTeleporterConverter(BaseTDNBTConverter):
     """
 
     def convert(self, nbt_1710: dict[str, Any], target_block_id: str) -> NBTConversionResult:
-        nbt_1182: dict[str, Any] = {}
-        for key in ("x", "y", "z"):
-            if key in nbt_1710:
-                nbt_1182[key] = nbt_1710[key]
+        nbt_1182 = _base_block_entity_nbt(nbt_1710, target_block_id)
 
         # Teleporter w Mekanism 1.18.2 używa NBT z częstotliwością
         # Ponieważ Viaduct nie miał częstotliwości, ustawiamy domyślną 0

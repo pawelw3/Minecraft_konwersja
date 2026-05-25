@@ -188,7 +188,7 @@ class TeleporterConverter(BaseIC2NBTConverter):
         source_block_id: str = "",
         source_metadata: int = 0,
     ) -> NBTConversionResult:
-        result = simulate_teleporter_conversion(nbt_1710)
+        result = simulate_teleporter_conversion(nbt_1710, target_block_id)
         return NBTConversionResult(
             success=len(result.get("errors", [])) == 0,
             converted_nbt=result.get("nbt_1182") or None,

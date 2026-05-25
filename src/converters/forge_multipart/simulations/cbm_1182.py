@@ -286,7 +286,7 @@ class TileMultipart:
     Symuluje codechicken.multipart.block.TileMultipart (1.18.2).
 
     Różnice względem 1.7.10:
-    - id w NBT: prawdopodobnie "cb_multipart:tile_multipart" (do potwierdzenia)
+    - id w NBT: "cb_multipart:saved_multipart"
     - Zapis w sekcji "block_entities" zamiast "TileEntities"
     - load() / saveAdditional() zamiast readFromNBT / writeToNBT
     """
@@ -364,4 +364,4 @@ class BlockMultipart:
     Stub symulujący codechicken.multipart.block.BlockMultipart (1.18.2).
     Registry name: cb_multipart:block
     """
-    REGISTRY_NAME = "cb_multipart:block"
+    REGISTRY_NAME = "cb_multipart:multipart"

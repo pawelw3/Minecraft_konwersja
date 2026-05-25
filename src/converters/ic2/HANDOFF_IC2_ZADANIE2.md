@@ -10,6 +10,13 @@ Wykonano kompletne mapowania bloków IC2 1.7.10 → Mekanism / Thermal / Placeho
 
 Wszystkie symulacje zostały przetestowane (20 testów jednostkowych, 100% zaliczonych).
 
+### Korekta 2026-05-20: wejściowe TE ID
+
+Symulacje NBT pozostają aktualne dla kształtu danych maszyn, ale warstwa
+wejściowa musi obsługiwać realne `TileEntities[].id` z mapy: `Macerator`,
+`Cable`, `TECrop`, `MFSU`, itd. Testy i router nie mogą zakładać wyłącznie
+wartości typu `TileEntityMacerator`.
+
 ---
 
 ## 1. Mapowania bloków (`mappings/block_mappings.py`)

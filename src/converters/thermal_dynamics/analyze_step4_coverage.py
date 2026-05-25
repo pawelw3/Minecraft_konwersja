@@ -123,7 +123,7 @@ def analyze_td_coverage(sample_regions: int | None = None):
 
 
 def save_coverage_report(stats: dict, sample_regions: int, total_regions: int):
-    output_dir = Path("src/converters/thermal_dynamics")
+    output_dir = ROOT / "src" / "converters" / "thermal_dynamics"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     report = {

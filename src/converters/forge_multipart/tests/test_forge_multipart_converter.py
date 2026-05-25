@@ -26,14 +26,14 @@ from converters.forge_multipart.mappings import map_block_id, map_part_id, map_t
 # Testy mapowań
 # ---------------------------------------------------------------------------
 def test_map_block_id():
-    assert map_block_id("ForgeMultipart:block") == "cb_multipart:block"
+    assert map_block_id("ForgeMultipart:block") == "cb_multipart:multipart"
     assert map_block_id("unknown:block") is None
 
 
 def test_map_te_id():
-    assert map_te_id("savedMultipart") == "cb_multipart:tile_multipart"
-    assert map_te_id("TileMultipart") == "cb_multipart:tile_multipart"
-    assert map_te_id("ForgeMultipart:TileMultipart") == "cb_multipart:tile_multipart"
+    assert map_te_id("savedMultipart") == "cb_multipart:saved_multipart"
+    assert map_te_id("TileMultipart") == "cb_multipart:saved_multipart"
+    assert map_te_id("ForgeMultipart:TileMultipart") == "cb_multipart:saved_multipart"
 
 
 def test_map_part_id_microblocks():
@@ -67,7 +67,7 @@ def test_convert_empty_tilemultipart():
     }
     nbt_1182 = TileMultipartNBTConverter.convert(nbt_1710)
     assert nbt_1182 is not None
-    assert nbt_1182["id"] == "cb_multipart:tile_multipart"
+    assert nbt_1182["id"] == "cb_multipart:saved_multipart"
     assert nbt_1182["parts"] == []
 
 
@@ -99,7 +99,7 @@ def test_convert_multiple_parts():
     }
     nbt_1182 = TileMultipartNBTConverter.convert(nbt_1710)
     assert nbt_1182 is not None
-    assert nbt_1182["id"] == "cb_multipart:tile_multipart"
+    assert nbt_1182["id"] == "cb_multipart:saved_multipart"
     assert len(nbt_1182["parts"]) == 3
 
     assert nbt_1182["parts"][0]["id"] == "microblockcbe:hollow"
@@ -152,9 +152,9 @@ def test_converter_block_multipart():
     )
 
     assert result.converted.success
-    assert result.converted.block_id_1182 == "cb_multipart:block"
+    assert result.converted.block_id_1182 == "cb_multipart:multipart"
     assert result.converted.nbt_1182 is not None
-    assert result.converted.nbt_1182["id"] == "cb_multipart:tile_multipart"
+    assert result.converted.nbt_1182["id"] == "cb_multipart:saved_multipart"
 
 
 def test_converter_unknown_block():
@@ -186,7 +186,7 @@ def test_converter_event_format():
     event = conv.events[0]
     assert event["op"] == "set_block_entity"
     assert event["pos"] == [5, 70, 5]
-    assert event["block"] == "cb_multipart:block"
+    assert event["block"] == "cb_multipart:multipart"
     assert event["source"]["mod"] == "ForgeMultipart"
     assert event["source"]["block_id"] == "ForgeMultipart:block"
     assert "nbt" in event
@@ -217,6 +217,26 @@ def test_convert_missing_parts_key():
     assert nbt_1182 is not None
     # Brak klucza "parts" w źródle powinien skutkować pustą listą w wyniku
     assert nbt_1182.get("parts") == []
+
+
+def test_router_sends_microblock_savedmultipart_to_forge_multipart():
+    from converters.router import convert_te_to_events
+
+    events = convert_te_to_events(
+        te_nbt={
+            "id": "savedMultipart",
+            "x": 1, "y": 2, "z": 3,
+            "parts": [{"id": "mcr_face", "shape": 16, "material": "minecraft:stone"}],
+        },
+        block_numeric_id=0,
+        metadata=0,
+        global_pos=(1, 2, 3),
+    )
+
+    assert len(events) == 1
+    assert events[0]["block"] == "cb_multipart:multipart"
+    assert events[0]["nbt"]["id"] == "cb_multipart:saved_multipart"
+    assert events[0]["nbt"]["parts"][0]["id"] == "microblockcbe:face"
 
 
 if __name__ == "__main__":

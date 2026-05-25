@@ -86,7 +86,7 @@ def scenario_1_single_face_microblock():
     nbt_1182 = tile_1182.save_additional()
     # W 1.18.2 chunk dodaje id, x, y, z — symulujemy pełny tag:
     full_nbt_1182 = {
-        "id": "cb_multipart:tile_multipart",
+        "id": "cb_multipart:saved_multipart",
         "x": 10, "y": 64, "z": -5,
         **nbt_1182
     }
@@ -158,7 +158,7 @@ def scenario_2_multiple_parts():
 
     nbt_1182 = tile_1182.save_additional()
     full_nbt_1182 = {
-        "id": "cb_multipart:tile_multipart",
+        "id": "cb_multipart:saved_multipart",
         "x": 20, "y": 70, "z": 30,
         **nbt_1182
     }
@@ -222,7 +222,7 @@ def scenario_3_microblock_nbt_conversion():
         })
 
     target_nbt = {
-        "id": "cb_multipart:tile_multipart",
+        "id": "cb_multipart:saved_multipart",
         "x": source_nbt["x"],
         "y": source_nbt["y"],
         "z": source_nbt["z"],

@@ -78,6 +78,90 @@ def _ic2():
     return _instances["ic2"]
 
 
+def _forge_multipart():
+    if "forgemultipart" not in _instances:
+        from converters.forge_multipart.forge_multipart_converter import ForgeMultipartConverter
+        _instances["forgemultipart"] = ForgeMultipartConverter()
+    return _instances["forgemultipart"]
+
+
+def _projectred():
+    if "projectred" not in _instances:
+        from converters.projectred.projectred_converter import ProjectRedConverter
+        _instances["projectred"] = ProjectRedConverter()
+    return _instances["projectred"]
+
+
+def _enderstorage():
+    if "enderstorage" not in _instances:
+        from converters.enderstorage.enderstorage_converter import EnderStorageConverter
+        _instances["enderstorage"] = EnderStorageConverter()
+    return _instances["enderstorage"]
+
+
+def _thermal():
+    if "thermal" not in _instances:
+        from converters.thermal.thermal_converter import ThermalConverter
+        _instances["thermal"] = ThermalConverter()
+    return _instances["thermal"]
+
+
+def _buildcraft():
+    if "buildcraft" not in _instances:
+        from converters.buildcraft.buildcraft_converter import BuildCraftConverter
+        _instances["buildcraft"] = BuildCraftConverter()
+    return _instances["buildcraft"]
+
+
+def _mrcrayfish():
+    if "mrcrayfish" not in _instances:
+        from converters.mrcrayfish_furniture.mrcrayfish_converter import MrCrayfishConverter
+        _instances["mrcrayfish"] = MrCrayfishConverter()
+    return _instances["mrcrayfish"]
+
+
+def _bibliocraft():
+    if "bibliocraft" not in _instances:
+        from converters.bibliocraft.nbt_converter import BiblioCraftNBTConverter
+        _instances["bibliocraft"] = BiblioCraftNBTConverter()
+    return _instances["bibliocraft"]
+
+
+def _jammyfurniture():
+    if "jammyfurniture" not in _instances:
+        from converters.jammyfurniture.jammyfurniture_converter import JammyFurnitureConverter
+        _instances["jammyfurniture"] = JammyFurnitureConverter()
+    return _instances["jammyfurniture"]
+
+
+def _growthcraft():
+    if "growthcraft" not in _instances:
+        from converters.growthcraft.growthcraft_converter import GrowthcraftConverter
+        _instances["growthcraft"] = GrowthcraftConverter()
+    return _instances["growthcraft"]
+
+
+def _railcraft():
+    if "railcraft" not in _instances:
+        from converters.railcraft.railcraft_converter import RailcraftConverter
+        _instances["railcraft"] = RailcraftConverter()
+    return _instances["railcraft"]
+
+
+def _enderstorage():
+    if "enderstorage" not in _instances:
+        from converters.enderstorage.enderstorage_converter import EnderStorageConverter
+        _instances["enderstorage"] = EnderStorageConverter()
+    return _instances["enderstorage"]
+
+
+def _bigreactors():
+    if "bigreactors" not in _instances:
+        from converters.bigreactors.biggerreactors_converter import BiggerReactorsConverter
+        _instances["bigreactors"] = BiggerReactorsConverter()
+    return _instances["bigreactors"]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Mod detection
 # ──────────────────────────────────────────────────────────────────────────────
@@ -138,6 +222,9 @@ def detect_mod(te_id: str) -> str:
     if te_id.startswith("Mekanism:") or te_id.startswith("mekanism:"):
         return "mekanism"
 
+    if te_id in ("DigitalMiner", "QuantumEntangloporter", "EnergyCube", "GasTank", "Bin"):
+        return "mekanism"
+
     if bare in _BLOODMAGIC_TE_IDS or te_id.startswith("AWWayofTime:"):
         return "bloodmagic"
 
@@ -164,6 +251,9 @@ def detect_mod(te_id: str) -> str:
     if any(te_id.startswith(p) for p in _BIBLIOCRAFT_PREFIXES) or te_id.startswith("BiblioCraft"):
         return "bibliocraft"
 
+    if te_id in _BIBLIO_TE_TO_BLOCK:
+        return "bibliocraft"
+
     # Railcraft
     if te_id.startswith("RC") or te_id.startswith("Railcraft") or te_id == "drum":
         return "railcraft"
@@ -185,16 +275,23 @@ def detect_mod(te_id: str) -> str:
         return "growthcraft"
 
     # Ender Storage
-    if te_id.startswith("EnderStorage") or te_id.startswith("enderStorage"):
+    if te_id.startswith("EnderStorage") or te_id.startswith("enderStorage") or te_id in ("Ender Chest", "Ender Tank"):
         return "enderstorage"
 
     # Jammy Furniture
-    if te_id.startswith("JammyFurniture") or te_id.startswith("jammy"):
+    if te_id.startswith("JammyFurniture") or te_id.startswith("jammy") or te_id in _JAMMY_TE_TO_BLOCK:
         return "jammyfurniture"
 
     # Thermal Dynamics
     if te_id.startswith("thermaldynamics."):
         return "thermaldynamics"
+
+    if te_id.startswith("thermalexpansion.") or te_id.startswith("thermalfoundation."):
+        return "thermal"
+
+    # BuildCraft
+    if "buildcraft" in te_id.lower():
+        return "buildcraft"
 
     # ForgeMultipart bounding helpers
     if te_id == "AdvancedBoundingBlock" or te_id == "BoundingBlock":
@@ -208,9 +305,14 @@ def detect_mod(te_id: str) -> str:
     if te_id in ("TableTile", "LampTile", "seatTile"):
         return "furniture_misc"
 
-    # IndustrialCraft 2 — TE ids are bare class names like TileEntityMacerator
-    if te_id.startswith("TileEntity") and te_id in _ic2_te_ids():
+    # IndustrialCraft 2. IC2 experimental commonly stores Forge registry ids
+    # such as "Macerator", "Cable", and "TECrop", not TileEntity* class names.
+    if _is_ic2_te_id(te_id):
         return "ic2"
+
+    # Big Reactors / Bigger Reactors
+    if te_id.startswith("BR") and _is_bigreactors_te_id(te_id):
+        return "bigreactors"
 
     return "unknown"
 
@@ -230,6 +332,16 @@ def _ic2_te_ids() -> frozenset[str]:
                     ids.add(te)
         _IC2_TE_IDS = frozenset(ids)
     return _IC2_TE_IDS
+
+
+def _is_bigreactors_te_id(te_id: str) -> bool:
+    from converters.bigreactors.mappings import is_bigreactors_te_id
+    return is_bigreactors_te_id(te_id)
+
+
+def _is_ic2_te_id(te_id: str) -> bool:
+    from converters.ic2.mappings.block_mappings import is_ic2_te_id
+    return is_ic2_te_id(te_id)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -330,6 +442,96 @@ def _ic2_to_events(result: Any) -> list[dict]:
     return [ev]
 
 
+def _projectred_to_events(result: Any) -> list[dict]:
+    """Serialise ProjectRedBlockConversion -> Event JSON list."""
+    c = result.converted
+    if not c.success or c.removed or not c.block_id_1182:
+        return []
+
+    pos = list(result.original_pos)
+    ev: dict = {"pos": pos, "block": c.block_id_1182}
+    if c.nbt_1182:
+        ev["op"] = "set_block_entity"
+        ev["nbt"] = c.nbt_1182
+    else:
+        ev["op"] = "set_block"
+    if c.blockstate_props:
+        ev["blockstate"] = c.blockstate_props
+    return [ev]
+
+
+def _conversion_event_to_events(event: Any) -> list[dict]:
+    """Serialise converters.common.conversion_event.ConversionEvent -> Event JSON."""
+    if event is None:
+        return []
+
+    if getattr(event, "event_type", None) == "remove":
+        pos = getattr(event, "position", None)
+        if pos is None:
+            return []
+        return [{"op": "set_block", "pos": list(pos), "block": "minecraft:air"}]
+
+    ev = event.to_set_block_event()
+    return [ev] if ev else []
+
+
+def _simple_dict_to_events(result: dict, pos: tuple[int, int, int]) -> list[dict]:
+    """Serialise simple dict converter output to Event JSON."""
+    block_id = result.get("target_block_id") or result.get("block_id")
+    if not block_id:
+        return []
+
+    ev: dict = {
+        "op": "set_block_entity" if result.get("target_nbt") or result.get("nbt") else "set_block",
+        "pos": list(pos),
+        "block": block_id,
+    }
+    nbt = result.get("target_nbt") or result.get("nbt")
+    if nbt:
+        ev["nbt"] = nbt
+    blockstate = result.get("target_blockstate") or result.get("blockstate") or {}
+    if blockstate:
+        ev["blockstate"] = blockstate
+    return [ev]
+
+
+def _converted_block_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
+    """Serialise BiblioCraft ConvertedBlock -> Event JSON."""
+    if not result or not getattr(result, "block_id", None):
+        return []
+    ev: dict = {
+        "op": "set_block_entity" if getattr(result, "tile_entity", None) else "set_block",
+        "pos": [getattr(result, "x", pos[0]), getattr(result, "y", pos[1]), getattr(result, "z", pos[2])],
+        "block": result.block_id,
+    }
+    if getattr(result, "tile_entity", None):
+        ev["nbt"] = result.tile_entity
+    blockstate = getattr(result, "block_state", {}) or {}
+    if blockstate:
+        ev["blockstate"] = blockstate
+    return [ev]
+
+
+def _jammy_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
+    """Serialise JammyFurniture ConversionResult -> Event JSON."""
+    if not result or not result.success or not result.target_block_id:
+        return []
+    ev: dict = {
+        "op": "set_block_entity" if result.target_te else "set_block",
+        "pos": list(pos),
+        "block": result.target_block_id,
+    }
+    if result.target_te:
+        nbt = dict(result.target_te)
+        nbt.setdefault("x", pos[0])
+        nbt.setdefault("y", pos[1])
+        nbt.setdefault("z", pos[2])
+        ev["nbt"] = nbt
+    if result.target_block_state:
+        ev["blockstate"] = result.target_block_state
+    return [ev]
+
+
 def _thermal_dynamics_to_events(result: Any) -> list[dict]:
     """Serialise TDBlockConversion -> Event JSON list."""
     c = result.converted
@@ -364,6 +566,26 @@ def _thermal_dynamics_to_events(result: Any) -> list[dict]:
     return events
 
 
+def _forge_multipart_to_events(result: Any) -> list[dict]:
+    """Serialise ForgeMultipartConversion -> Event JSON list."""
+    c = result.converted
+    if not c.success or not c.block_id_1182:
+        return []
+
+    ev: dict = {
+        "op": "set_block_entity" if c.nbt_1182 else "set_block",
+        "pos": list(result.original_pos),
+        "block": c.block_id_1182,
+    }
+    if c.nbt_1182:
+        ev["nbt"] = c.nbt_1182
+    if c.blockstate_props:
+        ev["blockstate"] = c.blockstate_props
+    if c.warnings:
+        ev["warnings"] = list(c.warnings)
+    return [ev]
+
+
 def _generic_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
     """Generic serialiser for converters with a 'converted' sub-object (AE2/Mekanism style)."""
     inner = getattr(result, "converted", result)
@@ -387,6 +609,62 @@ def _generic_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
     return [ev]
 
 
+def _buildcraft_to_events(result: Any) -> list[dict]:
+    """Serialise BuildCraftBlockConversion -> Event JSON list."""
+    c = result.converted
+    if not c.success:
+        return []
+
+    pos = list(result.original_pos)
+    block_id = c.block_id_1182
+    if not block_id:
+        return []
+
+    # REMOVE action -> air
+    if block_id == "minecraft:air":
+        return [{"op": "set_block", "pos": pos, "block": "minecraft:air"}]
+
+    ev: dict = {"pos": pos, "block": block_id}
+    if c.nbt_1182:
+        ev["op"] = "set_block_entity"
+        ev["nbt"] = c.nbt_1182
+    else:
+        ev["op"] = "set_block"
+    if c.blockstate_props:
+        ev["blockstate"] = dict(c.blockstate_props)
+    if c.warnings:
+        ev["warnings"] = list(c.warnings)
+    return [ev]
+
+
+def _biggerreactors_to_events(result: Any) -> list[dict]:
+    """Serialise BiggerReactorsBlockConversion -> Event JSON list."""
+    c = result.converted
+    if not c.success:
+        return []
+
+    pos = list(result.original_pos)
+    block_id = c.block_id_1182
+    if not block_id:
+        return []
+
+    # REMOVE action -> air
+    if block_id == "minecraft:air":
+        return [{"op": "set_block", "pos": pos, "block": "minecraft:air"}]
+
+    ev: dict = {"pos": pos, "block": block_id}
+    if c.nbt_1182:
+        ev["op"] = "set_block_entity"
+        ev["nbt"] = c.nbt_1182
+    else:
+        ev["op"] = "set_block"
+    if c.blockstate_props:
+        ev["blockstate"] = dict(c.blockstate_props)
+    if c.warnings:
+        ev["warnings"] = list(c.warnings)
+    return [ev]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Blood Magic block_id_1710 mapping
 # ──────────────────────────────────────────────────────────────────────────────
@@ -395,6 +673,65 @@ _BM_TE_TO_BLOCK: dict[str, str] = {
     "containerAltar": "AWWayofTime:blockBloodAltar",
     "BPAltar":        "AWWayofTime:blockBloodAltar",
     "containerMasterStone": "AWWayofTime:blockMasterStone",
+}
+
+
+_CFM_TE_TO_BLOCK: dict[str, str] = {
+    "cfmFridge": "cfm:fridge",
+    "cfmFreezer": "cfm:freezer",
+    "cfmCabinetKitchen": "cfm:kitchencabinet",
+    "cfmCounterSink": "cfm:countersink",
+    "cfmCabinet": "cfm:cabinet",
+    "cfmBedsideCabinet": "cfm:bedsidecabinet",
+    "cfmMailBox": "cfm:mailbox",
+    "cfmBin": "cfm:bin",
+    "cfmWallCabinet": "cfm:wallcabinet",
+    "cfmBasin": "cfm:basin",
+    "cfmBath": "cfm:bath1",
+    "TileEntityBath": "cfm:bath1",
+    "cfmMicrowave": "cfm:microwave",
+    "cfmOven": "cfm:oven",
+    "cfmPrinter": "cfm:printer",
+}
+
+
+_JAMMY_TE_TO_BLOCK: dict[str, str] = {
+    "TileEntityWoodBlocksOne": "jammyfurniture:WoodBlocksOne",
+    "TileEntityWoodBlocksTwo": "jammyfurniture:WoodBlocksTwo",
+    "TileEntityWoodBlocksThree": "jammyfurniture:WoodBlocksThree",
+    "TileEntityWoodBlocksFour": "jammyfurniture:WoodBlocksFour",
+    "TileEntityIronBlocksOne": "jammyfurniture:IronBlocksOne",
+    "TileEntityIronBlocksTwo": "jammyfurniture:IronBlocksTwo",
+    "TileEntityCeramicBlocksOne": "jammyfurniture:CeramicBlocksOne",
+    "TileEntityBath": "jammyfurniture:Bath",
+    "TileEntityLightsOn": "jammyfurniture:LightsOn",
+    "TileEntityLightsOff": "jammyfurniture:LightsOff",
+    "TileEntitySofa": "jammyfurniture:Sofa",
+    "TileEntityMobHeads": "jammyfurniture:MobHeads",
+}
+
+
+_BIBLIO_TE_TO_BLOCK: dict[str, str] = {
+    "BookcaseTile": "BiblioCraft:Bookcase",
+    "GenericShelfTile": "BiblioCraft:GenericShelf",
+    "PotionShelfTile": "BiblioCraft:PotionShelf",
+    "ToolRackTile": "BiblioCraft:WeaponRack",
+    "WeaponCaseTile": "BiblioCraft:WeaponCase",
+    "SwordPedestalTile": "BiblioCraft:SwordPedestal",
+    "TableTile": "BiblioCraft:Table",
+    "CookieJarTile": "BiblioCraft:CookieJar",
+    "dinnerPlateTile": "BiblioCraft:DinnerPlate",
+    "FramedChestTile": "BiblioCraft:FramedChest",
+    "ArmorStandTile": "BiblioCraft:ArmorStand",
+    "biblioPaintingTile": "BiblioCraft:Painting",
+    "WoodLabelTile": "BiblioCraft:Label",
+    "biblioClipboardTile": "BiblioCraft:Clipboard",
+    "DiscRackTile": "BiblioCraft:DiscRack",
+    "biblioClockTile": "BiblioCraft:Clock",
+    "fancySignTile": "BiblioCraft:FancySign",
+    "MapFrameTile": "BiblioCraft:MapFrame",
+    "LanternTile": "BiblioCraft:Lantern",
+    "LampTile": "BiblioCraft:Lamp",
 }
 
 
@@ -417,6 +754,18 @@ def convert_te_to_events(
     te_id = str(te_nbt.get("id", ""))
     if not te_id:
         return []
+
+    if te_id == "savedMultipart" and not _saved_multipart_is_projectred_only(te_nbt):
+        result = _forge_multipart().convert_block(
+            block_id_1710="ForgeMultipart:block",
+            metadata=metadata,
+            nbt_1710=te_nbt,
+            position=global_pos,
+        )
+        events = _forge_multipart_to_events(result)
+        if not events:
+            return [_placeholder(te_id, "forgemultipart", metadata, te_nbt, global_pos, "converter_returned_empty")]
+        return events
 
     mod = detect_mod(te_id)
     if mod == "vanilla":
@@ -522,6 +871,148 @@ def convert_te_to_events(
                 return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
             return events
 
+        if mod == "projectred":
+            if te_id == "savedMultipart":
+                events: list[dict[str, Any]] = []
+                unsupported_parts: list[str] = []
+                raw_parts = te_nbt.get("parts") or te_nbt.get("savedParts") or []
+                for part in raw_parts:
+                    if not isinstance(part, dict):
+                        continue
+                    part_type = str(part.get("id", ""))
+                    if not _projectred().is_projectred_multipart(part_type):
+                        unsupported_parts.append(part_type or "<empty>")
+                        continue
+                    result = _projectred().convert_multipart(
+                        part_type=part_type,
+                        nbt_1710=part,
+                        position=global_pos,
+                    )
+                    events.extend(_projectred_to_events(result))
+                if events:
+                    return events
+                reason = "no_supported_projectred_parts"
+                if unsupported_parts:
+                    reason += ":" + ",".join(sorted(set(unsupported_parts))[:5])
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, reason)]
+
+            if te_id.startswith("tile.projectred.illumination.lamp"):
+                lamp_meta = metadata
+                if "|" in te_id:
+                    try:
+                        lamp_meta = int(te_id.rsplit("|", 1)[1])
+                    except ValueError:
+                        lamp_meta = metadata
+                result = _projectred().convert_block(
+                    block_id_1710="ProjRed|Illumination:projectred.illumination.lamp",
+                    nbt_1710=te_nbt,
+                    metadata=lamp_meta,
+                    position=global_pos,
+                )
+                events = _projectred_to_events(result)
+                if not events:
+                    return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+                return events
+
+            return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "unsupported_projectred_te")]
+
+        if mod == "thermal":
+            result = _thermal().convert_te_by_id(te_id, te_nbt, global_pos)
+            events = _simple_dict_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "mrcraysfish_furniture":
+            block_id = _CFM_TE_TO_BLOCK.get(te_id, te_id)
+            event = _mrcrayfish().convert_tile_entity(
+                te_nbt=te_nbt,
+                block_id=block_id,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _conversion_event_to_events(event)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod in ("jammyfurniture", "decorative_blocks"):
+            block_id = _JAMMY_TE_TO_BLOCK.get(te_id, te_id)
+            result = _jammyfurniture().convert_block(
+                source_block_name=block_id,
+                source_metadata=metadata,
+                tile_entity=te_nbt,
+            )
+            events = _jammy_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod in ("bibliocraft", "furniture_misc"):
+            block_id = _BIBLIO_TE_TO_BLOCK.get(te_id, te_id)
+            result = _bibliocraft().convert_tile_entity(te_nbt, block_id, global_pos)
+            events = _converted_block_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "growthcraft":
+            gc = _growthcraft()
+            block_id = gc.TE_ID_TO_BLOCK_ID.get(te_id, te_id)
+            result = gc.convert_block(block_id=block_id, metadata=metadata, nbt=te_nbt)
+            events = _generic_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "enderstorage":
+            result = _enderstorage().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _generic_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "railcraft":
+            result = _railcraft().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _generic_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "buildcraft":
+            result = _buildcraft().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _buildcraft_to_events(result)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "bigreactors":
+            result = _bigreactors().convert_block(
+                block_id_1710=te_id,
+                metadata=metadata,
+                nbt_1710=te_nbt,
+                position=global_pos,
+            )
+            events = _biggerreactors_to_events(result)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
         # All other known-but-unimplemented mods and truly unknown ones
         return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "no_converter")]
 
@@ -548,3 +1039,17 @@ def _placeholder(
         original_nbt=te_nbt,
         conversion_reason=reason,
     )
+
+
+def _saved_multipart_is_projectred_only(te_nbt: dict[str, Any]) -> bool:
+    """Return true when a savedMultipart contains only ProjectRed parts."""
+    raw_parts = te_nbt.get("parts") or te_nbt.get("savedParts") or []
+    if not raw_parts:
+        return False
+    for part in raw_parts:
+        if not isinstance(part, dict):
+            return False
+        part_type = str(part.get("id", ""))
+        if not _projectred().is_projectred_multipart(part_type):
+            return False
+    return True

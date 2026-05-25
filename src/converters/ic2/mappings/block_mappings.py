@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from typing import Any
 
 try:
-    from ..block_inventory import IC2_ALL_BLOCKS
+    from .block_inventory import IC2_ALL_BLOCKS
 except ImportError:
     IC2_ALL_BLOCKS = {}
 
@@ -56,6 +56,7 @@ REACTOR_VESSEL = "IC2:blockreactorvessel"
 PERSONAL = "IC2:blockPersonal"
 LUMINATOR = "IC2:blockLuminator"
 LUMINATOR_DARK = "IC2:blockLuminatorDark"
+CROP = "IC2:blockCrop"
 
 # Placeholder block (z common/placeholders.py)
 PLACEHOLDER_BLOCK = "conversion_placeholders:block_entity_placeholder"
@@ -210,11 +211,86 @@ RESOURCE_MAPPINGS: dict[tuple[str, int], BlockMapping] = {
     ("IC2:blockMetal", 3): BlockMapping("IC2:blockMetal", 3, "ftbic:uranium_block", False, "identity", "Uranium Block (ftbic)"),
     ("IC2:blockMetal", 4): BlockMapping("IC2:blockMetal", 4, "ftbic:lead_block", False, "identity", "Lead Block (ftbic)"),
     ("IC2:blockMetal", 5): BlockMapping("IC2:blockMetal", 5, "thermal:steel_block", False, "identity", "Steel Block (Thermal, brak w Tier-1)"),
+    (CROP, 0): BlockMapping(CROP, 0, PLACEHOLDER_BLOCK, True, "placeholder", "IC2 Crop/TECrop - zachowaj NBT uprawy do ręcznej rekonstrukcji"),
 }
 
 
 # Połączone mapowania
 ALL_MAPPINGS = {**STATIC_MAPPINGS, **RESOURCE_MAPPINGS}
+
+
+# IC2 experimental 2.2.827 często zapisuje TileEntities[].id jako krótkie
+# nazwy rejestracyjne Forge, nie jako nazwy klas TileEntity*. Ta mapa jest
+# krytyczna dla rzeczywistej mapy 1.7.10.
+IC2_TE_ID_TO_BLOCK_META: dict[str, tuple[str, int]] = {
+    "Iron Furnace": (MACHINE, 1),
+    "Electric Furnace": (MACHINE, 2),
+    "Macerator": (MACHINE, 3),
+    "Extractor": (MACHINE, 4),
+    "Compressor": (MACHINE, 5),
+    "Canning Machine": (MACHINE, 6),
+    "Miner": (MACHINE, 7),
+    "Pump": (MACHINE, 8),
+    "Magnetizer": (MACHINE, 9),
+    "Electrolyzer": (MACHINE, 10),
+    "Recycler": (MACHINE, 11),
+    "Induction Furnace": (MACHINE, 13),
+    "Mass Fabricator": (MACHINE, 14),
+    "Terraformer": (MACHINE, 15),
+    "Teleporter": (MACHINE2, 0),
+    "Crop-Matron": (MACHINE2, 2),
+    "Thermal Centrifuge": (MACHINE2, 3),
+    "Metal Former": (MACHINE2, 4),
+    "Ore Washing Plant": (MACHINE2, 5),
+    "Pattern Storage": (MACHINE2, 6),
+    "Scanner": (MACHINE2, 7),
+    "Replicator": (MACHINE2, 8),
+    "Solid Canner": (MACHINE2, 9),
+    "Fluid Bottler": (MACHINE2, 10),
+    "Advanced Miner": (MACHINE2, 11),
+    "AdvMiner": (MACHINE2, 11),
+    "Steam Generator": (MACHINE3, 0),
+    "Blast Furnace": (MACHINE3, 1),
+    "Block Cutter": (MACHINE3, 2),
+    "Crop Havester": (MACHINE3, 7),  # IC2 typo zachowane w registry id.
+    "Generator": (GENERATOR, 0),
+    "Geothermal Generator": (GENERATOR, 1),
+    "Water Generator": (GENERATOR, 2),
+    "Solar Panel": (GENERATOR, 3),
+    "Wind Generator": (GENERATOR, 4),
+    "Nuclear Reactor": (GENERATOR, 5),
+    "Radioisotope Thermoelectric Generator": (GENERATOR, 6),
+    "Semifluid Generator": (GENERATOR, 7),
+    "Stirling Generator": (GENERATOR, 8),
+    "Kinetic Generator": (GENERATOR, 9),
+    "Electric Heat Generator": (HEAT_GENERATOR, 0),
+    "Fluid Heat Generator": (HEAT_GENERATOR, 1),
+    "RT Heat Generator": (HEAT_GENERATOR, 2),
+    "Solid Heat Generator": (HEAT_GENERATOR, 3),
+    "Electric Kinetic Generator": (KINETIC_GENERATOR, 0),
+    "Manual Kinetic Generator": (KINETIC_GENERATOR, 1),
+    "Steam Kinetic Generator": (KINETIC_GENERATOR, 2),
+    "Stirling Kinetic Generator": (KINETIC_GENERATOR, 3),
+    "Water Kinetic Generator": (KINETIC_GENERATOR, 4),
+    "Wind Kinetic Generator": (KINETIC_GENERATOR, 5),
+    "Cable": (CABLE, 0),
+    "BatBox": (ELECTRIC, 0),
+    "MFE": (ELECTRIC, 1),
+    "MFSU": (ELECTRIC, 2),
+    "LV-Transformer": (ELECTRIC, 3),
+    "MV-Transformer": (ELECTRIC, 4),
+    "HV-Transformer": (ELECTRIC, 5),
+    "EV-Transformer": (ELECTRIC, 6),
+    "CESU": (ELECTRIC, 7),
+    "Chargepad": (CHARGEPAD, 0),
+    "Chargepad MFE": (CHARGEPAD, 2),
+    "Chargepad MFSU": (CHARGEPAD, 3),
+    "Reactor Chamber": (REACTOR_CHAMBER, 0),
+    "Reactor Fluid Port": (REACTOR_FLUID_PORT, 0),
+    "Reactor Access Hatch": (REACTOR_ACCESS_HATCH, 0),
+    "Reactor Redstone Port": (REACTOR_REDSTONE_PORT, 0),
+    "TECrop": (CROP, 0),
+}
 
 
 def get_block_mapping(block_id: str, metadata: int) -> BlockMapping | None:
@@ -228,16 +304,32 @@ def get_block_mapping(block_id: str, metadata: int) -> BlockMapping | None:
     return ALL_MAPPINGS.get(key_wildcard)
 
 
+def get_block_meta_for_te_id(te_id: str) -> tuple[str, int] | None:
+    """Resolve an IC2 TE id to its source block id + metadata."""
+    direct = IC2_TE_ID_TO_BLOCK_META.get(te_id)
+    if direct:
+        return direct
+
+    for (block_id, meta), mapping in ALL_MAPPINGS.items():
+        info = IC2_ALL_BLOCKS.get(block_id, {}).get(meta if meta is not None else 0, {})
+        if info.get("te_class") == te_id:
+            return block_id, int(meta or 0)
+    return None
+
+
+def is_ic2_te_id(te_id: str) -> bool:
+    """True for class-name and Forge registry-name IC2 TileEntity ids."""
+    return get_block_meta_for_te_id(te_id) is not None
+
+
 def get_mapping_for_te_id(te_id: str) -> BlockMapping | None:
     """Próbuje znaleźć mapowanie na podstawie TileEntity ID (class name).
     
     Uwaga: W IC2 1.7.10 TE ID to nazwa klasy lub string rejestracyjny.
     """
-    # Mapowanie odwrotne TE → block
-    for (block_id, meta), mapping in ALL_MAPPINGS.items():
-        info = IC2_ALL_BLOCKS.get(block_id, {}).get(meta if meta is not None else 0, {})
-        if info.get("te_class") == te_id:
-            return mapping
+    resolved = get_block_meta_for_te_id(te_id)
+    if resolved:
+        return get_block_mapping(*resolved)
     return None
 
 

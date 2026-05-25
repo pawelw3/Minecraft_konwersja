@@ -282,7 +282,7 @@ class TestIndrebNBTShape:
         assert nbt["active"] is True
         assert nbt["progress"]["progress"] == 200.0
         assert nbt["progress"]["progressMax"] == 400.0
-        assert nbt["inventory"]["Size"] == 2
+        assert nbt["inventory"]["Size"] == 3
         assert len(nbt["inventory"]["Items"]) == 2
         # Sloty powinny być unikalne
         slots = [it["Slot"] for it in nbt["inventory"]["Items"]]

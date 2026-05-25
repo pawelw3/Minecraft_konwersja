@@ -41,6 +41,8 @@ class WorldEditor1182(private val worldPath: Path) {
     fun setBlock(x: Int, y: Int, z: Int, blockId: String, properties: Map<String, String> = emptyMap()) {
         val region = regionForBlock(x, z)
         region.region.setBlockState(x, y, z, BlockState(blockId, properties))
+        val chunk = region.region.getOrCreateChunk(chunkCoordFromBlock(x), chunkCoordFromBlock(z))
+        chunk.dataVersion = 2975
         modifiedChunks.add(chunkCoordFromBlock(x) to chunkCoordFromBlock(z))
     }
 
@@ -58,6 +60,7 @@ class WorldEditor1182(private val worldPath: Path) {
         val chunkX = chunkCoordFromBlock(x)
         val chunkZ = chunkCoordFromBlock(z)
         val chunk = region.region.getOrCreateChunk(chunkX, chunkZ)
+        chunk.dataVersion = 2975
 
         val existing = mutableListOf<NBTCompound>()
         for (tag in chunk.tileEntities) {
@@ -79,6 +82,7 @@ class WorldEditor1182(private val worldPath: Path) {
         setBlock(x, y, z, "minecraft:air")
         val region = regionForBlock(x, z)
         val chunk = region.region.getOrCreateChunk(chunkCoordFromBlock(x), chunkCoordFromBlock(z))
+        chunk.dataVersion = 2975
         val filtered = mutableListOf<NBTCompound>()
         for (i in 0 until chunk.tileEntities.size) {
             val tag = chunk.tileEntities[i]

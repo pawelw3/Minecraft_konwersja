@@ -135,7 +135,7 @@ class ThermalDynamicsConverter:
     ) -> TDBlockConversion:
         mapping = get_mapping_for_te_id(te_id, metadata)
         if mapping:
-            return self.convert_block(mapping.source_block_id, metadata, nbt_1710, position)
+            return self.convert_block(mapping.source_block_id, mapping.metadata or 0, nbt_1710, position)
         # Fallback: spróbuj użyć te_id jako block_id (rzadki przypadek)
         return self.convert_block(te_id, metadata, nbt_1710, position)
 

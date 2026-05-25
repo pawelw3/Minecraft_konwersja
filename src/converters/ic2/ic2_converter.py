@@ -21,7 +21,13 @@ from typing import Any
 from converters.common.conversion_event import ConversionEvent
 
 from .mappings.block_inventory import IC2_ALL_BLOCKS
-from .mappings.block_mappings import BlockMapping, get_block_mapping, get_mapping_for_te_id
+from .mappings.block_mappings import (
+    BlockMapping,
+    get_block_mapping,
+    get_block_meta_for_te_id,
+    get_mapping_for_te_id,
+    is_ic2_block,
+)
 from .nbt_converters.base_converter import NBTConversionResult
 from .nbt_converters.converter_registry import get_nbt_converter
 
@@ -168,7 +174,15 @@ class IC2Converter:
         metadata: int,
         nbt_1710: dict[str, Any] | None,
     ) -> BlockMapping | None:
-        # Try by TE id first (most specific)
+        # Prefer explicit block+metadata when the caller has section data.
+        # Registry TE ids such as "Cable" are generic and must not override
+        # metadata-specific mappings like IC2:blockCable:9.
+        if is_ic2_block(block_id_1710):
+            by_block = get_block_mapping(block_id_1710, metadata)
+            if by_block:
+                return by_block
+
+        # Try by TE id when block id is unavailable or unknown.
         if nbt_1710 and nbt_1710.get("id"):
             by_te = get_mapping_for_te_id(str(nbt_1710["id"]))
             if by_te:
@@ -226,6 +240,9 @@ class IC2Converter:
 
     def _resolve_block_id_from_te(self, te_id: str, metadata: int) -> str | None:
         """Look up block_id from TE class name using block_inventory data."""
+        resolved = get_block_meta_for_te_id(te_id)
+        if resolved:
+            return resolved[0]
         for block_id, variants in IC2_ALL_BLOCKS.items():
             meta_info = variants.get(metadata, variants.get(0))
             if meta_info and meta_info.get("te_class") == te_id:

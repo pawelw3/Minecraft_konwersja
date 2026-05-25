@@ -12,7 +12,7 @@ from __future__ import annotations
 # Mapowanie ID bloków
 # ---------------------------------------------------------------------------
 BLOCK_ID_1710_TO_1182: dict[str, str] = {
-    "ForgeMultipart:block": "cb_multipart:block",
+    "ForgeMultipart:block": "cb_multipart:multipart",
     # Mikrobloki nie są osobnymi blokami w 1.7.10 — są partami wewnątrz BlockMultipart.
     # W 1.18.2 również nie mają osobnych block ID.
 }
@@ -24,10 +24,10 @@ TE_ID_1710_TO_1182: dict[str, str] = {
     # Exact string potwierdzony na mapie (Zadanie 4):
     # ForgeMultipart używa dynamicznej rejestracji przez ASM;
     # w NBT chunka TileMultipart pojawia się jako "savedMultipart".
-    "savedMultipart": "cb_multipart:tile_multipart",
+    "savedMultipart": "cb_multipart:saved_multipart",
     # Hipotetyczne alternatywy (do weryfikacji jeśli się pojawią):
-    "TileMultipart": "cb_multipart:tile_multipart",
-    "ForgeMultipart:TileMultipart": "cb_multipart:tile_multipart",
+    "TileMultipart": "cb_multipart:saved_multipart",
+    "ForgeMultipart:TileMultipart": "cb_multipart:saved_multipart",
 }
 
 # ---------------------------------------------------------------------------

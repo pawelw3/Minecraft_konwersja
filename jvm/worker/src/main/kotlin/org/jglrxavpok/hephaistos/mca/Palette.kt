@@ -61,7 +61,11 @@ class Palette() {
     @JvmOverloads
     fun compactIDs(states: Array<BlockState>, version: SupportedVersion = SupportedVersion.Latest): ImmutableLongArray {
         val indices = states.map(blocks::indexOf).toIntArray()
-        val bitLength = ceil(log2(blocks.size.toFloat())).toInt().coerceAtLeast(1)
+        // 1.18.2+ requires a minimum of 4 bits per block-state entry.
+        // Using fewer bits produces a long-array shorter than the server expects,
+        // causing "invalid length given for storage" on chunk load.
+        val minBits = if (version >= SupportedVersion.MC_1_18_2) 4 else 1
+        val bitLength = ceil(log2(blocks.size.toFloat())).toInt().coerceAtLeast(minBits)
         return when {
             version == SupportedVersion.MC_1_15 -> compress(indices, bitLength)
             version >= SupportedVersion.MC_1_16 -> pack(indices, bitLength)

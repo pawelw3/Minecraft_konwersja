@@ -14,6 +14,7 @@ def convert_inventory_1710_to_1182(
     slot_tag: str,
     target_size: int,
     damage_mapper: dict[tuple[str, int], str] | None = None,
+    item_id_resolver: callable | None = None,
 ) -> list[dict[str, Any]]:
     """Konwertuje liste itemow z formatu 1.7.10 na standard 1.18.2.
 
@@ -22,6 +23,7 @@ def convert_inventory_1710_to_1182(
         slot_tag: Nazwa custom slot tag w 1.7.10 (np. "fridgeSlot", "cabinetSlot", "mailBoxSlot")
         target_size: Docelowa liczba slotow w 1.18.2
         damage_mapper: Opcjonalne mapowanie (item_id, damage) -> nowe item_id 1.18.2
+        item_id_resolver: Opcjonalna funkcja (str) -> str do mapowania numerycznych ID na string ID
 
     Returns:
         Lista itemow w formacie 1.18.2 (ze standardowym "Slot")
@@ -48,6 +50,10 @@ def convert_inventory_1710_to_1182(
 
         item_id = str(item.get("id", ""))
         damage = item.get("Damage", 0)
+
+        # Mapowanie numerycznych ID na string ID (1.7.10 -> 1.18.2)
+        if item_id_resolver is not None:
+            item_id = item_id_resolver(item_id)
 
         # Mapowanie damage na nowe ID
         if damage_mapper and (item_id, damage) in damage_mapper:

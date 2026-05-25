@@ -26,10 +26,14 @@ Requirements
 
 from __future__ import annotations
 
+import io
 import json
+import math
 import shutil
+import struct
 import subprocess
 import sys
+import zlib
 from pathlib import Path
 
 # ── project root on sys.path so src/ imports work ──────────────────────────
@@ -54,20 +58,23 @@ _TEMPLATES = [
 EVENTS_FILE = ROOT / "output" / "zsrr_events.jsonl"
 WORKER_JAR  = ROOT / "jvm" / "worker" / "build" / "libs" / "mc-editkit-worker-1.0-SNAPSHOT.jar"
 
-# Bounding box (block coordinates, inclusive)
-X_MIN, X_MAX = -2748, -2649
-Z_MIN, Z_MAX = -2057, -1958
+# Chunk range — 10×10 chunk grid centred on the densest ZSRR area
+# (original 7×7 core: X=-2748..-2649, Z=-2057..-1958)
+CHUNK_X_MIN = -174   # chunk -174 starts at X = -2784
+CHUNK_X_MAX = -165   # chunk -165 ends   at X = -2625
+CHUNK_Z_MIN = -131   # chunk -131 starts at Z = -2096
+CHUNK_Z_MAX = -122   # chunk -122 ends   at Z = -1937
 
-# Chunk range (Python floor division handles negatives correctly)
-CHUNK_X_MIN = X_MIN // 16   # -172
-CHUNK_X_MAX = X_MAX // 16   # -166
-CHUNK_Z_MIN = Z_MIN // 16   # -129
-CHUNK_Z_MAX = Z_MAX // 16   # -123
+# Block bounding box of the 10×10 area
+X_MIN = CHUNK_X_MIN * 16         # -2784
+X_MAX = CHUNK_X_MAX * 16 + 15   # -2625
+Z_MIN = CHUNK_Z_MIN * 16         # -2096
+Z_MAX = CHUNK_Z_MAX * 16 + 15   # -1937
 
-# Spawn: centre of the converted area, comfortable height
-SPAWN_X = (X_MIN + X_MAX) // 2   # -2699
+# Spawn: centre of the converted area
+SPAWN_X = (X_MIN + X_MAX) // 2   # -2705
 SPAWN_Y = 70
-SPAWN_Z = (Z_MIN + Z_MAX) // 2   # -2007
+SPAWN_Z = (Z_MIN + Z_MAX) // 2   # -2017
 
 
 # ── helpers ──────────────────────────────────────────────────────────────────
@@ -145,6 +152,129 @@ def step2_amulet_vanilla_copy():
 
     print(f"      chunks copied: {copied}, missing/error: {skipped}")
     print("      Vanilla blocks translated; unknown mod blocks → air (handled in step 3).")
+
+
+# ── step 2b: replace minecraft:numerical with air ────────────────────────────
+
+def step2b_replace_numerical_with_air():
+    """Replace minecraft:numerical palette entries with minecraft:air.
+
+    Amulet writes untranslatable blocks (mod blocks without a 1.18.2 equivalent)
+    as 'minecraft:numerical[block_id=X,block_data=Y]'.  This is an internal
+    Amulet format that is NOT a valid Minecraft 1.18.2 block, so the game either
+    renders it as invisible or may fail to load the section.
+
+    Fix: rename every such palette entry to 'minecraft:air'.  The data long-array
+    is untouched — the same palette indices now point to air, so affected positions
+    become structurally correct empty blocks.  Duplicate air entries in a palette
+    are harmless (the game reads by index, not by de-duplicating).
+    """
+    import nbtlib  # type: ignore
+
+    print(f"\n[2b/5] Replacing minecraft:numerical with air in copied chunks")
+
+    chunks_patched = 0
+    sections_patched = 0
+
+    for rx, rz in sorted(_regions_needed()):
+        region_file = DST_WORLD / "region" / f"r.{rx}.{rz}.mca"
+        if not region_file.exists():
+            continue
+
+        with open(region_file, "rb") as f:
+            region_data = bytearray(f.read())
+
+        region_dirty = False
+
+        for gcx, gcz in _chunks_in_area():
+            if gcx // 32 != rx or gcz // 32 != rz:
+                continue
+
+            lcx, lcz = _global_to_local_chunk(gcx, gcz)
+            idx = lcx + lcz * 32
+
+            loc = region_data[idx * 4 : idx * 4 + 4]
+            sector_off = (loc[0] << 16) | (loc[1] << 8) | loc[2]
+            if sector_off == 0:
+                continue
+
+            byte_off = sector_off * 4096
+            length = struct.unpack(">I", bytes(region_data[byte_off : byte_off + 4]))[0]
+            comp_type = region_data[byte_off + 4]
+            if comp_type != 2:
+                continue
+
+            compressed = bytes(region_data[byte_off + 5 : byte_off + 5 + length - 1])
+            raw = zlib.decompress(compressed)
+
+            nbt_file = nbtlib.File.from_fileobj(io.BytesIO(raw), byteorder="big")
+
+            # Locate sections — handle both 1.18.2 flat format and legacy Level format.
+            root = nbt_file.get("Level", nbt_file)
+            sections = root.get("sections") or root.get("Sections") or []
+
+            chunk_dirty = False
+            for section in sections:
+                bs = section.get("block_states")
+                if bs is None:
+                    continue
+                palette = bs.get("palette")
+                if palette is None:
+                    continue
+
+                for i, entry in enumerate(palette):
+                    name = str(entry.get("Name", ""))
+                    if "numerical" not in name:
+                        continue
+                    # Replace with a plain air entry (no Properties).
+                    palette[i] = nbtlib.Compound({"Name": nbtlib.String("minecraft:air")})
+                    sections_patched += 1
+                    chunk_dirty = True
+
+            if not chunk_dirty:
+                continue
+
+            # Serialize the modified chunk back into the region bytearray.
+            buf = io.BytesIO()
+            nbt_file.write(buf)
+            new_raw = buf.getvalue()
+            new_comp = zlib.compress(new_raw)
+            new_len = len(new_comp) + 1  # +1 for compression-type byte
+
+            old_sector_count = region_data[idx * 4 + 3]
+            new_sector_count = math.ceil((new_len + 4) / 4096)
+
+            if new_sector_count <= old_sector_count:
+                # Fits in the existing sector allocation — write in-place.
+                region_data[byte_off : byte_off + 4] = struct.pack(">I", new_len)
+                region_data[byte_off + 4] = 2
+                region_data[byte_off + 5 : byte_off + 5 + len(new_comp)] = new_comp
+            else:
+                # Append to the end of the file and update the location table.
+                # (Shrinking palette entries almost always makes the chunk smaller,
+                # so this branch is rarely taken.)
+                if len(region_data) % 4096 != 0:
+                    region_data.extend(b"\x00" * (4096 - len(region_data) % 4096))
+                new_start = len(region_data) // 4096
+                chunk_bytes = struct.pack(">I", new_len) + b"\x02" + new_comp
+                chunk_bytes += b"\x00" * (new_sector_count * 4096 - len(chunk_bytes))
+                region_data.extend(chunk_bytes)
+                region_data[idx * 4 : idx * 4 + 4] = bytes([
+                    (new_start >> 16) & 0xFF,
+                    (new_start >> 8) & 0xFF,
+                    new_start & 0xFF,
+                    new_sector_count,
+                ])
+
+            chunks_patched += 1
+            region_dirty = True
+
+        if region_dirty:
+            with open(region_file, "wb") as f:
+                f.write(region_data)
+
+    print(f"      Chunks patched : {chunks_patched}")
+    print(f"      Sections patched: {sections_patched}  (numerical→air palette entries)")
 
 
 # ── step 3: generate mod events ──────────────────────────────────────────────
@@ -304,13 +434,16 @@ def step5_configure_world():
 
 def main():
     print("=" * 60)
+    cx = CHUNK_X_MAX - CHUNK_X_MIN + 1
+    cz = CHUNK_Z_MAX - CHUNK_Z_MIN + 1
     print("ZSRR Fragment Converter  --  1.7.10 -> 1.18.2")
-    print(f"Area : X={X_MIN}..{X_MAX}  Z={Z_MIN}..{Z_MAX}")
-    print(f"Chunks: X {CHUNK_X_MIN}..{CHUNK_X_MAX}  Z {CHUNK_Z_MIN}..{CHUNK_Z_MAX}  ({(CHUNK_X_MAX-CHUNK_X_MIN+1)*(CHUNK_Z_MAX-CHUNK_Z_MIN+1)} total)")
+    print(f"Area  : X={X_MIN}..{X_MAX}  Z={Z_MIN}..{Z_MAX}")
+    print(f"Chunks: X {CHUNK_X_MIN}..{CHUNK_X_MAX}  Z {CHUNK_Z_MIN}..{CHUNK_Z_MAX}  ({cx}x{cz}={cx*cz} total)")
     print("=" * 60)
 
     step1_prepare_world()
     step2_amulet_vanilla_copy()
+    step2b_replace_numerical_with_air()
     step3_generate_mod_events()
     step4_apply_events()
     step5_configure_world()

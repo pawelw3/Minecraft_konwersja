@@ -18,6 +18,7 @@ from typing import Any
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
 from minecraft_map_parser.anvil_parser import AnvilParser
+from converters.ic2.mappings.block_mappings import is_ic2_te_id
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -82,39 +83,12 @@ def region_file_exists(rx: int, rz: int) -> bool:
 
 
 def is_ic2_te(te_id: str) -> bool:
-    """Sprawdza czy TE id należy do IC2."""
-    if not te_id:
-        return False
-    # IC2 w 1.7.10 używa nazw klas (TileEntityMacerator, itp.)
-    # oraz niektórych prefiksów jak "IC2TE"
-    if te_id.startswith("IC2TE"):
-        return True
-    # Większość IC2 TE to TileEntity* które nie są z innych modów
-    # Ale TileEntityBookcase to BiblioCraft, TileEntityCarpentersBlock to Carpenter's
-    if te_id.startswith("TileEntity"):
-        # Wykluczamy znane TE innych modów
-        non_ic2_prefixes = (
-            "TileEntityBook", "TileEntityShelf", "TileEntityArmor",
-            "TileEntityLabel", "TileEntityPrintingPress", "TileEntityTypeMachine",
-            "TileEntityMap", "TileEntityAtlas", "TileEntityLantern", "TileEntityBiblio",
-            "TileEntityCarpentersBlock", "TileEntityCarpenters", "TileEntityBarrier",
-            "TileEntityBath", "TileEntityKitchen", "TileEntitySofa", "TileEntityCabinet",
-            "TileEntityWoodBlocks", "TileEntityCeramicBlocks",
-            "TileEntityFilingCabinet", "TileEntityDesk",
-        )
-        if any(te_id.startswith(p) for p in non_ic2_prefixes):
-            return False
-        # Wykluczamy vanilla
-        vanilla = {"Chest", "TrappedChest", "Furnace", "Brewing", "Dropper",
-                   "Dispenser", "Hopper", "Beacon", "Jukebox", "MobSpawner",
-                   "Sign", "Skull", "Banner", "Comparator", "Cauldron",
-                   "EnchantTable", "EndPortal", "Control", "RecordPlayer",
-                   "Music", "Piston", "FlowerPot", "noteblock", "DLDetector"}
-        bare = te_id.split(":")[-1]
-        if bare in vanilla:
-            return False
-        return True
-    return False
+    """Sprawdza czy TE id należy do IC2.
+
+    IC2 experimental 2.2.827 zapisuje realne TE zwykle jako krótkie nazwy
+    rejestracyjne Forge, np. "Macerator", "Cable", "TECrop".
+    """
+    return is_ic2_te_id(te_id)
 
 
 def scan_region(rx: int, rz: int) -> dict[str, Any]:
@@ -226,20 +200,13 @@ def main():
         print(f"  {te_id}: {count}")
 
     # Sprawdź pokrycie mapowań
-    from converters.ic2.mappings.block_inventory import IC2_ALL_BLOCKS
-
-    known_te_classes = set()
-    for block_id, variants in IC2_ALL_BLOCKS.items():
-        for meta, info in variants.items():
-            te = info.get("te_class")
-            if te:
-                known_te_classes.add(te)
+    from converters.ic2.mappings.block_mappings import get_mapping_for_te_id
 
     covered = 0
     uncovered = 0
     uncovered_ids = []
     for te_id, count in total_te_counts.items():
-        if te_id in known_te_classes:
+        if get_mapping_for_te_id(te_id):
             covered += count
         else:
             uncovered += count

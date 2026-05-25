@@ -51,7 +51,7 @@ class ForgeMultipartConverter:
     Konwerter ForgeMultipart / CB Multipart.
 
     Obsługuje:
-    - ForgeMultipart:block (BlockMultipart) -> cb_multipart:block
+    - ForgeMultipart:block (BlockMultipart) -> cb_multipart:multipart
     - TileMultipart NBT (z parts: mikrobloki, vanilla parts)
     """
 

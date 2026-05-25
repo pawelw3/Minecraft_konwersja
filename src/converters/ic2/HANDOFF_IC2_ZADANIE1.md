@@ -4,6 +4,15 @@
 
 Wykonano kompletną inwentaryzację moda **IndustrialCraft 2 Experimental 2.2.827** dla Minecraft 1.7.10. Zdekompilowano kod źródłowy z JARa (`industrialcraft-2-2.2.827-experimental.jar`) przy użyciu Vineflower i przeanalizowano wszystkie klasy bloków oraz Tile Entities. Wyniki zapisano w module `src/converters/ic2/mappings/block_inventory.py`.
 
+### Korekta 2026-05-20: nazwy TE w zapisie mapy
+
+Inwentaryzacja klas `TileEntity*` pozostaje potrzebna, ale realne NBT mapy
+1.7.10 nie zawsze używa tych nazw w `TileEntities[].id`. IC2 experimental
+2.2.827 rejestruje wiele TE krótkimi nazwami Forge, np. `Macerator`,
+`Electric Furnace`, `Cable`, `TECrop`, `MFSU`, `Reactor Chamber`.
+Zadanie 1 należy więc czytać jako inwentaryzację klas i bloków, a nie jako
+pełną listę wartości `TileEntities[].id` występujących na mapie.
+
 ---
 
 ## 1. Informacje ogólne o IC2

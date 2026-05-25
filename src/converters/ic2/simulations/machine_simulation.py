@@ -254,18 +254,27 @@ def simulate_standard_machine_conversion(
             # Użyj extract_inventory_indreb dla poprawnego mapowania slotów
             indreb_inv = extract_inventory_indreb(nbt_1710)
             if indreb_inv["inventory"]:
+                max_inv_slot = max(it["Slot"] for it in indreb_inv["inventory"])
+                # Generator-like machines have 1 slot; standard machines have 3+
+                if "generator" in target_block_id or "solar" in target_block_id or "semifluid" in target_block_id:
+                    min_size = 1
+                else:
+                    min_size = 3
                 result["nbt_1182"]["inventory"] = {
-                    "Size": len(indreb_inv["inventory"]),
+                    "Size": max(max_inv_slot + 1, min_size),
                     "Items": indreb_inv["inventory"],
                 }
             if indreb_inv["battery"]:
+                max_bat_slot = max(it["Slot"] for it in indreb_inv["battery"])
                 result["nbt_1182"]["battery"] = {
-                    "Size": len(indreb_inv["battery"]),
+                    "Size": max(max_bat_slot + 1, 1),
                     "Items": indreb_inv["battery"],
                 }
             if indreb_inv["upgrade"]:
+                max_upg_slot = max(it["Slot"] for it in indreb_inv["upgrade"])
+                # indreb upgrade handler always has 4 slots
                 result["nbt_1182"]["upgrade"] = {
-                    "Size": len(indreb_inv["upgrade"]),
+                    "Size": max(max_upg_slot + 1, 4),
                     "Items": indreb_inv["upgrade"],
                 }
         elif target_block_id.startswith("ftbic:"):
@@ -304,11 +313,13 @@ def simulate_standard_machine_conversion(
 
 def simulate_teleporter_conversion(
     nbt_1710: dict[str, Any],
+    target_block_id: str = "",
 ) -> dict[str, Any]:
-    """Symulacja konwersji Teleportera IC2 → Mekanism Teleporter.
+    """Symulacja konwersji Teleportera IC2 → ftbic / Mekanism Teleporter.
     
     IC2: targetSet (bool), targetX/Y/Z (int)
-    Mekanism: frequency (CompoundTag) z 'publicCache' lub 'securityMode'
+    ftbic: Energy (double)
+    Mekanism: energyContainer (CompoundTag) z 'stored'
     """
     result = {
         "nbt_1182": {},
@@ -323,7 +334,14 @@ def simulate_teleporter_conversion(
     
     # Energia
     energy_eu = float(nbt_1710.get("energy", 0.0))
-    result["nbt_1182"]["energyContainer"] = {"stored": convert_energy_eu_to_fe(energy_eu)}
+    energy_fe = convert_energy_eu_to_fe(energy_eu)
+    
+    if target_block_id.startswith("ftbic:"):
+        # ftbic: Energy jako double
+        result["nbt_1182"]["Energy"] = float(energy_fe)
+    else:
+        # Mekanism: energyContainer ze stored (int)
+        result["nbt_1182"]["energyContainer"] = {"stored": energy_fe}
     
     # Współrzędne celu
     target_set = bool(nbt_1710.get("targetSet", False))
@@ -331,11 +349,11 @@ def simulate_teleporter_conversion(
         tx = nbt_1710.get("targetX", 0)
         ty = nbt_1710.get("targetY", 0)
         tz = nbt_1710.get("targetZ", 0)
-        # Mekanism przechowuje frequency; współrzędne są w innym systemie
+        # Współrzędne są w innym systemie niż IC2; zapisujemy jako legacy
         result["nbt_1182"]["legacy_target"] = [tx, ty, tz]
         result["warnings"].append(
             "IC2-W-TELEPORTER-TARGET: Współrzędne celu zapisane w NBT, "
-            "wymagana ręczna konfiguracja w Mekanism"
+            "wymagana ręczna konfiguracja w docelowym modzie"
         )
     
     return result

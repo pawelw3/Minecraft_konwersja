@@ -117,10 +117,10 @@ class MrCrayfishChunkParser:
     Wykrywa Tile Entities CFM w chunkach mapy 1.7.10 i produkuje ConversionEvent.
     """
 
-    def __init__(self, world_path: str):
+    def __init__(self, world_path: str, level_dat_path: str | None = None):
         self.world_path = Path(world_path)
         self.region_path = self.world_path / "region"
-        self.converter = MrCrayfishConverter()
+        self.converter = MrCrayfishConverter(level_dat_path=level_dat_path)
         self.stats = {
             "chunks_analyzed": 0,
             "chunks_with_cfm": 0,

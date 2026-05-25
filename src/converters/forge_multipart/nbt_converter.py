@@ -11,7 +11,7 @@ Zasady konwersji (zgodne ze SKILL.md):
 - Nie tworzymy własnych kluczy NBT.
 - Shape, material, meta przenoszone 1:1.
 - Zmieniamy tylko namespace part IDs.
-- ID TileMultipart zmienia się na cb_multipart:tile_multipart.
+- ID TileMultipart zmienia się na cb_multipart:saved_multipart.
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ class TileMultipartNBTConverter:
         new_id = map_te_id(old_id)
         if new_id is None:
             # Fallback — jeśli exact string nie jest w mapowaniu, używamy domyślnego
-            new_id = "cb_multipart:tile_multipart"
+            new_id = "cb_multipart:saved_multipart"
 
         # Głęboka kopia żeby nie modyfikować oryginału
         nbt_1182 = deepcopy(nbt_1710)

@@ -38,11 +38,12 @@ Wykonano pełny cykl konwersji moda **ForgeMultipart (1.7.10) -> CB Multipart (1
 - Serber załadował mapę bez błędów (`Done (8,677s)!`)
 - Mapa przeniesiona na headless serwer 1.18.2
 
-## Zadanie 6 — Test headless serwera 1.18.2 ✅
-- Serwer Forge 1.18.2 wystartował (`Done (15.977s)!`)
+## Zadanie 6 — Test headless serwera 1.18.2 ✅ (FINAL — SUKCES)
+- Serwer Forge 1.18.2 wystartował (`Done (7.616s)!`)
 - Mod CB Multipart załadował się poprawnie
-- **Wykryto błąd:** Chunk [0,0] nie załadował się przez `PalettedContainer: Invalid length given for storage`
-- Błąd jest w warstwie zapisu WorldEditor1182/Hephaistos, nie w konwerterze ForgeMultipart
+- Chunk [0,0] z przekonwertowanymi blokami **załadował się poprawnie**
+- Wszystkie 15 BlockEntity rozpoznane przez mod (brak `Skipping`)
+- **Pipeline end-to-end działa!**
 
 ## Pliki projektu
 
@@ -87,16 +88,18 @@ Wykonano pełny cykl konwersji moda **ForgeMultipart (1.7.10) -> CB Multipart (1
 | `output/forge_multipart/RAPORT_ZADANIE5B.md` | Raport zadania 5B |
 | `output/forge_multipart/RAPORT_ZADANIE6.md` | Raport zadania 6 |
 
-## Krytyczne ograniczenie
+## Status
 
-**WorldEditor1182 (Hephaistos) niepoprawnie zapisuje chunki 1.18.2.**
-- Chunki modyfikowane przez `--apply-events` mają uszkodzony PalettedContainer
-- Serwer 1.18.2 nie może załadować takich chunków
-- Wymaga naprawy przed pełnymi testami integracyjnymi
+✅ **Konwerter ForgeMultipart/CB Multipart jest w pełni funkcjonalny end-to-end.**
+
+Wykryte i naprawione problemy:
+1. **Palette.kt** — Hephaistos używał < 4 bitów per block-state dla 1.18.2 (naprawiono `minBits = 4`)
+2. **BlockEntity ID** — konwerter używał niepoprawnego ID `cb_multipart:tile_multipart` (naprawiono na `cb_multipart:saved_multipart`)
+3. **Block ID** — konwerter używał niepoprawnego ID `cb_multipart:block` (naprawiono na `cb_multipart:multipart`)
 
 ## Następne kroki (do wyboru)
 
-1. **Naprawa WorldEditor1182/Hephaistos** — zbadanie i naprawa serializacji PalettedContainer w formacie 1.18.2
-2. **Przejście do innego modu** — np. ProjectRed (który również używa savedMultipart)
-3. **Test integracyjny milestone** — gdy edytor 1.18.2 będzie naprawiony
-4. **Aktualizacja routera** — dodanie routing `savedMultipart` -> `forgemultipart` (obecnie wskazuje na `projectred`)
+1. **Przejście do innego modu** — np. ProjectRed (też używa `savedMultipart`), AE2, Mekanism, itp.
+2. **Test integracyjny milestone** — ForgeMultipart gotowy do milestone z innymi modami
+3. **Aktualizacja routera** — dodanie routing `savedMultipart` -> `ForgeMultipartConverter` (obecnie wskazuje na `projectred`)
+4. **Konwersja pełnej mapy** — uruchomienie konwersji na wszystkich 284k+ TileMultipart z `mapa_1710`

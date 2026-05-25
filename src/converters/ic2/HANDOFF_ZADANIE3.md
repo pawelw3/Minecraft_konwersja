@@ -6,6 +6,14 @@ zgodne z handlerem mapy 1.18.2. Konwerter jest zintegrowany z `router.py` (detek
 Dodano registry konwerterów NBT opakowujących istniejące symulacje (Zadanie 2).
 Wszystkie testy przechodzą (36/36 dla IC2, 319/321 ogółem — 2 pre-existing failures w enderstorage).
 
+### Korekta 2026-05-20: registry ids IC2
+
+Pierwotna integracja routera rozpoznawała IC2 tylko przez `TileEntity*` class
+names z `block_inventory.py`. Realna mapa używa też krótkich Forge registry ids
+(`Macerator`, `Cable`, `TECrop`, `MFSU`, `Reactor Chamber`). Zaktualizowano
+`block_mappings.py`, `ic2_converter.py`, `router.py` i testy, żeby obsługiwać
+oba formaty oraz nie nadpisywać metadata ogólnym aliasem `Cable`.
+
 ## Ukończono
 - [x] `src/converters/ic2/ic2_converter.py` — główna klasa `IC2Converter`
   - `convert_block(block_id, metadata, nbt, position)` — główny entrypoint

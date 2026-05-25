@@ -35,19 +35,39 @@ Ukończono pełną analizę i implementację konwersji modu **Thermal Dynamics**
 - **Modyfikacje:**
   - `src/converters/router.py` — dodano branch `thermaldynamics` w `convert_te_to_events()`
 
-### Step 4 — Analiza pokrycia na mapie (✅)
+### Step 4 — Analiza pokrycia na mapie (próbka) (✅)
 - Próbka 400/1195 regionów (~33% mapy)
 - Znaleziono **5967 TE Thermal Dynamics** we **11 regionach**
 - **100% pokrycia** — 0 niezmapowanych TE
-- Rozkład:
-  - `thermaldynamics.ItemDuct`: 3206
-  - `thermaldynamics.FluxDuctSuperConductor`: 2480
-  - `thermaldynamics.FluidDuctSuper`: 225
-  - `thermaldynamics.FluxDuct`: 33
-  - `thermaldynamics.FluidDuct`: 21
+
+### Step 5 — Pełny skan + test integracyjny (✅)
+- **Pełny skan 1195 regionów w 42.5s** (multiprocessing, 7 workerów)
+- Znaleziono **13444 TE Thermal Dynamics** we **27 regionach**
+- **100% pokrycia** — 0 niezmapowanych TE
+- Rozkład pełny:
+  - `thermaldynamics.ItemDuct`: 6518
+  - `thermaldynamics.FluxDuctSuperConductor`: 5940
+  - `thermaldynamics.ItemDuctEnder`: 470 *(nowy typ, nie widziany w próbce)*
+  - `thermaldynamics.FluidDuctSuper`: 309
+  - `thermaldynamics.FluidDuct`: 171
+  - `thermaldynamics.FluxDuct`: 34
   - `thermaldynamics.FluidDuctFragile`: 2
-- **Attachments**: 135 (125 na ItemDuct, 1 na FluidDuct, 9 na FluidDuctSuper)
-- **Facades**: 33 (4 na ItemDuct, 29 na FluxDuctSuperConductor)
+- **Attachments**: 282 (227 ItemDuct, 1 FluidDuct, 9 FluidDuctSuper, 45 ItemDuctEnder)
+- **Facades**: 61
+
+**Test integracyjny na mapach testowych:**
+- `thermal_test_v2`: 2/2 TE skonwertowane
+- `thermal_test`: 34/34 TE skonwertowane
+
+### Step 6 — Headless serwer (✅)
+- **Serwer Forge 1.18.2** z modami Thermal Series + Mekanism uruchamia się poprawnie
+- **9/9 bloków** wstawionych przez RCON `/setblock` bez błędów:
+  - `thermal:energy_duct`, `thermal:fluid_duct`, `thermal:fluid_duct_windowed`
+  - `mekanism:basic_logistical_transporter`, `advanced`, `elite`, `ultimate`
+  - `mekanism:teleporter`, `mekanism:teleporter_frame`
+- **Restart test**: Serwer uruchamia się ponownie bez crashy
+- **0 ERROR/FATAL** związanych z konwertowanymi blokami
+- **Raport**: `THERMAL_DYNAMICS_STEP6_REPORT.md`
 
 ---
 
@@ -62,6 +82,13 @@ Ukończono pełną analizę i implementację konwersji modu **Thermal Dynamics**
 | `src/converters/thermal_dynamics/analyze_step4_coverage.py` | Skaner pokrycia mapy z raportem JSON/MD |
 | `src/converters/thermal_dynamics/THERMAL_DYNAMICS_STEP4_COVERAGE.json` | Raport z próbki 400 regionów |
 | `src/converters/thermal_dynamics/THERMAL_DYNAMICS_STEP4_COVERAGE.md` | Raport czytelny dla człowieka |
+| `src/converters/thermal_dynamics/analyze_step5_fullscan.py` | Pełny skan 1195 regionów z multiprocessingiem |
+| `src/converters/thermal_dynamics/THERMAL_DYNAMICS_STEP5_FULLSCAN.json` | Raport pełnego skanu |
+| `src/converters/thermal_dynamics/THERMAL_DYNAMICS_STEP5_FULLSCAN.md` | Raport pełnego skanu (czytelny) |
+| `src/converters/thermal_dynamics/test_integration_map.py` | Test integracyjny na `thermal_test_v2` |
+| `src/converters/thermal_dynamics/test_integration_map_full.py` | Test integracyjny na `thermal_test` |
+| `src/converters/thermal_dynamics/run_task6_headless.py` | Skrypt headless serwer test (Step 6) |
+| `src/converters/thermal_dynamics/THERMAL_DYNAMICS_STEP6_REPORT.md` | Raport z testu headless serwera |
 
 ---
 
@@ -95,17 +122,15 @@ router.py ──► ThermalDynamicsConverter.convert_block()
 
 ## Następne kroki
 
-1. **Step 5 — Full scan optymalizacja:**
-   - [ ] Uruchomić pełny skan 1195 regionów z multiprocessingiem lub ograniczyć do 11 regionów zawierających TD (z listy `regions_with_td_list`)
-   - [ ] Przetestować konwersję na mapie testowej 1.7.10 z TD → weryfikacja 1.18.2
+Thermal Dynamics — **Unity 4 kompletny (Steps 1-6)**. Gotowy do milestone integracyjnego z Thermalem i AE2.
 
-2. **Step 6 — Milestone integracyjny:**
-   - [ ] Połączyć z konwerterem Mekanism (sprawdzić czy `mekanism:*_logistical_transporter` istnieje w `mappings.py` Mekanism)
-   - [ ] Test E2E na lekkiej mapie testowej z przewodami + załącznikami
+1. **Milestone integracyjny (Milestone 2: Thermal + transport + AE2):**
+   - [ ] Wspólny test na mapie z maszynami Thermal + przewodami TD + siecią AE2
+   - [ ] Weryfikacja kompatybilności `mekanism:*_logistical_transporter` z konwerterem Mekanism
 
-3. **Ulepszenia (opcjonalne):**
-   - [ ] Dopracować heurystykę tier detection dla załączników (`_tier_from_attachment_nbt`)
-   - [ ] Obsługa fasad (facades) — obecnie ignorowane, można dodać do placeholder event
+2. **Ulepszenia (opcjonalne):**
+   - [ ] Dopracować heurystykę tier detection dla załączników
+   - [ ] Obsługa fasad (facades)
    - [ ] Sprawdzić czy `Grid` NBT zawiera informacje o kolorze/połączeniach wartych zachowania
 
 ---
@@ -115,11 +140,10 @@ router.py ──► ThermalDynamicsConverter.convert_block()
 | Problem | Wpływ | Status |
 |---------|-------|--------|
 | `r.-10.2.mca` uszkodzony (truncated stream) | 1 region nieprzetworzony | Niski — brak TD w tym regionie |
-| Full scan 1195 regionów > 5 min w Pythonie | Timeout przy domyślnych ustawieniach | Średni — użyć tylko 11 regionów z TD |
-| Mekanism converter nie zna `*_logistical_transporter` | Możliwy konflikt przy milestone integracyjnym | Średni — do weryfikacji w Step 5 |
 | Załączniki dumpowane do skrzynki, nie montowane | Funkcjonalność sieci tracona | Akceptowane — brak odpowiednika w 1.18.2 |
+| Brak `cofh_core` w `mods/` serwera | Wymagany do uruchomienia Thermala | Rozwiązany — pobrano ręcznie |
 
 ---
 
-*Handoff utworzony: 2026-05-19*  
-*Etap: Unity 4 (Thermal Dynamics) — kompletny, gotowy do milestone integracyjnego*
+*Handoff zaktualizowany: 2026-05-20*  
+*Etap: Unity 4 (Thermal Dynamics) — Steps 1-6 KOMPLETNE*

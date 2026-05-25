@@ -112,6 +112,24 @@ class TestIC2ConverterBasic:
         assert result.converted.success
         assert result.converted.block_id_1182 == "indreb:crusher"
 
+    def test_convert_by_registry_te_id_from_real_map(self, converter):
+        """IC2 2.2.827 often stores Forge registry ids, not TileEntity* names."""
+        nbt = {"id": "Macerator", "facing": 2, "energy": 0.0}
+        result = converter.convert_tile_entity(
+            te_id="Macerator",
+            nbt_1710=nbt,
+            metadata=3,
+            position=(1, 2, 3),
+        )
+        assert result.converted.success
+        assert result.converted.block_id_1182 == "indreb:crusher"
+
+    def test_registry_te_id_does_not_override_block_metadata(self, converter):
+        nbt = {"id": "Cable", "cableType": 9, "color": 0, "foamed": 0}
+        result = converter.convert_block("IC2:blockCable", 9, nbt, (1, 2, 3))
+        assert result.converted.success
+        assert result.converted.block_id_1182 == "indreb:glass_fibre_cable"
+
     def test_stats_tracking(self, converter):
         converter.convert_block("IC2:blockMachine", 3, {}, (0, 0, 0))
         converter.convert_block("IC2:blockMachine", 7, {}, (0, 0, 0))
@@ -126,9 +144,11 @@ class TestIC2RouterIntegration:
 
     def test_detect_mod_ic2_macerator(self):
         assert detect_mod("TileEntityMacerator") == "ic2"
+        assert detect_mod("Macerator") == "ic2"
 
     def test_detect_mod_ic2_generator(self):
         assert detect_mod("TileEntityGenerator") == "ic2"
+        assert detect_mod("Generator") == "ic2"
 
     def test_detect_mod_ic2_batbox(self):
         assert detect_mod("TileEntityElectricBatBox") == "ic2"
@@ -192,7 +212,7 @@ class TestIC2RouterIntegration:
         assert ev.get("op") == "set_block"
 
     def test_transformer_has_energy_and_mode(self):
-        te_nbt = {"id": "TileEntityElectricTransformer", "facing": 2, "energy": 100.0}
+        te_nbt = {"id": "TileEntityTransformerLV", "facing": 2, "energy": 100.0}
         events = convert_te_to_events(
             te_nbt=te_nbt,
             block_numeric_id=123,
