@@ -133,6 +133,9 @@ headless_server/*/*.jar
 headless_server/*/mods/*.jar
 headless_server/*/config/**/*.cfg
 headless_server/*/config/*.cfg
+headless_server/**/config/**/*.toml
+headless_server/**/serverconfig/**/*.toml
+test_worlds/**/serverconfig/**/*.toml
 headless_server/*/ops.json
 headless_server/*/whitelist.json
 headless_server/*/banned-*.json
