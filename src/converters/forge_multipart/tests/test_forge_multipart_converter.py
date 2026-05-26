@@ -37,18 +37,18 @@ def test_map_te_id():
 
 
 def test_map_part_id_microblocks():
-    assert map_part_id("mcr_face") == "microblockcbe:face"
-    assert map_part_id("mcr_hollow") == "microblockcbe:hollow"
-    assert map_part_id("mcr_corner") == "microblockcbe:corner"
-    assert map_part_id("mcr_edge") == "microblockcbe:edge"
-    assert map_part_id("mcr_post") == "microblockcbe:post"
+    assert map_part_id("mcr_face") == "cb_microblock:face"
+    assert map_part_id("mcr_hollow") == "cb_microblock:hollow"
+    assert map_part_id("mcr_corner") == "cb_microblock:corner"
+    assert map_part_id("mcr_edge") == "cb_microblock:edge"
+    assert map_part_id("mcr_post") == "cb_microblock:post"
 
 
 def test_map_part_id_vanilla():
-    assert map_part_id("mc_torch") == "cb_multipart:torch"
-    assert map_part_id("mc_redtorch") == "cb_multipart:redstone_torch"
-    assert map_part_id("mc_button") == "cb_multipart:button"
-    assert map_part_id("mc_lever") == "cb_multipart:lever"
+    assert map_part_id("mc_torch") == "minecraft:torch"
+    assert map_part_id("mc_redtorch") == "minecraft:redstone_torch"
+    assert map_part_id("mc_button") == "minecraft:stone_button"
+    assert map_part_id("mc_lever") == "minecraft:lever"
 
 
 def test_map_part_id_unknown_fallback():
@@ -82,7 +82,7 @@ def test_convert_face_microblock():
     nbt_1182 = TileMultipartNBTConverter.convert(nbt_1710)
     assert nbt_1182 is not None
     part = nbt_1182["parts"][0]
-    assert part["id"] == "microblockcbe:face"
+    assert part["id"] == "cb_microblock:face"
     assert part["shape"] == 16
     assert part["material"] == "minecraft:stone"
 
@@ -102,10 +102,15 @@ def test_convert_multiple_parts():
     assert nbt_1182["id"] == "cb_multipart:saved_multipart"
     assert len(nbt_1182["parts"]) == 3
 
-    assert nbt_1182["parts"][0]["id"] == "microblockcbe:hollow"
-    assert nbt_1182["parts"][1]["id"] == "cb_multipart:torch"
-    assert nbt_1182["parts"][1]["meta"] == 4
-    assert nbt_1182["parts"][2]["id"] == "cb_multipart:lever"
+    assert nbt_1182["parts"][0]["id"] == "cb_microblock:hollow"
+    assert nbt_1182["parts"][1]["id"] == "minecraft:torch"
+    assert nbt_1182["parts"][1]["state"] == {
+        "Name": "minecraft:wall_torch",
+        "Properties": {"facing": "north"},
+    }
+    assert "meta" not in nbt_1182["parts"][1]
+    assert nbt_1182["parts"][2]["id"] == "minecraft:lever"
+    assert nbt_1182["parts"][2]["state"]["Name"] == "minecraft:lever"
 
 
 def test_convert_preserves_coordinates():
@@ -236,7 +241,7 @@ def test_router_sends_microblock_savedmultipart_to_forge_multipart():
     assert len(events) == 1
     assert events[0]["block"] == "cb_multipart:multipart"
     assert events[0]["nbt"]["id"] == "cb_multipart:saved_multipart"
-    assert events[0]["nbt"]["parts"][0]["id"] == "microblockcbe:face"
+    assert events[0]["nbt"]["parts"][0]["id"] == "cb_microblock:face"
 
 
 if __name__ == "__main__":

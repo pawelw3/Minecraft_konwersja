@@ -33,3 +33,4 @@ Pobrano brakujace publiczne repozytoria kodu zrodlowego modow docelowych 1.18.x 
 ## Uwagi
 - `Handcrafted` nie jest potwierdzonym kodem 1.18.2. Modrinth pokazuje kompatybilnosc od 1.19.2 wzwyz, a FTB Wiki wskazuje starsze wsparcie 1.17.2/1.18.1, nie 1.18.2.
 - Repozytoria zostaly pobrane jako zagniezdzone repozytoria Git; nie modyfikowano istniejacych zmian uzytkownika w glownym repo.
+- 2026-05-26: `PrettyPipes` w `mod_src/118/actual_src/1.18.2/PrettyPipes/repo` zostal naprawiony. Poprzedni checkout upstream wskazywal na build setup 1.21.1; przeniesiono go do `repo_wrong_1.21_reference/`, a `repo/` wypelniono zdekompilowanym kodem z `mod_src/118/mod_jars/PrettyPipes-1.12.8.jar` dla Minecraft 1.18.2 Forge.

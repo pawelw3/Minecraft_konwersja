@@ -1,39 +1,43 @@
-# Handoff: ForgeMultipart i Thermal Dynamics - korekta routera/NBT
+# Handoff: Logistics Pipes, Zadanie 6
 
 ## Podsumowanie sesji
-Naprawiono realne błędy integracyjne w skryptach konwersji ForgeMultipart i Thermal Dynamics. Lokalne konwertery przechodziły testy, ale globalny router kierował część danych z mapy do złej ścieżki albo produkował niepełne eventy.
+Wykonano nastepny krok dla Logistics Pipes: headless tick/restart verification na swiecie `world_logistics_pipes_task5b`. Datapack `logistics_pipes_task5b:apply` zostal wykonany przez RCON, po 180 sekundach tickow i po restarcie wszystkie probki przetrwaly poprawnie.
 
-## Ukończono
-- [x] `savedMultipart` z mikroblokami (`mcr_face`, `mcr_edge`, itd.) trafia teraz do `ForgeMultipartConverter`, nie do ProjectRed.
-- [x] `savedMultipart` zawierający wyłącznie party ProjectRed nadal może iść specjalistyczną ścieżką ProjectRed.
-- [x] Thermal Dynamics używa domyślnego metadata z `TE_ID_TO_BLOCK` dla konkretnych TE, np. `ItemDuctEnder` i `FluidDuctSuper`.
-- [x] NBT Thermal Dynamics dla `set_block_entity` dostaje pole `id`.
-- [x] Dodano testy regresyjne dla powyższych przypadków.
+## Ukonczono
+- [x] Dodano skrypt `run_task6_headless_tick_restart.py`.
+- [x] Uruchomiono headless server 1.18.2 na `world_logistics_pipes_task5b`.
+- [x] Wykonano `function logistics_pipes_task5b:apply`.
+- [x] Sprawdzono 13/13 blokow i 13/13 block entities po apply.
+- [x] Odczekano 180 sekund tickow i sprawdzono 13/13 blokow oraz BE.
+- [x] Zapisano swiat, zatrzymano serwer, uruchomiono restart verification.
+- [x] Po restarcie sprawdzono 13/13 blokow i 13/13 block entities.
 
-## Zmodyfikowane pliki
-- `src/converters/router.py`
-- `src/converters/thermal_dynamics/mappings.py`
-- `src/converters/thermal_dynamics/thermal_dynamics_converter.py`
-- `src/converters/thermal_dynamics/nbt_converters/__init__.py`
-- `src/converters/forge_multipart/tests/test_forge_multipart_converter.py`
+## Nowe/zmienione pliki
+- `test_scenarios/logistics_pipes_task5a/run_task6_headless_tick_restart.py`
+- `test_scenarios/logistics_pipes_task5a/logistics_pipes_task6_headless_tick_restart_report.json`
+- `test_scenarios/logistics_pipes_task5a/LOGISTICS_PIPES_TASK6_REPORT.md`
+- `src/converters/logistics_pipes/HANDOFF_LOGISTICS_PIPES_ZADANIE6.md`
+- `headless_server/1.18.2/server.properties`
+- `headless_server/1.18.2/server.properties.before_logistics_pipes_task6`
+- `headless_server/1.18.2/server_logistics_pipes_task6_first_20260526_222119_out.log`
+- `headless_server/1.18.2/server_logistics_pipes_task6_first_20260526_222119_err.log`
+- `headless_server/1.18.2/server_logistics_pipes_task6_restart_20260526_222645_out.log`
+- `headless_server/1.18.2/server_logistics_pipes_task6_restart_20260526_222645_err.log`
 
-## Nowe pliki
-- `src/converters/thermal_dynamics/test_thermal_dynamics_regressions.py`
+## Wynik
+- Status: `passed`
+- Overall pass: `true`
+- Apply marker: znaleziony
+- Relevant errors: 0
+- Unknown block: false
+- Skipping BlockEntity: false
+- Crash: false
 
 ## Weryfikacja
-```powershell
-python -m py_compile src\converters\router.py src\converters\thermal_dynamics\mappings.py src\converters\thermal_dynamics\thermal_dynamics_converter.py src\converters\thermal_dynamics\nbt_converters\__init__.py src\converters\thermal_dynamics\test_thermal_dynamics_regressions.py
-$env:PYTHONPATH='src'; python -m pytest src\converters\forge_multipart\tests src\converters\thermal_dynamics\test_thermal_dynamics_regressions.py -q
-```
-Wynik: `20 passed`.
+- `python -m py_compile test_scenarios\logistics_pipes_task5a\run_task6_headless_tick_restart.py` -> OK
+- `python -m pytest src\converters\logistics_pipes\tests -q` -> 20 passed
+- `python test_scenarios\logistics_pipes_task5a\run_task6_headless_tick_restart.py` -> Overall PASS
 
-Smoke:
-- `savedMultipart` + `mcr_face` -> `cb_multipart:multipart` + `cb_multipart:saved_multipart`
-- `thermaldynamics.ItemDuctEnder` -> `mekanism:elite_logistical_transporter`
-- `thermaldynamics.FluidDuctSuper` -> `thermal:fluid_duct_windowed`
-- NBT TD zawiera `id`
-
-## Następne kroki
-1. Uruchomić próbkę konwersji realnych chunków zawierających ForgeMultipart i Thermal Dynamics.
-2. Sprawdzić na headless 1.18.2, czy docelowe BE ID Thermal/Mekanism są akceptowane przez mody.
-3. Przy pełnej mapie logować mieszane `savedMultipart` z partami ProjectRed + mikroblokami, bo to wymaga decyzji czy ważniejsza jest rekonstrukcja PR czy zachowanie całego kontenera.
+## Nastepne kroki
+1. [ ] Dopracowac extractor modulow dla realnych `PipeLogisticsChassiMk4`, jesli chcemy odzyskac wiecej niz fallback pustych modulow.
+2. [ ] Albo przejsc do kolejnego moda wedlug planu.

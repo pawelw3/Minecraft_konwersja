@@ -2,13 +2,13 @@
 Symulacja API CB Multipart 1.18.2
 Źródło prawdy:
 - Kod źródłowy ProjectRed 1.18.2 (importy codechicken.multipart.block.* / api.part.*)
-- Dokumentacja/issues CB Multipart (registry names: cb_multipart:block, microblockcbe:microblock)
+- Kod zrodlowy CBMultipart 1.18.x (registry names: cb_multipart, cb_microblock)
 
 Kluczowe różnice względem 1.7.10:
 1. TileEntity → BlockEntity (zapis w sekcji "block_entities" chunka zamiast "TileEntities")
 2. Rejestracja przez DeferredRegister / RegistryObject (Forge 1.18.2)
 3. Part ID to ResourceLocation (zamiast string fabryk z MultiPartRegistry)
-4. Namespace zmieniony: ForgeMultipart → cb_multipart (core), microblock → microblockcbe (microblocks)
+4. Namespace zmieniony: ForgeMultipart -> cb_multipart (core), microblock -> cb_microblock (microblocks)
 """
 
 from __future__ import annotations
@@ -78,7 +78,7 @@ class MultiPart:
         self._tile: Optional[TileMultipart] = None
 
     def get_type(self) -> str:
-        """Zwraca ResourceLocation jako string, np. 'cb_multipart:torch'."""
+        """Zwraca ResourceLocation jako string, np. 'minecraft:torch'."""
         raise NotImplementedError
 
     def bind(self, tile: TileMultipart):
@@ -109,10 +109,10 @@ class Microblock(MultiPart):
     Format NBT pozostaje kompatybilny z 1.7.10:
         tag["shape"] = byte
         tag["material"] = string (ResourceLocation)
-    Ale get_type() zwraca teraz pełny ResourceLocation z namespace microblockcbe.
+    Ale get_type() zwraca teraz pelny ResourceLocation z namespace cb_microblock.
     """
 
-    MICRO_CLASS_NAME: str = "microblockcbe:microblock"
+    MICRO_CLASS_NAME: str = "cb_microblock:microblock"
 
     def __init__(self, material: int = 0):
         super().__init__()
@@ -151,7 +151,7 @@ class Microblock(MultiPart):
 
     def get_drops(self) -> List[dict]:
         return [{
-            "item": "microblockcbe:microblock",
+            "item": "cb_microblock:microblock",
             "shape": self._shape,
             "material": self.get_material_name()
         }]
@@ -161,19 +161,19 @@ class Microblock(MultiPart):
 
 
 class FaceMicroblock(Microblock):
-    MICRO_CLASS_NAME = "microblockcbe:face"
+    MICRO_CLASS_NAME = "cb_microblock:face"
 
 class HollowMicroblock(Microblock):
-    MICRO_CLASS_NAME = "microblockcbe:hollow"
+    MICRO_CLASS_NAME = "cb_microblock:hollow"
 
 class CornerMicroblock(Microblock):
-    MICRO_CLASS_NAME = "microblockcbe:corner"
+    MICRO_CLASS_NAME = "cb_microblock:corner"
 
 class EdgeMicroblock(Microblock):
-    MICRO_CLASS_NAME = "microblockcbe:edge"
+    MICRO_CLASS_NAME = "cb_microblock:edge"
 
 class PostMicroblock(Microblock):
-    MICRO_CLASS_NAME = "microblockcbe:post"
+    MICRO_CLASS_NAME = "cb_microblock:post"
 
 
 # ---------------------------------------------------------------------------
@@ -204,16 +204,16 @@ class VanillaPart(MultiPart):
 
 
 class TorchPart(VanillaPart):
-    PART_TYPE = "cb_multipart:torch"
+    PART_TYPE = "minecraft:torch"
 
 class RedstoneTorchPart(VanillaPart):
-    PART_TYPE = "cb_multipart:redstone_torch"
+    PART_TYPE = "minecraft:redstone_torch"
 
 class ButtonPart(VanillaPart):
-    PART_TYPE = "cb_multipart:button"
+    PART_TYPE = "minecraft:stone_button"
 
 class LeverPart(VanillaPart):
-    PART_TYPE = "cb_multipart:lever"
+    PART_TYPE = "minecraft:lever"
 
 
 # ---------------------------------------------------------------------------
@@ -264,15 +264,15 @@ class PartRegistry:
 
 def register_defaults():
     """Rejestruje domyślne factory partów (używane po reset)."""
-    PartRegistry.register("microblockcbe:face", FaceMicroblock)
-    PartRegistry.register("microblockcbe:hollow", HollowMicroblock)
-    PartRegistry.register("microblockcbe:corner", CornerMicroblock)
-    PartRegistry.register("microblockcbe:edge", EdgeMicroblock)
-    PartRegistry.register("microblockcbe:post", PostMicroblock)
-    PartRegistry.register("cb_multipart:torch", TorchPart)
-    PartRegistry.register("cb_multipart:redstone_torch", RedstoneTorchPart)
-    PartRegistry.register("cb_multipart:button", ButtonPart)
-    PartRegistry.register("cb_multipart:lever", LeverPart)
+    PartRegistry.register("cb_microblock:face", FaceMicroblock)
+    PartRegistry.register("cb_microblock:hollow", HollowMicroblock)
+    PartRegistry.register("cb_microblock:corner", CornerMicroblock)
+    PartRegistry.register("cb_microblock:edge", EdgeMicroblock)
+    PartRegistry.register("cb_microblock:post", PostMicroblock)
+    PartRegistry.register("minecraft:torch", TorchPart)
+    PartRegistry.register("minecraft:redstone_torch", RedstoneTorchPart)
+    PartRegistry.register("minecraft:stone_button", ButtonPart)
+    PartRegistry.register("minecraft:lever", LeverPart)
 
 
 register_defaults()

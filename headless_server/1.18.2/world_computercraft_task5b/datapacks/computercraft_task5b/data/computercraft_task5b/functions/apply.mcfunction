@@ -1,0 +1,19 @@
+setblock 0 64 0 computercraft:computer_normal[state=on]{ComputerId:1,On:1} replace
+setblock 1 64 0 computercraft:computer_normal[state=off]{ComputerId:2,Label:"TestPC",On:0} replace
+setblock 2 64 0 computercraft:computer_advanced[state=on]{ComputerId:3,On:1} replace
+setblock 3 64 0 computercraft:computer_command[facing=north,state=on]{ComputerId:4,On:1} replace
+setblock 0 64 1 computercraft:monitor_normal[facing=north,orientation=north,state=rd]{XIndex:0,YIndex:0,Width:2,Height:2} replace
+setblock 1 64 1 computercraft:monitor_normal[facing=north,orientation=north,state=ld]{XIndex:1,YIndex:0,Width:2,Height:2} replace
+setblock 2 64 1 computercraft:monitor_advanced[facing=south,orientation=down,state=none]{XIndex:0,YIndex:0,Width:1,Height:1} replace
+setblock 3 64 1 computercraft:monitor_advanced[facing=south,orientation=up,state=none]{XIndex:0,YIndex:0,Width:1,Height:1} replace
+setblock 0 64 2 computercraft:disk_drive[facing=north,state=empty] replace
+setblock 1 64 2 computercraft:printer[bottom=false,facing=north,top=false] replace
+setblock 2 64 2 computercraft:speaker[facing=north] replace
+setblock 3 64 2 computercraft:wireless_modem_normal[facing=north,on=false] replace
+setblock 0 64 3 computercraft:cable[cable=false,down=false,east=false,modem=down_off,north=false,south=false,up=false,west=false] replace
+setblock 1 64 3 computercraft:cable[cable=true,down=false,east=false,modem=down_off,north=false,south=false,up=false,west=false] replace
+setblock 2 64 3 computercraft:cable[cable=true,down=false,east=false,modem=none,north=false,south=false,up=false,west=false] replace
+setblock 0 64 4 computercraft:turtle_normal[facing=north]{Fuel:1000,LeftUpgrade:"computercraft:wireless_modem_normal",RightUpgrade:"minecraft:crafting_table"} replace
+setblock 1 64 4 computercraft:turtle_normal[facing=south]{LeftUpgrade:"computercraft:wireless_modem_advanced",RightUpgrade:"computercraft:speaker"} replace
+setblock 2 64 4 computercraft:turtle_advanced[facing=west]{Colour:16711680,LeftUpgrade:"computercraft:wireless_modem_normal"} replace
+say [CC_TASK5B] apply complete

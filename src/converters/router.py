@@ -162,6 +162,20 @@ def _bigreactors():
     return _instances["bigreactors"]
 
 
+def _computercraft():
+    if "computercraft" not in _instances:
+        from converters.computercraft.computercraft_converter import ComputerCraftConverter
+        _instances["computercraft"] = ComputerCraftConverter()
+    return _instances["computercraft"]
+
+
+def _logistics_pipes():
+    if "logisticspipes" not in _instances:
+        from converters.logistics_pipes.logistics_pipes_converter import LogisticsPipesConverter
+        _instances["logisticspipes"] = LogisticsPipesConverter()
+    return _instances["logisticspipes"]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Mod detection
 # ──────────────────────────────────────────────────────────────────────────────
@@ -267,7 +281,29 @@ def detect_mod(te_id: str) -> str:
         return "thaumcraft"
 
     # ComputerCraft
-    if te_id in ("monitor", "computer", "turtle", "drive", "speaker"):
+    # TE IDs w 1.7.10 mają format "computercraft : <nazwa>" (ze spacjami!)
+    # lub czasem bez prefiksu — obsługujemy oba warianty.
+    _CC_TE_IDS = frozenset([
+        "monitor", "computer", "turtle", "drive", "speaker",
+        "ccprinter", "wirelessmodem", "wiredmodem",
+        "command_computer", "advanced_modem",
+        "turtleex", "turtleadv",
+        # Z prefiksem i spacjami (dokładne registry stringi z 1.7.10)
+        "computercraft : computer",
+        "computercraft : diskdrive",
+        "computercraft : wirelessmodem",
+        "computercraft : monitor",
+        "computercraft : ccprinter",
+        "computercraft : wiredmodem",
+        "computercraft : command_computer",
+        "computercraft : advanced_modem",
+        "computercraft : speaker",
+        "computercraft : turtle",
+        "computercraft : turtleex",
+        "computercraft : turtleadv",
+    ])
+    bare = te_id.split(":")[-1].strip()
+    if te_id in _CC_TE_IDS or bare in _CC_TE_IDS or te_id.startswith("computercraft"):
         return "computercraft"
 
     # GrowthCraft
@@ -288,6 +324,10 @@ def detect_mod(te_id: str) -> str:
 
     if te_id.startswith("thermalexpansion.") or te_id.startswith("thermalfoundation."):
         return "thermal"
+
+    # Logistics Pipes
+    if te_id.startswith("logisticspipes."):
+        return "logisticspipes"
 
     # BuildCraft
     if "buildcraft" in te_id.lower():
@@ -637,6 +677,26 @@ def _buildcraft_to_events(result: Any) -> list[dict]:
     return [ev]
 
 
+def _logistics_pipes_to_events(result: Any) -> list[dict]:
+    """Serialise LogisticsPipesBlockConversion -> Event JSON list."""
+    c = result.converted
+    if not c.success or not c.block_id_1182:
+        return []
+
+    ev: dict = {
+        "op": "set_block_entity" if c.nbt_1182 else "set_block",
+        "pos": list(result.original_pos),
+        "block": c.block_id_1182,
+    }
+    if c.nbt_1182:
+        ev["nbt"] = c.nbt_1182
+    if c.blockstate_props:
+        ev["blockstate"] = dict(c.blockstate_props)
+    if c.warnings:
+        ev["warnings"] = list(c.warnings)
+    return [ev]
+
+
 def _biggerreactors_to_events(result: Any) -> list[dict]:
     """Serialise BiggerReactorsBlockConversion -> Event JSON list."""
     c = result.converted
@@ -649,6 +709,33 @@ def _biggerreactors_to_events(result: Any) -> list[dict]:
         return []
 
     # REMOVE action -> air
+    if block_id == "minecraft:air":
+        return [{"op": "set_block", "pos": pos, "block": "minecraft:air"}]
+
+    ev: dict = {"pos": pos, "block": block_id}
+    if c.nbt_1182:
+        ev["op"] = "set_block_entity"
+        ev["nbt"] = c.nbt_1182
+    else:
+        ev["op"] = "set_block"
+    if c.blockstate_props:
+        ev["blockstate"] = dict(c.blockstate_props)
+    if c.warnings:
+        ev["warnings"] = list(c.warnings)
+    return [ev]
+
+
+def _computercraft_to_events(result: Any) -> list[dict]:
+    """Serialise ComputerCraftBlockConversion -> Event JSON list."""
+    c = result.converted
+    if not c.success:
+        return []
+
+    pos = list(result.original_pos)
+    block_id = c.block_id_1182
+    if not block_id:
+        return []
+
     if block_id == "minecraft:air":
         return [{"op": "set_block", "pos": pos, "block": "minecraft:air"}]
 
@@ -997,6 +1084,30 @@ def convert_te_to_events(
                 position=global_pos,
             )
             events = _buildcraft_to_events(result)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "logisticspipes":
+            result = _logistics_pipes().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _logistics_pipes_to_events(result)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "computercraft":
+            result = _computercraft().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _computercraft_to_events(result)
             if not events:
                 return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
             return events

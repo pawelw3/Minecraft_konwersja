@@ -200,15 +200,15 @@ def scenario_3_microblock_nbt_conversion():
 
     # Mapowanie ID partów 1.7.10 -> 1.18.2
     id_mapping = {
-        "mcr_face":   "microblockcbe:face",
-        "mcr_hollow": "microblockcbe:hollow",
-        "mcr_corner": "microblockcbe:corner",
-        "mcr_edge":   "microblockcbe:edge",
-        "mcr_post":   "microblockcbe:post",
-        "mc_torch":   "cb_multipart:torch",
-        "mc_redtorch": "cb_multipart:redstone_torch",
-        "mc_button":  "cb_multipart:button",
-        "mc_lever":   "cb_multipart:lever",
+        "mcr_face":   "cb_microblock:face",
+        "mcr_hollow": "cb_microblock:hollow",
+        "mcr_corner": "cb_microblock:corner",
+        "mcr_edge":   "cb_microblock:edge",
+        "mcr_post":   "cb_microblock:post",
+        "mc_torch":   "minecraft:torch",
+        "mc_redtorch": "minecraft:redstone_torch",
+        "mc_button":  "minecraft:stone_button",
+        "mc_lever":   "minecraft:lever",
     }
 
     converted_parts = []

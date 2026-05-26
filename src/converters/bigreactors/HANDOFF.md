@@ -80,6 +80,18 @@ Wykonano Zadania 1, 2 i 3 z PLAN.md dla moda Big Reactors (1.7.10) → Bigger Re
   - Strefy: 95.8% poza strefami, 3.0% w `iii_rzesza`, 1.1% w `rzym`, 0.09% w `zsrr`
   - Raporty: `output/bigreactors_task4/bigreactors_coverage_report.json` + `.md`
 
+## Ukończono (Zadanie 5A)
+- [x] **Testowa mapa + konwersja**:
+  - `generate_bigreactors_task5a.py` — 257 edycji (146 bloków + 111 TE)
+  - `convert_bigreactors_task5a.py` — konwersja do 1.18.2
+  - Wynik: 107/107 bloków skonwertowanych (100%), 0 failures, 13 warnings
+  - Testowane: reaktor (casing, control rod, power tap, access port, coolant port, glass, fuel rod, redstone port, computer port)
+  - Testowane: turbina (housing, controller, power tap, fluid port, bearing, glass, rotor shaft/blade, computer port)
+  - Testowane: Cyanite Reprocessor (inventory, energy, progress)
+  - Testowane: mini multibloki (3x3x4 reactor + 3x3x4 turbine)
+  - Raport: `test_scenarios/bigreactors_task5a/BIGREACTORS_TASK5A_REPORT.md`
+
 ## Następne kroki
-1. [ ] **Zadanie 5A** — testowa mapa 1.7.10 z Big Reactors → konwersja → weryfikacja w grze
-2. [ ] **Zadanie 5B/6** — testy na headless serwerze (3 min ticków + restart)
+1. [ ] **Zadanie 5B** — materializacja na headless serwerze 1.18.2
+   - **Wymaga instalacji `BiggerReactors` mod JAR** na serwerze (obecnie brak w `headless_server/1.18.2/mods/`)
+2. [ ] **Zadanie 6** — test ticków + restart na headless serwerze z BiggerReactors

@@ -1,18 +1,16 @@
 """
-Główny konwerter ForgeMultipart 1.7.10 -> CB Multipart 1.18.2
+Glowny konwerter ForgeMultipart 1.7.10 -> CBMultipart 1.18.2.
 
-Source mapping:
-- 1.7.10: dekompilacja JAR ForgeMultipart-1.7.10-1.2.0.345-universal.jar
-- 1.18.2: źródła ProjectRed 1.18.2 + dokumentacja CB Multipart
-
-Produkuje eventy kompatybilne z ogólnym handlerem wstawiającym dane na mapę 1.18.2.
+Produkuje eventy kompatybilne z ogolnym handlerem wstawiajacym dane na mape
+1.18.2.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass, field
 from typing import Any
 
-from .mappings import map_block_id, map_te_id, map_part_id
+from .mappings import is_known_part_id_1182, map_block_id
 from .nbt_converter import TileMultipartNBTConverter
 
 
@@ -48,11 +46,11 @@ class ForgeMultipartConversion:
 
 class ForgeMultipartConverter:
     """
-    Konwerter ForgeMultipart / CB Multipart.
+    Konwerter ForgeMultipart / CBMultipart.
 
-    Obsługuje:
-    - ForgeMultipart:block (BlockMultipart) -> cb_multipart:multipart
-    - TileMultipart NBT (z parts: mikrobloki, vanilla parts)
+    Obsluguje:
+    - ForgeMultipart:block -> cb_multipart:multipart
+    - savedMultipart/TileMultipart NBT z mikroblokami i prostymi vanilla parts
     """
 
     SOURCE_VERSION = "1.7.10"
@@ -70,12 +68,9 @@ class ForgeMultipartConverter:
         nbt_1710: dict[str, Any] | None = None,
         position: tuple[int, int, int] = (0, 0, 0),
     ) -> ForgeMultipartConversion:
-        """
-        Konwertuje blok ForgeMultipart na CB Multipart.
-        """
+        """Konwertuje blok ForgeMultipart na CBMultipart."""
         self.stats["processed"] += 1
 
-        # Mapowanie block ID
         new_block_id = map_block_id(block_id_1710)
         if new_block_id is None:
             msg = f"FMP-E-BLOCK-NOT-MAPPED: brak mapowania dla {block_id_1710}"
@@ -87,24 +82,26 @@ class ForgeMultipartConverter:
         warnings: list[str] = []
         nbt_1182 = None
 
-        # Konwersja NBT TileMultipart (jeśli obecne)
         if nbt_1710:
             te_id = nbt_1710.get("id", "")
-            # Wykrywamy czy to jest TileMultipart (różne możliwe nazwy)
-            # "savedMultipart" to potwierdzony exact string z mapy 1.7.10
             if te_id in ("savedMultipart", "TileMultipart", "ForgeMultipart:TileMultipart", ""):
                 nbt_1182 = TileMultipartNBTConverter.convert(nbt_1710)
                 if nbt_1182 is None:
                     errors.append("FMP-E-NBT-CONVERSION-FAILED: nieudana konwersja NBT TileMultipart")
                 else:
-                    # Sprawdź czy wszystkie part-y zostały zamapowane
-                    for part in nbt_1182.get("parts", []):
-                        old_id = part.get("_original_id", part.get("id"))
-                        # Nie mamy _original_id, ale możemy porównać
-                        # Cicho pomijamy — map_part_id zwraca oryginał jeśli brak mapowania
-                        pass
+                    parts = nbt_1182.get("parts", [])
+                    if not parts:
+                        warnings.append(
+                            "FMP-W-EMPTY-PARTS: CBMultipart 1.18.x usuwa pusty saved_multipart podczas ladowania"
+                        )
+                    for part in parts:
+                        part_id = str(part.get("id", ""))
+                        if not is_known_part_id_1182(part_id):
+                            warnings.append(
+                                f"FMP-W-UNKNOWN-PART-ID: part '{part_id}' moze zostac pominiety przez CBMultipart"
+                            )
             else:
-                warnings.append(f"FMP-W-UNKNOWN-TE: nieoczekiwane TE id '{te_id}', pominięto konwersję NBT")
+                warnings.append(f"FMP-W-UNKNOWN-TE: nieoczekiwane TE id '{te_id}', pominieto konwersje NBT")
 
         success = not errors
         self.stats["converted" if success else "failed"] += 1
@@ -118,7 +115,6 @@ class ForgeMultipartConverter:
             warnings=warnings,
         )
 
-        # Generuj event kompatybilny z handlerem wstawiającym
         event = self._make_event(
             source_block_id=block_id_1710,
             metadata=metadata,
@@ -136,10 +132,7 @@ class ForgeMultipartConverter:
         position: tuple[int, int, int],
         result: ConversionResult,
     ) -> dict[str, Any]:
-        """
-        Tworzy event dict kompatybilny z ogólnym handlerem.
-        Format zgodny z konwencją z placeholders.py i router.py.
-        """
+        """Tworzy event dict kompatybilny z ogolnym handlerem."""
         event: dict[str, Any] = {
             "op": "set_block_entity" if result.nbt_1182 else "set_block",
             "pos": list(position),
