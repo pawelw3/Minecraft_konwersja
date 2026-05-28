@@ -176,6 +176,41 @@ def _logistics_pipes():
     return _instances["logisticspipes"]
 
 
+def _chisel():
+    if "chisel" not in _instances:
+        from converters.chisel.chisel_converter import ChiselConverter
+        _instances["chisel"] = ChiselConverter()
+    return _instances["chisel"]
+
+
+def _extrautils():
+    if "extrautils" not in _instances:
+        from converters.extrautils.extrautils_converter import ExtraUtilsConverter
+        _instances["extrautils"] = ExtraUtilsConverter()
+    return _instances["extrautils"]
+
+
+def _reliquary():
+    if "reliquary" not in _instances:
+        from converters.reliquary.converter import ReliquaryConverter
+        _instances["reliquary"] = ReliquaryConverter()
+    return _instances["reliquary"]
+
+
+def _omt():
+    if "omt" not in _instances:
+        from converters.openmodularturrets.omt_converter import OpenModularTurretsConverter
+        _instances["omt"] = OpenModularTurretsConverter()
+    return _instances["omt"]
+
+
+def _witchery():
+    if "witchery" not in _instances:
+        from converters.witchery.witchery_converter import WitcheryConverter
+        _instances["witchery"] = WitcheryConverter()
+    return _instances["witchery"]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Mod detection
 # ──────────────────────────────────────────────────────────────────────────────
@@ -245,6 +280,13 @@ def detect_mod(te_id: str) -> str:
     if te_id.startswith("eplus:"):
         return "enchantingplus"
 
+    if (
+        te_id in ("TileEntityAutoChisel", "TileEntityCarvableBeacon", "TileEntityPresent")
+        or te_id.lower() in ("tile.chisel.present", "chisel:present", "tile.chisel.beacon", "chisel:beacon")
+        or "autochisel" in te_id.lower()
+    ):
+        return "chisel"
+
     # Carpenter's Blocks
     if te_id in _CARPENTERS_TE_IDS:
         return "carpentersblocks"
@@ -260,6 +302,10 @@ def detect_mod(te_id: str) -> str:
     # MrCrayfish's Furniture Mod
     if te_id.lower().startswith("cfm") or any(te_id.startswith(p) for p in _CFM_PREFIXES):
         return "mrcraysfish_furniture"
+
+    # Extra Utilities (przed Bibliocraft — TileEntityFilingCabinet overlap)
+    if te_id.startswith("extrautils:") or te_id in ("TileEntityAntiMobTorch", "TileEntityFilingCabinet"):
+        return "extrautils"
 
     # BiblioCraft
     if any(te_id.startswith(p) for p in _BIBLIOCRAFT_PREFIXES) or te_id.startswith("BiblioCraft"):
@@ -344,6 +390,19 @@ def detect_mod(te_id: str) -> str:
     # Misc furniture/prop tiles without clear prefix
     if te_id in ("TableTile", "LampTile", "seatTile"):
         return "furniture_misc"
+
+    # Reliquary
+    if te_id in ("reliquaryAltar", "reliquaryCauldron", "apothecaryMortar"):
+        return "reliquary"
+
+    # Open Modular Turrets (placeholder-only – no 1.18.2 equivalent)
+    from converters.openmodularturrets.mappings import OMT_TE_IDS
+    if te_id in OMT_TE_IDS or bare in OMT_TE_IDS:
+        return "openmodularturrets"
+
+    # Witchery (placeholder-only – uproszczona konwersja, brak portu na 1.18.2)
+    if te_id.startswith("witchery:"):
+        return "witchery"
 
     # IndustrialCraft 2. IC2 experimental commonly stores Forge registry ids
     # such as "Macerator", "Cable", and "TECrop", not TileEntity* class names.
@@ -552,6 +611,13 @@ def _converted_block_to_events(result: Any, pos: tuple[int, int, int]) -> list[d
     return [ev]
 
 
+def _chisel_to_events(result: Any) -> list[dict]:
+    """Serialise ChiselBlockConversion -> Event JSON list."""
+    if not result or not getattr(result, "converted", None):
+        return []
+    return _chisel().to_events(result)
+
+
 def _jammy_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
     """Serialise JammyFurniture ConversionResult -> Event JSON."""
     if not result or not result.success or not result.target_block_id:
@@ -623,6 +689,42 @@ def _forge_multipart_to_events(result: Any) -> list[dict]:
         ev["blockstate"] = c.blockstate_props
     if c.warnings:
         ev["warnings"] = list(c.warnings)
+    return [ev]
+
+
+def _extrautils_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
+    """Serialise ExtraUtils ConversionResult -> Event JSON list."""
+    if not result or not result.success or not result.block_id_1182:
+        return []
+
+    ev: dict = {
+        "op": "set_block_entity" if result.nbt_1182 else "set_block",
+        "pos": list(pos),
+        "block": result.block_id_1182,
+    }
+    if result.nbt_1182:
+        ev["nbt"] = result.nbt_1182
+    if result.blockstate_props:
+        ev["blockstate"] = dict(result.blockstate_props)
+    if result.warnings:
+        ev["warnings"] = list(result.warnings)
+    return [ev]
+
+
+def _reliquary_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
+    """Serialise Reliquary ConversionResult -> Event JSON list."""
+    if not result or not result.success or not result.block_id_1182:
+        return []
+
+    ev: dict = {
+        "op": "set_block_entity" if result.nbt_1182 else "set_block",
+        "pos": list(pos),
+        "block": result.block_id_1182,
+    }
+    if result.nbt_1182:
+        ev["nbt"] = result.nbt_1182
+    if result.warnings:
+        ev["warnings"] = list(result.warnings)
     return [ev]
 
 
@@ -911,6 +1013,18 @@ def convert_te_to_events(
                 return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
             return events
 
+        if mod == "chisel":
+            result = _chisel().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _chisel_to_events(result)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
         if mod == "betterstorage":
             x, y, z = global_pos
             try:
@@ -1123,6 +1237,47 @@ def convert_te_to_events(
             if not events:
                 return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
             return events
+
+        if mod == "extrautils":
+            result = _extrautils().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _extrautils_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "reliquary":
+            result = _reliquary().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+            events = _reliquary_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
+        if mod == "openmodularturrets":
+            return _omt().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
+
+        # Witchery – uproszczona konwersja tylko na placeholdery (brak portu 1.18.2)
+        if mod == "witchery":
+            return _witchery().convert_tile_entity(
+                te_id=te_id,
+                nbt_1710=te_nbt,
+                metadata=metadata,
+                position=global_pos,
+            )
 
         # All other known-but-unimplemented mods and truly unknown ones
         return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "no_converter")]

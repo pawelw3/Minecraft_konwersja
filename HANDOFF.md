@@ -1,43 +1,59 @@
-# Handoff: Logistics Pipes, Zadanie 6
+# Handoff: Armourer's Workshop - Zadanie 5A
 
 ## Podsumowanie sesji
-Wykonano nastepny krok dla Logistics Pipes: headless tick/restart verification na swiecie `world_logistics_pipes_task5b`. Datapack `logistics_pipes_task5b:apply` zostal wykonany przez RCON, po 180 sekundach tickow i po restarcie wszystkie probki przetrwaly poprawnie.
+
+Wykonano Zadanie 5A dla Armourer's Workshop: powstal deterministyczny fixture
+testowej mapy 1.7.10, wynikowy patch 1.18.2, plaski plik eventow oraz raport
+konwersji. Fixture uwzglednia specyfike AW, czyli globalna biblioteke `.armour`
+poza chunkami swiata.
 
 ## Ukonczono
-- [x] Dodano skrypt `run_task6_headless_tick_restart.py`.
-- [x] Uruchomiono headless server 1.18.2 na `world_logistics_pipes_task5b`.
-- [x] Wykonano `function logistics_pipes_task5b:apply`.
-- [x] Sprawdzono 13/13 blokow i 13/13 block entities po apply.
-- [x] Odczekano 180 sekund tickow i sprawdzono 13/13 blokow oraz BE.
-- [x] Zapisano swiat, zatrzymano serwer, uruchomiono restart verification.
-- [x] Po restarcie sprawdzono 13/13 blokow i 13/13 block entities.
 
-## Nowe/zmienione pliki
-- `test_scenarios/logistics_pipes_task5a/run_task6_headless_tick_restart.py`
-- `test_scenarios/logistics_pipes_task5a/logistics_pipes_task6_headless_tick_restart_report.json`
-- `test_scenarios/logistics_pipes_task5a/LOGISTICS_PIPES_TASK6_REPORT.md`
-- `src/converters/logistics_pipes/HANDOFF_LOGISTICS_PIPES_ZADANIE6.md`
-- `headless_server/1.18.2/server.properties`
-- `headless_server/1.18.2/server.properties.before_logistics_pipes_task6`
-- `headless_server/1.18.2/server_logistics_pipes_task6_first_20260526_222119_out.log`
-- `headless_server/1.18.2/server_logistics_pipes_task6_first_20260526_222119_err.log`
-- `headless_server/1.18.2/server_logistics_pipes_task6_restart_20260526_222645_out.log`
-- `headless_server/1.18.2/server_logistics_pipes_task6_restart_20260526_222645_err.log`
+- [x] Wygenerowano source patch 1.7.10.
+- [x] Wygenerowano converted patch 1.18.2.
+- [x] Wygenerowano plaski plik eventow 1.18.2.
+- [x] Pokryto wszystkie source names z `BLOCK_MAPPINGS`.
+- [x] Uwzgledniono warianty `skinnable` metadata 2/3/4/5.
+- [x] Uwzgledniono parent/child skinnable oraz wskazniki `libraryFile`.
+- [x] Uwzgledniono placeholder-rescue dla `mannequin`, `doll`, `miniArmourer`.
+- [x] Dodano fixture globalnych plikow `.armour`.
+- [x] Dodano brakujace mapowanie `outfit_maker` -> `armourers_workshop:outfit-maker`.
 
-## Wynik
-- Status: `passed`
-- Overall pass: `true`
-- Apply marker: znaleziony
-- Relevant errors: 0
-- Unknown block: false
-- Skipping BlockEntity: false
-- Crash: false
+## Wyniki
+
+- Samples: `26`.
+- Source names covered: `20 / 20`.
+- Converted: `23`.
+- Placeholder-rescue: `3`.
+- Failed: `0`.
+- Skin library fixture files: `2`.
+
+## Nowe pliki
+
+- `test_scenarios/armourers_workshop_task5a/generate_armourers_workshop_task5a.py`
+- `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_source_patch_1710.json`
+- `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_converted_patch_1182.json`
+- `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_events_1182.json`
+- `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_conversion_report.json`
+- `test_scenarios/armourers_workshop_task5a/ARMOURERS_WORKSHOP_TASK5A_REPORT.md`
+- `test_scenarios/armourers_workshop_task5a/HANDOFF_ARMOURERS_WORKSHOP_TASK5A.md`
+- `test_scenarios/armourers_workshop_task5a/skin_library_source/`
+- `lightweigh_map_templates/1710_modded/armourers_workshop_task5a_world/README.md`
+- `src/converters/armourers_workshop/tests/test_task5a_fixture.py`
+- `src/converters/armourers_workshop/HANDOFF_ARMOURERS_WORKSHOP_ZADANIE5A.md`
+
+## Zmodyfikowane pliki
+
+- `src/converters/armourers_workshop/mappings.py`
+- `HANDOFF.md`
 
 ## Weryfikacja
-- `python -m py_compile test_scenarios\logistics_pipes_task5a\run_task6_headless_tick_restart.py` -> OK
-- `python -m pytest src\converters\logistics_pipes\tests -q` -> 20 passed
-- `python test_scenarios\logistics_pipes_task5a\run_task6_headless_tick_restart.py` -> Overall PASS
+
+- `python test_scenarios\armourers_workshop_task5a\generate_armourers_workshop_task5a.py` -> `samples=26`, `events=26`, `failed=0`.
+- `python -m py_compile test_scenarios\armourers_workshop_task5a\generate_armourers_workshop_task5a.py src\converters\armourers_workshop\tests\test_task5a_fixture.py` -> OK.
+- `python -m pytest src\converters\armourers_workshop\tests -q` -> `25 passed`.
 
 ## Nastepne kroki
-1. [ ] Dopracowac extractor modulow dla realnych `PipeLogisticsChassiMk4`, jesli chcemy odzyskac wiecej niz fallback pustych modulow.
-2. [ ] Albo przejsc do kolejnego moda wedlug planu.
+
+1. [ ] W Zadaniu 5B zmaterializowac `armourers_workshop_task5a_converted_patch_1182.json` na headless 1.18.2.
+2. [ ] Podpiac batch runner `.armour` dla fixture i pelnej biblioteki.

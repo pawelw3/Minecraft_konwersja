@@ -30,6 +30,11 @@ mapa_118/
 mapa_1710/
 lightweigh_map_templates/
 
+# ----------------------------------------------------------------------------
+# PLIKI GLOBALNE SERWERA 1.7.10 (duże, generowane)
+# ----------------------------------------------------------------------------
+pliki_globalne_serwer_1710/
+
 # Wyjątki - metadata map (małe pliki konfiguracyjne)
 !mapa_*/level.dat
 !mapa_*/session.lock
