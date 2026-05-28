@@ -25,6 +25,7 @@ from converters.common.item_id_resolver import load_item_id_mapping  # noqa: E40
 
 
 SOURCE_PATCH = SCENARIO_DIR / "armourers_workshop_task5a_source_patch_1710.json"
+WORKER_PATCH = SCENARIO_DIR / "armourers_workshop_task5a_worker_patch_1710.json"
 CONVERTED_PATCH = SCENARIO_DIR / "armourers_workshop_task5a_converted_patch_1182.json"
 EVENTS_1182 = SCENARIO_DIR / "armourers_workshop_task5a_events_1182.json"
 CONVERSION_REPORT = SCENARIO_DIR / "armourers_workshop_task5a_conversion_report.json"
@@ -190,6 +191,18 @@ def source_edit(sample: Sample, dynamic_ids: dict[str, int]) -> dict[str, Any]:
     }
 
 
+def worker_edits(samples: list[Sample], dynamic_ids: dict[str, int]) -> list[dict[str, Any]]:
+    edits: list[dict[str, Any]] = []
+    for sample in samples:
+        numeric_id = dynamic_ids.get(sample.block_id)
+        if numeric_id is None:
+            continue
+        edits.append({"op": "set_block", "x": sample.x, "y": sample.y, "z": sample.z, "id": numeric_id, "meta": sample.metadata})
+        if sample.nbt:
+            edits.append({"op": "set_te", "x": sample.x, "y": sample.y, "z": sample.z, "nbt": sample.nbt})
+    return edits
+
+
 def convert_sample(converter: ArmourersWorkshopConverter, sample: Sample) -> dict[str, Any]:
     conversion = converter.convert_block(sample.block_id, sample.metadata, sample.nbt, (sample.x, sample.y, sample.z))
     events = converter.to_events(conversion)
@@ -292,10 +305,11 @@ def write_report(samples: list[Sample], conversions: list[dict[str, Any]], skin_
     lines.extend(
         [
             "",
-            "## Pliki",
-            "",
-            f"- `{SOURCE_PATCH.relative_to(PROJECT_ROOT)}`",
-            f"- `{CONVERTED_PATCH.relative_to(PROJECT_ROOT)}`",
+        "## Pliki",
+        "",
+        f"- `{SOURCE_PATCH.relative_to(PROJECT_ROOT)}`",
+        f"- `{WORKER_PATCH.relative_to(PROJECT_ROOT)}`",
+        f"- `{CONVERTED_PATCH.relative_to(PROJECT_ROOT)}`",
             f"- `{EVENTS_1182.relative_to(PROJECT_ROOT)}`",
             f"- `{CONVERSION_REPORT.relative_to(PROJECT_ROOT)}`",
         ]
@@ -335,6 +349,7 @@ fixture testowej mapy 1.7.10, przekonwertowano go przez
 
 - `test_scenarios/armourers_workshop_task5a/generate_armourers_workshop_task5a.py`
 - `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_source_patch_1710.json`
+- `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_worker_patch_1710.json`
 - `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_converted_patch_1182.json`
 - `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_events_1182.json`
 - `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_conversion_report.json`
@@ -381,6 +396,16 @@ def main() -> int:
         },
         "edits": [source_edit(sample, dynamic_ids) for sample in samples],
     }
+    worker_patch = {
+        "metadata": {
+            "name": "armourers_workshop_task5a_worker_patch",
+            "minecraft_version": "1.7.10",
+            "generated_by": Path(__file__).name,
+            "world_dir": str(WORLD_DIR.relative_to(PROJECT_ROOT)),
+            "note": "Uses numeric ids from mapa_1710/level.dat. Entries without a dynamic numeric id are kept only in source_patch.",
+        },
+        "edits": worker_edits(samples, dynamic_ids),
+    }
     converted_patch = {
         "metadata": {
             "name": "armourers_workshop_task5a_converted",
@@ -405,6 +430,7 @@ def main() -> int:
     }
 
     write_json(SOURCE_PATCH, source_patch)
+    write_json(WORKER_PATCH, worker_patch)
     write_json(CONVERTED_PATCH, converted_patch)
     write_json(EVENTS_1182, events)
     write_json(CONVERSION_REPORT, report)
@@ -413,7 +439,7 @@ def main() -> int:
     write_handoff(samples, conversions)
 
     failed = [item for item in conversions if not item["success"]]
-    print(json.dumps({"samples": len(samples), "events": len(events), "failed": len(failed), "missing_source_names": missing}, indent=2))
+    print(json.dumps({"samples": len(samples), "worker_edits": len(worker_patch["edits"]), "events": len(events), "failed": len(failed), "missing_source_names": missing}, indent=2))
     return 1 if failed or missing else 0
 
 

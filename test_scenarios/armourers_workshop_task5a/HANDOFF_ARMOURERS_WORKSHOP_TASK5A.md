@@ -28,6 +28,7 @@ fixture testowej mapy 1.7.10, przekonwertowano go przez
 
 - `test_scenarios/armourers_workshop_task5a/generate_armourers_workshop_task5a.py`
 - `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_source_patch_1710.json`
+- `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_worker_patch_1710.json`
 - `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_converted_patch_1182.json`
 - `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_events_1182.json`
 - `test_scenarios/armourers_workshop_task5a/armourers_workshop_task5a_conversion_report.json`

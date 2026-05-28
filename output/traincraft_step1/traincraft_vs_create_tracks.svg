@@ -1,0 +1,661 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="3560" viewBox="0 0 820 3560">
+  <defs>
+    <style>
+      .title { font-family: sans-serif; font-size: 14px; font-weight: bold; }
+      .label { font-family: sans-serif; font-size: 11px; }
+      .sub { font-family: sans-serif; font-size: 10px; fill: #555; }
+      .tc-main { fill: #d9534f; stroke: #333; stroke-width: 1; }
+      .tc-gag { fill: #f0ad4e; stroke: #333; stroke-width: 1; }
+      .tc-straight { fill: #5bc0de; stroke: #333; stroke-width: 1; }
+      .create-block { fill: #5cb85c; stroke: #333; stroke-width: 1; }
+      .create-fake { fill: #9e9e9e; stroke: #666; stroke-width: 1; stroke-dasharray: 3,2; }
+      .grid { stroke: #ddd; stroke-width: 0.5; }
+      .arrow { stroke: #333; stroke-width: 1.5; marker-end: url(#arrowhead); }
+      .bezier { fill: none; stroke: #5cb85c; stroke-width: 3; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+    </marker>
+  </defs>
+  <rect width="100%" height="100%" fill="#fafafa" />
+  <text x="20" y="12" class="title">SMALL_STRAIGHT</text>
+  <text x="20" y="26" class="sub">1×1  |  1 block</text>
+  <rect x="20" y="40" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="40" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="56" text-anchor="middle" class="label" fill="white" font-size="8">S</text>
+  <rect x="20" y="76" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="92" class="sub">tcRail (main)</text>
+  <rect x="110" y="76" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="92" class="sub">tcRailGag</text>
+  <rect x="200" y="76" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="92" class="sub">tcRail straight</text>
+  <line x1="360" y1="180" x2="390" y2="180" class="arrow"/>
+  <text x="420" y="12" class="title">Straight (Create)</text>
+  <text x="420" y="26" class="sub">1 block (track shape xo/zo)</text>
+  <rect x="480" y="80" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="492" y="96" text-anchor="middle" class="label" fill="white" font-size="10">track</text>
+  <text x="440" y="130" class="sub">1 block, blockstate only (no BE)</text>
+  <rect x="420" y="190" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="206" class="sub">TrackBlock (create:track)</text>
+  <text x="20" y="332" class="title">MEDIUM_STRAIGHT</text>
+  <text x="20" y="346" class="sub">1×3  |  3 blocks</text>
+  <rect x="20" y="360" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="386" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="412" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="412" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="428" text-anchor="middle" class="label" fill="white" font-size="8">S</text>
+  <rect x="20" y="386" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="402" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="360" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="376" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="448" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="464" class="sub">tcRail (main)</text>
+  <rect x="110" y="448" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="464" class="sub">tcRailGag</text>
+  <rect x="200" y="448" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="464" class="sub">tcRail straight</text>
+  <line x1="360" y1="500" x2="390" y2="500" class="arrow"/>
+  <text x="420" y="332" class="title">Straight (Create)</text>
+  <text x="420" y="346" class="sub">1 block per segment</text>
+  <rect x="480" y="400" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="492" y="416" text-anchor="middle" class="label" fill="white" font-size="10">track</text>
+  <text x="440" y="450" class="sub">1 block, blockstate only (no BE)</text>
+  <rect x="420" y="510" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="526" class="sub">TrackBlock (create:track)</text>
+  <text x="20" y="652" class="title">LONG_STRAIGHT</text>
+  <text x="20" y="666" class="sub">1×6  |  6 blocks</text>
+  <rect x="20" y="680" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="706" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="732" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="758" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="784" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="810" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="810" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="826" text-anchor="middle" class="label" fill="white" font-size="8">S</text>
+  <rect x="20" y="784" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="800" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="758" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="774" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="732" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="748" text-anchor="middle" class="label" fill="white" font-size="8">S</text>
+  <rect x="20" y="706" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="722" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="680" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="696" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="846" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="862" class="sub">tcRail (main)</text>
+  <rect x="110" y="846" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="862" class="sub">tcRailGag</text>
+  <rect x="200" y="846" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="862" class="sub">tcRail straight</text>
+  <line x1="360" y1="820" x2="390" y2="820" class="arrow"/>
+  <text x="420" y="652" class="title">Straight (Create)</text>
+  <text x="420" y="666" class="sub">1 block per segment</text>
+  <rect x="480" y="720" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="492" y="736" text-anchor="middle" class="label" fill="white" font-size="10">track</text>
+  <text x="440" y="770" class="sub">1 block, blockstate only (no BE)</text>
+  <rect x="420" y="830" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="846" class="sub">TrackBlock (create:track)</text>
+  <text x="20" y="972" class="title">MEDIUM_TURN</text>
+  <text x="20" y="986" class="sub">3×3 area  |  5 blocks</text>
+  <rect x="20" y="1000" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1000" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1000" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1026" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1026" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1026" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1052" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1052" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1052" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1052" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="32" y="1068" text-anchor="middle" class="label" fill="white" font-size="8">M</text>
+  <rect x="20" y="1026" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="1042" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="46" y="1026" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="1042" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="46" y="1000" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="1016" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="1000" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="1016" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="1088" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="1104" class="sub">tcRail (main)</text>
+  <rect x="110" y="1088" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="1104" class="sub">tcRailGag</text>
+  <rect x="200" y="1088" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="1104" class="sub">tcRail straight</text>
+  <line x1="360" y1="1140" x2="390" y2="1140" class="arrow"/>
+  <text x="420" y="972" class="title">Turn (Create)</text>
+  <text x="420" y="986" class="sub">1 block + Bezier curve</text>
+  <path d="M 452 1060 C 470 1000, 530 1000, 572 1060" class="bezier"/>
+  <rect x="440" y="1060" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="452" y="1076" text-anchor="middle" class="label" fill="white" font-size="10">TE</text>
+  <rect x="560" y="1060" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="572" y="1076" text-anchor="middle" class="label" fill="white" font-size="10">TE</text>
+  <rect x="470" y="1020" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="500" y="1005" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="530" y="1020" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="440" y="1110" class="sub">1 block + BezierConnection NBT per endpoint</text>
+  <text x="440" y="1125" class="sub">fake_track blocks generated at runtime</text>
+  <rect x="420" y="1150" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="1166" class="sub">TrackBlock (create:track)</text>
+  <rect x="570" y="1150" width="24" height="24" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="598" y="1166" class="sub">FakeTrackBlock</text>
+  <text x="20" y="1292" class="title">LARGE_TURN</text>
+  <text x="20" y="1306" class="sub">5×5 area  |  12 blocks</text>
+  <rect x="20" y="1320" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1320" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1320" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="1320" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="1320" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1346" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1346" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1346" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="1346" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="1346" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1372" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1372" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1372" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="1372" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="1372" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1398" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1398" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1398" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="1398" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="1398" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1424" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1424" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1424" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="1424" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="1424" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1424" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="32" y="1440" text-anchor="middle" class="label" fill="white" font-size="8">M</text>
+  <rect x="20" y="1398" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="1414" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="1372" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="1388" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="46" y="1398" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="1414" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="46" y="1372" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="1388" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="1372" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="1388" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="46" y="1346" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="1362" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="1346" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="1362" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="98" y="1346" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="110" y="1362" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="124" y="1320" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="136" y="1336" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="98" y="1320" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="110" y="1336" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="1320" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="1336" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="1460" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="1476" class="sub">tcRail (main)</text>
+  <rect x="110" y="1460" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="1476" class="sub">tcRailGag</text>
+  <rect x="200" y="1460" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="1476" class="sub">tcRail straight</text>
+  <line x1="360" y1="1460" x2="390" y2="1460" class="arrow"/>
+  <text x="420" y="1292" class="title">Turn (Create)</text>
+  <text x="420" y="1306" class="sub">1 block + Bezier curve</text>
+  <path d="M 452 1380 C 470 1320, 530 1320, 572 1380" class="bezier"/>
+  <rect x="440" y="1380" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="452" y="1396" text-anchor="middle" class="label" fill="white" font-size="10">TE</text>
+  <rect x="560" y="1380" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="572" y="1396" text-anchor="middle" class="label" fill="white" font-size="10">TE</text>
+  <rect x="470" y="1340" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="500" y="1325" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="530" y="1340" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="440" y="1430" class="sub">1 block + BezierConnection NBT per endpoint</text>
+  <text x="440" y="1445" class="sub">fake_track blocks generated at runtime</text>
+  <rect x="420" y="1470" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="1486" class="sub">TrackBlock (create:track)</text>
+  <rect x="570" y="1470" width="24" height="24" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="598" y="1486" class="sub">FakeTrackBlock</text>
+  <text x="20" y="1612" class="title">VERY_LARGE_TURN</text>
+  <text x="20" y="1626" class="sub">10×10 area  |  25 blocks</text>
+  <rect x="20" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1640" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1660" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1680" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1700" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1720" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1740" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1760" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1780" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1800" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="40" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="60" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="80" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="100" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="120" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="140" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="160" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="180" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="200" y="1820" width="18" height="18" class="grid" fill="white"/>
+  <rect x="20" y="1820" width="18" height="18" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="1800" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="1780" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="40" y="1780" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="1760" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="40" y="1760" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="1740" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="40" y="1740" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="40" y="1720" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="60" y="1740" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="60" y="1720" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="60" y="1700" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="80" y="1700" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="80" y="1680" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="100" y="1680" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="100" y="1660" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="120" y="1680" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="120" y="1660" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="120" y="1640" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="140" y="1660" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="140" y="1640" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="160" y="1660" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="160" y="1640" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="180" y="1640" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="200" y="1640" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="1850" width="18" height="18" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="42" y="1863" class="sub">tcRail (main)</text>
+  <rect x="110" y="1850" width="18" height="18" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="132" y="1863" class="sub">tcRailGag</text>
+  <rect x="200" y="1850" width="18" height="18" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="222" y="1863" class="sub">tcRail straight</text>
+  <line x1="360" y1="1780" x2="390" y2="1780" class="arrow"/>
+  <text x="420" y="1612" class="title">Turn (Create)</text>
+  <text x="420" y="1626" class="sub">1 block + Bezier curve</text>
+  <path d="M 452 1700 C 470 1640, 530 1640, 572 1700" class="bezier"/>
+  <rect x="440" y="1700" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="452" y="1716" text-anchor="middle" class="label" fill="white" font-size="10">TE</text>
+  <rect x="560" y="1700" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="572" y="1716" text-anchor="middle" class="label" fill="white" font-size="10">TE</text>
+  <rect x="470" y="1660" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="500" y="1645" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <rect x="530" y="1660" width="19" height="19" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="440" y="1750" class="sub">1 block + BezierConnection NBT per endpoint</text>
+  <text x="440" y="1765" class="sub">fake_track blocks generated at runtime</text>
+  <rect x="420" y="1790" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="1806" class="sub">TrackBlock (create:track)</text>
+  <rect x="570" y="1790" width="24" height="24" fill="#bdbdbd" stroke="#666" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="598" y="1806" class="sub">FakeTrackBlock</text>
+  <text x="20" y="1932" class="title">MEDIUM_SWITCH</text>
+  <text x="20" y="1946" class="sub">4×4 area  |  ~8 blocks</text>
+  <rect x="20" y="1960" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1960" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1960" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="1960" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="1986" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="1986" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="1986" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="1986" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2012" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="2012" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="2012" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="2012" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2038" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="2038" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="2038" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="2038" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2038" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2054" text-anchor="middle" class="label" fill="white" font-size="8">E</text>
+  <rect x="46" y="1986" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="58" y="2002" text-anchor="middle" class="label" fill="white" font-size="8">M</text>
+  <rect x="46" y="1960" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="1976" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="1960" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="1976" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="98" y="1960" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="110" y="1976" text-anchor="middle" class="label" fill="white" font-size="8">X</text>
+  <rect x="20" y="2012" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2028" text-anchor="middle" class="label" fill="white" font-size="8">1</text>
+  <rect x="20" y="1986" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2002" text-anchor="middle" class="label" fill="white" font-size="8">2</text>
+  <rect x="20" y="1960" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="1976" text-anchor="middle" class="label" fill="white" font-size="8">3</text>
+  <rect x="20" y="2074" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="2090" class="sub">tcRail (main)</text>
+  <rect x="110" y="2074" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="2090" class="sub">tcRailGag</text>
+  <rect x="200" y="2074" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="2090" class="sub">tcRail straight</text>
+  <line x1="360" y1="2100" x2="390" y2="2100" class="arrow"/>
+  <text x="420" y="1932" class="title">Switch (Create)</text>
+  <text x="420" y="1946" class="sub">1 block track_switch_andesite</text>
+  <rect x="480" y="2000" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="492" y="2016" text-anchor="middle" class="label" fill="white" font-size="10">track</text>
+  <text x="440" y="2050" class="sub">1 block, blockstate only (no BE)</text>
+  <rect x="420" y="2110" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="2126" class="sub">TrackBlock (create:track)</text>
+  <text x="20" y="2252" class="title">LARGE_SWITCH</text>
+  <text x="20" y="2266" class="sub">6×6 area  |  ~14 blocks</text>
+  <rect x="20" y="2280" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="2280" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="2280" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="2280" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="2280" width="24" height="24" class="grid" fill="white"/>
+  <rect x="150" y="2280" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2306" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="2306" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="2306" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="2306" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="2306" width="24" height="24" class="grid" fill="white"/>
+  <rect x="150" y="2306" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2332" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="2332" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="2332" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="2332" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="2332" width="24" height="24" class="grid" fill="white"/>
+  <rect x="150" y="2332" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2358" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="2358" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="2358" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="2358" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="2358" width="24" height="24" class="grid" fill="white"/>
+  <rect x="150" y="2358" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2384" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="2384" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="2384" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="2384" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="2384" width="24" height="24" class="grid" fill="white"/>
+  <rect x="150" y="2384" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2410" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="2410" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="2410" width="24" height="24" class="grid" fill="white"/>
+  <rect x="98" y="2410" width="24" height="24" class="grid" fill="white"/>
+  <rect x="124" y="2410" width="24" height="24" class="grid" fill="white"/>
+  <rect x="150" y="2410" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2410" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2426" text-anchor="middle" class="label" fill="white" font-size="8">E</text>
+  <rect x="46" y="2358" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="58" y="2374" text-anchor="middle" class="label" fill="white" font-size="8">M</text>
+  <rect x="46" y="2332" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="2348" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="2332" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="2348" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="46" y="2306" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="2322" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="2306" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="2322" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="98" y="2306" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="110" y="2322" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="124" y="2280" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="136" y="2296" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="98" y="2280" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="110" y="2296" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="2280" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="2296" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="150" y="2280" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="162" y="2296" text-anchor="middle" class="label" fill="white" font-size="8">X</text>
+  <rect x="20" y="2384" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2400" text-anchor="middle" class="label" fill="white" font-size="8">1</text>
+  <rect x="20" y="2358" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2374" text-anchor="middle" class="label" fill="white" font-size="8">2</text>
+  <rect x="20" y="2332" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2348" text-anchor="middle" class="label" fill="white" font-size="8">3</text>
+  <rect x="20" y="2306" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2322" text-anchor="middle" class="label" fill="white" font-size="8">4</text>
+  <rect x="20" y="2280" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2296" text-anchor="middle" class="label" fill="white" font-size="8">5</text>
+  <rect x="20" y="2446" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="2462" class="sub">tcRail (main)</text>
+  <rect x="110" y="2446" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="2462" class="sub">tcRailGag</text>
+  <rect x="200" y="2446" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="2462" class="sub">tcRail straight</text>
+  <line x1="360" y1="2420" x2="390" y2="2420" class="arrow"/>
+  <text x="420" y="2252" class="title">Switch (Create)</text>
+  <text x="420" y="2266" class="sub">1 block track_switch_andesite</text>
+  <rect x="480" y="2320" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="492" y="2336" text-anchor="middle" class="label" fill="white" font-size="10">track</text>
+  <text x="440" y="2370" class="sub">1 block, blockstate only (no BE)</text>
+  <rect x="420" y="2430" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="2446" class="sub">TrackBlock (create:track)</text>
+  <text x="20" y="2572" class="title">MEDIUM_PARALLEL_SWITCH</text>
+  <text x="20" y="2586" class="sub">4×11 area  |  ~22 blocks</text>
+  <rect x="20" y="2600" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2600" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2600" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2600" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2618" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2618" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2618" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2618" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2636" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2636" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2636" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2636" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2654" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2654" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2654" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2654" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2672" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2672" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2672" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2672" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2690" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2690" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2690" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2690" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2708" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2708" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2708" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2708" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2726" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2726" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2726" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2726" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2744" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2744" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2744" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2744" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2762" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2762" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2762" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2762" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2780" width="16" height="16" class="grid" fill="white"/>
+  <rect x="38" y="2780" width="16" height="16" class="grid" fill="white"/>
+  <rect x="56" y="2780" width="16" height="16" class="grid" fill="white"/>
+  <rect x="74" y="2780" width="16" height="16" class="grid" fill="white"/>
+  <rect x="20" y="2762" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2744" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2726" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2708" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2690" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2672" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2654" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2636" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2618" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2600" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <rect x="38" y="2708" width="16" height="16" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <rect x="38" y="2690" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="56" y="2690" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="56" y="2672" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="74" y="2654" width="16" height="16" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <rect x="74" y="2600" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="74" y="2618" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="74" y="2636" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="92" y="2600" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="92" y="2618" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="92" y="2636" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="110" y="2600" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="110" y="2618" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="110" y="2636" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <rect x="20" y="2808" width="16" height="16" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="40" y="2820" class="sub">tcRail (main)</text>
+  <rect x="110" y="2808" width="16" height="16" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="130" y="2820" class="sub">tcRailGag</text>
+  <rect x="200" y="2808" width="16" height="16" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="220" y="2820" class="sub">tcRail straight</text>
+  <line x1="360" y1="2740" x2="390" y2="2740" class="arrow"/>
+  <text x="420" y="2572" class="title">Switch (Create)</text>
+  <text x="420" y="2586" class="sub">1 block track_switch_andesite</text>
+  <rect x="480" y="2640" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="492" y="2656" text-anchor="middle" class="label" fill="white" font-size="10">track</text>
+  <text x="440" y="2690" class="sub">1 block, blockstate only (no BE)</text>
+  <rect x="420" y="2750" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="2766" class="sub">TrackBlock (create:track)</text>
+  <text x="20" y="2892" class="title">SLOPE</text>
+  <text x="20" y="2906" class="sub">1×6  |  6 blocks</text>
+  <rect x="20" y="2920" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2946" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2972" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="2998" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="3024" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="3050" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="3050" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="32" y="3066" text-anchor="middle" class="label" fill="white" font-size="8">M</text>
+  <rect x="20" y="3024" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="3040" text-anchor="middle" class="label" fill="white" font-size="8">1</text>
+  <rect x="20" y="2998" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="3014" text-anchor="middle" class="label" fill="white" font-size="8">2</text>
+  <rect x="20" y="2972" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2988" text-anchor="middle" class="label" fill="white" font-size="8">3</text>
+  <rect x="20" y="2946" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2962" text-anchor="middle" class="label" fill="white" font-size="8">4</text>
+  <rect x="20" y="2920" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="2936" text-anchor="middle" class="label" fill="white" font-size="8">5</text>
+  <rect x="20" y="3086" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="3102" class="sub">tcRail (main)</text>
+  <rect x="110" y="3086" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="3102" class="sub">tcRailGag</text>
+  <rect x="200" y="3086" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="3102" class="sub">tcRail straight</text>
+  <line x1="360" y1="3060" x2="390" y2="3060" class="arrow"/>
+  <text x="420" y="2892" class="title">Slope (Create)</text>
+  <text x="420" y="2906" class="sub">1 block TrackShape.AE/AW/AN/AS</text>
+  <rect x="480" y="2960" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="492" y="2976" text-anchor="middle" class="label" fill="white" font-size="10">track</text>
+  <text x="440" y="3010" class="sub">1 block, blockstate only (no BE)</text>
+  <rect x="420" y="3070" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="3086" class="sub">TrackBlock (create:track)</text>
+  <text x="20" y="3212" class="title">TWO_WAYS_CROSSING</text>
+  <text x="20" y="3226" class="sub">3×3 area  |  ~9 blocks</text>
+  <rect x="20" y="3240" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="3240" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="3240" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="3266" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="3266" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="3266" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="3292" width="24" height="24" class="grid" fill="white"/>
+  <rect x="46" y="3292" width="24" height="24" class="grid" fill="white"/>
+  <rect x="72" y="3292" width="24" height="24" class="grid" fill="white"/>
+  <rect x="20" y="3292" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="32" y="3308" text-anchor="middle" class="label" fill="white" font-size="8">M</text>
+  <rect x="20" y="3266" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="32" y="3282" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="20" y="3240" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="32" y="3256" text-anchor="middle" class="label" fill="white" font-size="8">S</text>
+  <rect x="46" y="3292" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="3308" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="46" y="3266" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="58" y="3282" text-anchor="middle" class="label" fill="white" font-size="8">C</text>
+  <rect x="46" y="3240" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="58" y="3256" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="3292" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="84" y="3308" text-anchor="middle" class="label" fill="white" font-size="8">S</text>
+  <rect x="72" y="3266" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="84" y="3282" text-anchor="middle" class="label" fill="white" font-size="8">G</text>
+  <rect x="72" y="3240" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="84" y="3256" text-anchor="middle" class="label" fill="white" font-size="8">S</text>
+  <rect x="20" y="3328" width="24" height="24" fill="#d9534f" stroke="#333" stroke-width="1"/>
+  <text x="48" y="3344" class="sub">tcRail (main)</text>
+  <rect x="110" y="3328" width="24" height="24" fill="#f0ad4e" stroke="#333" stroke-width="1"/>
+  <text x="138" y="3344" class="sub">tcRailGag</text>
+  <rect x="200" y="3328" width="24" height="24" fill="#5bc0de" stroke="#333" stroke-width="1"/>
+  <text x="228" y="3344" class="sub">tcRail straight</text>
+  <line x1="360" y1="3380" x2="390" y2="3380" class="arrow"/>
+  <text x="420" y="3212" class="title">Crossing (Create)</text>
+  <text x="420" y="3226" class="sub">1 block TrackShape.CR_O</text>
+  <rect x="480" y="3280" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="2"/>
+  <text x="492" y="3296" text-anchor="middle" class="label" fill="white" font-size="10">track</text>
+  <text x="440" y="3330" class="sub">1 block, blockstate only (no BE)</text>
+  <rect x="420" y="3390" width="24" height="24" fill="#5cb85c" stroke="#333" stroke-width="1"/>
+  <text x="448" y="3406" class="sub">TrackBlock (create:track)</text>
+</svg>

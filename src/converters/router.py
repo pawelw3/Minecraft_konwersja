@@ -99,6 +99,13 @@ def _enderstorage():
     return _instances["enderstorage"]
 
 
+def _carpentersblocks():
+    if "carpentersblocks" not in _instances:
+        from converters.carpenterblocks.nbt_converter import CBBlockConverter
+        _instances["carpentersblocks"] = CBBlockConverter()
+    return _instances["carpentersblocks"]
+
+
 def _thermal():
     if "thermal" not in _instances:
         from converters.thermal.thermal_converter import ThermalConverter
@@ -211,6 +218,21 @@ def _witchery():
     return _instances["witchery"]
 
 
+def _armourers_workshop():
+    if "armourers_workshop" not in _instances:
+        from converters.armourers_workshop.converter import ArmourersWorkshopConverter
+        _instances["armourers_workshop"] = ArmourersWorkshopConverter()
+    return _instances["armourers_workshop"]
+
+
+def _traincraft(removals: set[tuple[int, int, int]] | None = None):
+    key = "traincraft"
+    if key not in _instances:
+        from converters.traincraft.traincraft_converter import TraincraftConverter
+        _instances[key] = TraincraftConverter(removals=removals)
+    return _instances[key]
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Mod detection
 # ──────────────────────────────────────────────────────────────────────────────
@@ -228,8 +250,13 @@ _BLOODMAGIC_TE_IDS = frozenset([
 
 _CARPENTERS_TE_IDS = frozenset([
     "TileEntityCarpentersBlock",
-    "te.skinnable", "te.skinnableChild",
-    "te.mannequin", "te.armourLibrary",
+])
+
+_AW_TE_IDS = frozenset([
+    "te.armourLibrary", "te.globalSkinLibrary", "te.skinningTable",
+    "te.dyeTable", "te.colourMixer", "te.armourerBrain",
+    "te.hologramProjector", "te.colourable", "te.awBoundingBox6",
+    "te.skinnable", "te.skinnableChild", "te.mannequin", "te.miniArmourer",
 ])
 
 _CFM_PREFIXES = (
@@ -286,6 +313,10 @@ def detect_mod(te_id: str) -> str:
         or "autochisel" in te_id.lower()
     ):
         return "chisel"
+
+    # Armourer's Workshop
+    if te_id in _AW_TE_IDS:
+        return "armourers_workshop"
 
     # Carpenter's Blocks
     if te_id in _CARPENTERS_TE_IDS:
@@ -412,6 +443,10 @@ def detect_mod(te_id: str) -> str:
     # Big Reactors / Bigger Reactors
     if te_id.startswith("BR") and _is_bigreactors_te_id(te_id):
         return "bigreactors"
+
+    # Traincraft
+    if _traincraft().is_traincraft_tile_entity_id(te_id):
+        return "traincraft"
 
     return "unknown"
 
@@ -796,6 +831,27 @@ def _logistics_pipes_to_events(result: Any) -> list[dict]:
         ev["blockstate"] = dict(c.blockstate_props)
     if c.warnings:
         ev["warnings"] = list(c.warnings)
+    return [ev]
+
+
+def _traincraft_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
+    """Serialise Traincraft converter output -> Event JSON list."""
+    if not result:
+        return []
+    block_id, meta_hint, props, nbt = result
+    if not block_id:
+        return []
+    if block_id == "minecraft:air":
+        return [{"op": "set_block", "pos": list(pos), "block": "minecraft:air"}]
+
+    ev: dict = {"pos": list(pos), "block": block_id}
+    if nbt:
+        ev["op"] = "set_block_entity"
+        ev["nbt"] = nbt
+    else:
+        ev["op"] = "set_block"
+    if props:
+        ev["blockstate"] = dict(props)
     return [ev]
 
 
@@ -1238,6 +1294,20 @@ def convert_te_to_events(
                 return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
             return events
 
+        if mod == "carpentersblocks":
+            from converters.carpenterblocks.mappings.block_ids import CB_NUMERIC_ID_TO_BLOCK_ID
+            block_id_1710 = CB_NUMERIC_ID_TO_BLOCK_ID.get(block_numeric_id)
+            if not block_id_1710:
+                return [_placeholder(
+                    te_id, mod, metadata, te_nbt, global_pos,
+                    f"unknown_cb_numeric_id:{block_numeric_id}",
+                )]
+            result = _carpentersblocks().convert(block_id_1710, te_nbt)
+            events = _carpentersblocks_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
         if mod == "extrautils":
             result = _extrautils().convert_tile_entity(
                 te_id=te_id,
@@ -1270,6 +1340,19 @@ def convert_te_to_events(
                 position=global_pos,
             )
 
+        if mod == "armourers_workshop":
+            aw = _armourers_workshop()
+            result = aw.convert_block(
+                block_id_1710=te_id,
+                metadata=metadata,
+                nbt_1710=te_nbt,
+                position=global_pos,
+            )
+            events = aw.to_events(result)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
         # Witchery – uproszczona konwersja tylko na placeholdery (brak portu 1.18.2)
         if mod == "witchery":
             return _witchery().convert_tile_entity(
@@ -1279,6 +1362,19 @@ def convert_te_to_events(
                 position=global_pos,
             )
 
+        if mod == "traincraft":
+            result = _traincraft().convert_tile_entity(
+                te_id=te_id,
+                te_nbt=te_nbt,
+                block_id=te_id,  # Will be resolved internally via mappings
+                metadata=metadata,
+                pos=global_pos,
+            )
+            events = _traincraft_to_events(result, global_pos)
+            if not events:
+                return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "converter_returned_empty")]
+            return events
+
         # All other known-but-unimplemented mods and truly unknown ones
         return [_placeholder(te_id, mod, metadata, te_nbt, global_pos, "no_converter")]
 
@@ -1287,6 +1383,23 @@ def convert_te_to_events(
             te_id, mod, metadata, te_nbt, global_pos,
             f"converter_error:{type(exc).__name__}:{exc}",
         )]
+
+
+def _carpentersblocks_to_events(result: Any, pos: tuple[int, int, int]) -> list[dict]:
+    """Serialise CBConversionResult -> Event JSON list."""
+    if not result or not result.success or not result.block_id_1182:
+        return []
+    ev: dict = {"pos": list(pos), "block": result.block_id_1182}
+    if result.nbt_1182:
+        ev["op"] = "set_block_entity"
+        ev["nbt"] = dict(result.nbt_1182)
+    else:
+        ev["op"] = "set_block"
+    if result.blockstate_props:
+        ev["blockstate"] = dict(result.blockstate_props)
+    if result.warnings:
+        ev["warnings"] = list(result.warnings)
+    return [ev]
 
 
 def _placeholder(

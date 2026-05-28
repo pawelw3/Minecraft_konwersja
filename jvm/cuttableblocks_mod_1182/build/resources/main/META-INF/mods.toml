@@ -1,0 +1,27 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="MIT"
+
+[[mods]]
+modId="cuttableblocks"
+version="${file.jarVersion}"
+displayName="Cuttable Blocks"
+authors="pawel"
+description='''
+CuttableBlocks 1.18.2 - target mod for CarpentersBlocks 1.7.10 world conversion.
+Provides geometry and cover-material block entities for all 18 CB block types.
+'''
+
+[[dependencies.cuttableblocks]]
+modId="forge"
+mandatory=true
+versionRange="[40,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.cuttableblocks]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.18.2,1.19)"
+ordering="NONE"
+side="BOTH"

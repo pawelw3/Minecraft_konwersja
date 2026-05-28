@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from converters.forge_multipart.forge_multipart_converter import ForgeMultipartConverter
 from converters.forge_multipart.nbt_converter import TileMultipartNBTConverter
-from converters.forge_multipart.mappings import map_block_id, map_part_id, map_te_id
+from converters.forge_multipart.mappings import map_block_id, map_microblock_material, map_part_id, map_te_id
 
 
 # ---------------------------------------------------------------------------
@@ -56,6 +56,15 @@ def test_map_part_id_unknown_fallback():
     assert map_part_id("custom:unknown_part") == "custom:unknown_part"
 
 
+def test_map_microblock_material_extrautils_colored_blocks():
+    assert map_microblock_material("tile.extrautils:color_quartzBlock_2") == "minecraft:quartz_block"
+    assert map_microblock_material("tile.extrautils:color_blockLapis_15") == "minecraft:lapis_block"
+
+
+def test_map_microblock_material_falls_back_to_valid_resource_location():
+    assert map_microblock_material("bad material with spaces") == "minecraft:stone"
+
+
 # ---------------------------------------------------------------------------
 # Testy konwersji NBT TileMultipart
 # ---------------------------------------------------------------------------
@@ -85,6 +94,22 @@ def test_convert_face_microblock():
     assert part["id"] == "cb_microblock:face"
     assert part["shape"] == 16
     assert part["material"] == "minecraft:stone"
+
+
+def test_convert_extrautils_colored_microblock_material_is_resource_location_safe():
+    nbt_1710 = {
+        "id": "savedMultipart",
+        "x": -100, "y": 70, "z": -65,
+        "parts": [
+            {"id": "mcr_face", "shape": 16, "material": "tile.extrautils:color_quartzBlock_2"}
+        ]
+    }
+    nbt_1182 = TileMultipartNBTConverter.convert(nbt_1710)
+    assert nbt_1182 is not None
+    part = nbt_1182["parts"][0]
+    assert part["id"] == "cb_microblock:face"
+    assert part["material"] == "minecraft:quartz_block"
+    assert "color_quartzBlock" not in part["material"]
 
 
 def test_convert_multiple_parts():
@@ -242,6 +267,25 @@ def test_router_sends_microblock_savedmultipart_to_forge_multipart():
     assert events[0]["block"] == "cb_multipart:multipart"
     assert events[0]["nbt"]["id"] == "cb_multipart:saved_multipart"
     assert events[0]["nbt"]["parts"][0]["id"] == "cb_microblock:face"
+
+
+def test_router_sanitizes_extrautils_microblock_material():
+    from converters.router import convert_te_to_events
+
+    events = convert_te_to_events(
+        te_nbt={
+            "id": "savedMultipart",
+            "x": -100, "y": 70, "z": -65,
+            "parts": [{"id": "mcr_face", "shape": 16, "material": "tile.extrautils:color_quartzBlock_2"}],
+        },
+        block_numeric_id=0,
+        metadata=0,
+        global_pos=(-100, 70, -65),
+    )
+
+    assert len(events) == 1
+    assert events[0]["block"] == "cb_multipart:multipart"
+    assert events[0]["nbt"]["parts"][0]["material"] == "minecraft:quartz_block"
 
 
 if __name__ == "__main__":

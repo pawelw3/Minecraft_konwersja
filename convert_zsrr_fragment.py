@@ -368,6 +368,31 @@ def step3_generate_mod_events():
     print(f"      events file: {EVENTS_FILE}")
 
 
+# ── step 3b: convert Backpack mod data ──────────────────────────────────────
+
+def step3b_convert_backpacks():
+    print(f"\n[3b] Converting Backpack mod data (→ Sophisticated Backpacks 1.18.2)")
+
+    backpacks_dir = SRC_WORLD / "backpacks" / "backpacks"
+    if not backpacks_dir.exists():
+        print(f"      No backpacks dir found at {backpacks_dir}, skipping.")
+        return
+
+    from converters.backpack.backpack_converter import BackpackBatchConverter
+
+    converter = BackpackBatchConverter(source_world=SRC_WORLD, target_world=DST_WORLD)
+    report = converter.convert_all()
+
+    if "error" in report:
+        print(f"      ERROR: {report['error']}")
+        return
+
+    pd = report.get("playerdata", {})
+    print(f"      Backpacks converted : {report.get('converted', 0)}/{report.get('total_files', 0)}  (failed: {report.get('failed', 0)}, items: {report.get('total_items', 0)})")
+    print(f"      Playerdata backpacks: {pd.get('converted_backpacks', 0)} in {pd.get('converted_players', 0)} players")
+    print(f"      Output: {report.get('output_paths', {}).get('nbt', '')}")
+
+
 # ── step 4: apply events via JVM Worker ─────────────────────────────────────
 
 def step4_apply_events():
@@ -445,6 +470,7 @@ def main():
     step2_amulet_vanilla_copy()
     step2b_replace_numerical_with_air()
     step3_generate_mod_events()
+    step3b_convert_backpacks()
     step4_apply_events()
     step5_configure_world()
 

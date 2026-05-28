@@ -18,7 +18,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from .mappings import map_part_id, map_te_id
+from .mappings import map_microblock_material, map_part_id, map_te_id
 
 
 DIRECTION_BY_1710_META = {
@@ -123,6 +123,9 @@ class TileMultipartNBTConverter:
         converted = deepcopy(part)
         old_part_id = str(converted["id"])
         converted["id"] = map_part_id(old_part_id)
+
+        if "material" in converted:
+            converted["material"] = map_microblock_material(str(converted.get("material", "")))
 
         state = _convert_vanilla_part_state(old_part_id, converted)
         if state is not None:

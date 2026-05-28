@@ -9,6 +9,9 @@ Zakres: deterministyczny fixture mapy 1.7.10 obejmujacy wszystkie znane bloki AW
 - Converted: 23
 - Placeholder-rescue: 3
 - Failed: 0
+- Worker edits: 43
+- Materialized chunks: 2
+- Materialized tile entities readback: 18
 - Skin library fixture files: 2
 
 ## Pokryte source names
@@ -68,6 +71,14 @@ Zakres: deterministyczny fixture mapy 1.7.10 obejmujacy wszystkie znane bloki AW
 - `official/Barrel.armour` -> `ws:official/Barrel.armour`
 - `Biret kap_a_ski.armour` -> `ws:Biret kap_a_ski.armour`
 
+## Materializacja 1.7.10
+
+- World: `lightweigh_map_templates\1710_modded\armourers_workshop_task5a_world`
+- Worker patch: `test_scenarios\armourers_workshop_task5a\armourers_workshop_task5a_worker_patch_1710.json`
+- Region: `lightweigh_map_templates\1710_modded\armourers_workshop_task5a_world\region\r.0.0.mca`
+- Readback: `2` chunki, `18` tile entities.
+- Uwaga: `miniArmourer` ma pokrycie logiczne w source/converted fixture, ale nie zostal wpisany do `.mca`, bo nie ma dynamicznego numeric ID w `mapa_1710/level.dat`.
+
 ## Warningi unikalne
 
 - `AW-W-SOURCE-NBT-PRESERVED: original TE NBT kept on ConversionEvent for audit.`: 17
@@ -87,6 +98,7 @@ Zakres: deterministyczny fixture mapy 1.7.10 obejmujacy wszystkie znane bloki AW
 ## Pliki
 
 - `test_scenarios\armourers_workshop_task5a\armourers_workshop_task5a_source_patch_1710.json`
+- `test_scenarios\armourers_workshop_task5a\armourers_workshop_task5a_worker_patch_1710.json`
 - `test_scenarios\armourers_workshop_task5a\armourers_workshop_task5a_converted_patch_1182.json`
 - `test_scenarios\armourers_workshop_task5a\armourers_workshop_task5a_events_1182.json`
 - `test_scenarios\armourers_workshop_task5a\armourers_workshop_task5a_conversion_report.json`
