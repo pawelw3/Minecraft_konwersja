@@ -52,7 +52,6 @@ class TestRouterConversion:
         ev = events[0]
         assert ev["block"] == "cuttableblocks:carpenter_block"
         assert ev["blockstate"]["type"] == "bottom"
-        assert ev["blockstate"]["axis"] == "y"
 
     def test_barrier_vanilla_no_post(self):
         te = _te(cb_metadata=0)
@@ -87,10 +86,11 @@ class TestRouterConversion:
         assert ev["blockstate"]["facing"] == "north"
         assert ev["blockstate"]["half"] == "lower"
 
-    def test_bed_multiblock_warning(self):
+    def test_bed_conversion(self):
         te = _te(cb_metadata=5)
         events = convert_te_to_events(te, block_numeric_id=249, metadata=0, global_pos=(0, 0, 0))
         assert len(events) == 1
         ev = events[0]
         assert ev["block"] == "cuttableblocks:carpenter_bed"
-        assert any("CB-W-MULTIBLOCK" in str(w) for w in ev.get("warnings", []))
+        assert ev["blockstate"]["facing"] == "west"
+        assert ev["blockstate"]["part"] == "foot"

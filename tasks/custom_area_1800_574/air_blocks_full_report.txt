@@ -1,0 +1,177 @@
+BLOKI W AIR - PELNA ANALIZA
+================================================================================
+
+RAZEM: 15728 blokow, 91 unikalnych typow
+
+GRUPA 1: Bloki z TileEntity (obsługiwane przez events.jsonl lub inny converter)
+Liczba typow: 36, blokow: 6955
+--------------------------------------------------------------------------------
+   2299  ThermalDynamics:ThermalDynamics_0
+         Thermal Dynamics energy/fluid/item ducts are network/BE-owned
+   1438  ThermalDynamics:ThermalDynamics_32
+         Thermal Dynamics energy/fluid/item ducts are network/BE-owned
+    732  ProjRed|Illumination:projectred.illumination.lamp
+         block is TE/multipart or functional ProjectRed block
+    678  Mekanism:BasicBlock2
+         block must be handled by Mekanism TE/NBT converter
+    305  ExtraUtilities:filing
+         block has functional NBT converter and is outside block-only
+    288  Railcraft:machine.beta
+         block is handled by Railcraft TE/event converter
+    221  ThermalDynamics:ThermalDynamics_16
+         Thermal Dynamics energy/fluid/item ducts are network/BE-owned
+    208  openmodularturrets:baseTierFourBlock
+         block is owned by OMT TE/entity converter
+    149  openmodularturrets:laserTurret
+         block is owned by OMT TE/entity converter
+    129  ThermalExpansion:Machine
+         Thermal block has BE/NBT mapping and is outside block-only
+    121  Mekanism:MachineBlock2
+         block must be handled by Mekanism TE/NBT converter
+     76  witchery:poppetshelf
+         Witchery functional/decorative TE remains placeholder/NBT converter scope
+     60  openmodularturrets:teleporterTurret
+         block is owned by OMT TE/entity converter
+     53  Mekanism:MachineBlock
+         block must be handled by Mekanism TE/NBT converter
+     37  Mekanism:MachineBlock3
+         block must be handled by Mekanism TE/NBT converter
+     22  IC2:blockGenerator
+         block must be handled by IC2 TE/NBT converter
+     16  ThermalExpansion:Cell
+         Thermal block has BE/NBT mapping and is outside block-only
+     14  IC2:blockMachine2
+         block must be handled by IC2 TE/NBT converter
+     11  Mekanism:BasicBlock
+         block must be handled by Mekanism TE/NBT converter
+     11  IC2:blockHeatGenerator
+         block must be handled by IC2 TE/NBT converter
+     10  witchery:candelabra
+         Witchery functional/decorative TE remains placeholder/NBT converter scope
+     10  IC2:blockElectric
+         block must be handled by IC2 TE/NBT converter
+     10  IC2:blockMachine3
+         block must be handled by IC2 TE/NBT converter
+     10  Mekanism:GasTank
+         block must be handled by Mekanism TE/NBT converter
+      9  IC2:blockMachine
+         block must be handled by IC2 TE/NBT converter
+... oraz 11 innych typow
+
+GRUPA 2: Brak mapowania block-only (kandydaci do dodania)
+Liczba typow: 53, blokow: 8739
+--------------------------------------------------------------------------------
+   1764  BigReactors:BRTurbinePart
+         Block fell through to default fallback
+   1453  tc:tcRailGag
+         Traincraft rails/machines are handled by TE/track converter
+   1016  BigReactors:BRMultiblockGlass
+         Block fell through to default fallback
+    891  tc:tcRail
+         Traincraft rails/machines are handled by TE/track converter
+    750  BuildCraft|Transport:pipeBlock
+         Block fell through to default fallback
+    686  BigReactors:BRReactorPart
+         Block fell through to default fallback
+    584  appliedenergistics2:tile.BlockCableBus
+         Block fell through to default fallback
+    564  BigReactors:BRTurbineRotorPart
+         Block fell through to default fallback
+    189  BiblioCraft:BiblioTable
+         Block fell through to default fallback
+    171  BigReactors:YelloriumFuelRod
+         Block fell through to default fallback
+     95  Railcraft:residual.heat
+         RC-BO-W-MAPPED: Residual Heat (RCHiddenTile) → air (ignored per user request)
+     84  BiblioCraft:Bibliotheca
+         Block fell through to default fallback
+     83  appliedenergistics2:tile.BlockDenseEnergyCell
+         Block fell through to default fallback
+     56  BiblioCraft:BiblioDesk
+         Block fell through to default fallback
+     50  appliedenergistics2:tile.BlockController
+         Block fell through to default fallback
+     43  BuildCraft|Factory:pumpBlock
+         Block fell through to default fallback
+     41  JammyFurniture:WoodBlocksFour
+         mapping preserves inventory and is outside block-only
+     33  BuildCraft|Core:engineBlock
+         Block fell through to default fallback
+     21  BiblioCraft:BiblioShelf
+         Block fell through to default fallback
+     19  AWWayofTime:blockCrystalBelljar
+         Block fell through to default fallback
+     17  BiblioCraft:BiblioStuffs
+         Block fell through to default fallback
+     14  BiblioCraft:BiblioTypewriter
+         Block fell through to default fallback
+     12  cfm:washingmachine
+         CFM-BO-W-EXPLICIT-REMOVAL: washingmachine
+      8  JammyFurniture:IronBlocksTwo
+         mapping preserves inventory and is outside block-only
+      8  BiblioCraft:BiblioLabel
+         Block fell through to default fallback
+      7  JammyFurniture:CeramicBlocksOne
+         mapping preserves inventory and is outside block-only
+      6  BiblioCraft:BiblioBorderlessPainting
+         Block fell through to default fallback
+      6  
+         DIRECT-W-NO-FML-REGISTRY
+      5  cfm:dishwasher
+         CFM-BO-W-EXPLICIT-REMOVAL: dishwasher
+      5  BiblioCraft:BiblioIronLamp
+         Block fell through to default fallback
+      5  BuildCraft|Builders:machineBlock
+         Block fell through to default fallback
+      5  BiblioCraft:BiblioClipboard
+         Block fell through to default fallback
+      4  cfm:oven
+         CFM-BO-W-EXPLICIT-REMOVAL: oven
+      4  cfm:tv
+         CFM-BO-W-EXPLICIT-REMOVAL: tv
+      4  cfm:stereo
+         CFM-BO-W-EXPLICIT-REMOVAL: stereo
+      4  BiblioCraft:BiblioLamp
+         Block fell through to default fallback
+      4  AWWayofTime:masterStone
+         Block fell through to default fallback
+      3  BiblioCraft:BiblioLantern
+         Block fell through to default fallback
+      3  cfm:ovenoverhead
+         CFM-BO-W-EXPLICIT-REMOVAL: ovenoverhead
+      3  cfm:blender
+         CFM-BO-W-EXPLICIT-REMOVAL: blender
+      3  cfm:microwave
+         CFM-BO-W-EXPLICIT-REMOVAL: microwave
+      3  JammyFurniture:IronBlocksOne
+         mapping preserves inventory and is outside block-only
+      2  cfm:toaster
+         CFM-BO-W-EXPLICIT-REMOVAL: toaster
+      2  cfm:lampoff
+         CFM-BO-W-EXPLICIT-REMOVAL: lampoff
+      1  BiblioCraft:BiblioFancyPainting
+         Block fell through to default fallback
+      1  BiblioCraft:BiblioPaintPress
+         Block fell through to default fallback
+      1  cfm:printer
+         CFM-BO-W-EXPLICIT-REMOVAL: printer
+      1  cfm:computer
+         CFM-BO-W-EXPLICIT-REMOVAL: computer
+      1  BiblioCraft:BiblioClock
+         Block fell through to default fallback
+      1  BuildCraft|Builders:architectBlock
+         Block fell through to default fallback
+      1  appliedenergistics2:tile.BlockInscriber
+         Block fell through to default fallback
+      1  appliedenergistics2:tile.BlockEnergyAcceptor
+         Block fell through to default fallback
+      1  tc:trainWorkbench
+         Traincraft rails/machines are handled by TE/track converter
+
+GRUPA 3: Plyny i inne specjalne przypadki
+Liczba typow: 2, blokow: 34
+--------------------------------------------------------------------------------
+     26  Growthcraft|Hops:grc.hopAleFluid.0
+         fluid blocks require a separate fluid conversion policy
+      8  Growthcraft|Hops:grc.hopAleFluid.4
+         fluid blocks require a separate fluid conversion policy

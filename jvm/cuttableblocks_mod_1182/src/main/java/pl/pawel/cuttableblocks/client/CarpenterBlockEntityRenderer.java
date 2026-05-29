@@ -30,7 +30,8 @@ public class CarpenterBlockEntityRenderer implements BlockEntityRenderer<Carpent
             coverId = "minecraft:oak_planks";
         }
 
-        Block block = ForgeRegistries.BLOCKS.getValue(new ResourceLocation(coverId));
+        ResourceLocation coverLocation = ResourceLocation.tryParse(coverId);
+        Block block = coverLocation != null ? ForgeRegistries.BLOCKS.getValue(coverLocation) : null;
         if (block == null || block == Blocks.AIR) {
             block = Blocks.OAK_PLANKS;
         }

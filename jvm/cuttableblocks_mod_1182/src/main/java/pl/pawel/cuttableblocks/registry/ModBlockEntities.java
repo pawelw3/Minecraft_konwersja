@@ -8,15 +8,6 @@ import pl.pawel.cuttableblocks.CuttableBlocksMod;
 import pl.pawel.cuttableblocks.world.CarpenterBlockEntity;
 import pl.pawel.cuttableblocks.world.CuttableBlockEntity;
 
-/**
- * Two BlockEntity types mirroring the 1.7.10 new_mod_trial structure:
- *
- *   CARPENTER (CarpenterBlockEntity) — all 18 carpenter_* + collapsible_block
- *             Matches TileEntityCoverable / TileEntityCollapsible from 1.7.10.
- *
- *   CUTTABLE  (CuttableBlockEntity)  — cuttable_block (free-cut)
- *             Matches TileEntityCuttable from 1.7.10.
- */
 public final class ModBlockEntities {
     public static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
         DeferredRegister.create(ForgeRegistries.BLOCK_ENTITIES, CuttableBlocksMod.MODID);

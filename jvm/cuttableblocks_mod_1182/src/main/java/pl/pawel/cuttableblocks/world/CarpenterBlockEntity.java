@@ -1,11 +1,16 @@
 package pl.pawel.cuttableblocks.world;
+import net.minecraft.world.level.block.Block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.IntArrayTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraftforge.client.model.data.IModelData;
+import net.minecraftforge.client.model.data.ModelDataMap;
+import pl.pawel.cuttableblocks.client.model.CarpenterModelData;
 import pl.pawel.cuttableblocks.registry.ModBlockEntities;
 
 /**
@@ -161,6 +166,11 @@ public class CarpenterBlockEntity extends BlockEntity {
         return tag;
     }
 
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
+    }
+
     // --- Accessors ---------------------------------------------------------
 
     public String getCoverBlock() { return coverBlock; }
@@ -208,5 +218,91 @@ public class CarpenterBlockEntity extends BlockEntity {
             this.flags &= ~mask;
         }
         setChanged();
+    }
+
+    public void setSideCover(int side, String blockId) {
+        if (blockId == null || blockId.isEmpty()) {
+            sideCovers.remove(String.valueOf(side));
+        } else {
+            sideCovers.putString(String.valueOf(side), blockId);
+        }
+        setChanged();
+    }
+
+    public String getSideCover(int side) {
+        return sideCovers.getString(String.valueOf(side));
+    }
+
+    public void setSideDye(int side, String dyeName) {
+        if (dyeName == null || dyeName.isEmpty()) {
+            sideDyes.remove(String.valueOf(side));
+        } else {
+            sideDyes.putString(String.valueOf(side), dyeName);
+        }
+        setChanged();
+    }
+
+    public String getSideDye(int side) {
+        return sideDyes.getString(String.valueOf(side));
+    }
+
+    public void setCbDesign(String design) {
+        this.cbDesign = design;
+        setChanged();
+    }
+
+    public void setIlluminator(boolean value) {
+        this.illuminator = value;
+        setChanged();
+    }
+
+    public void setQuadDepths(int[] depths) {
+        if (depths != null && depths.length >= 4) {
+            this.quadDepths = new int[]{depths[0], depths[1], depths[2], depths[3]};
+        }
+        setChanged();
+    }
+
+    public void setLightLevel(int level) {
+        this.lightLevel = level;
+        setChanged();
+    }
+
+    public void setPlantBlock(String plantBlock) {
+        this.plantBlock = plantBlock;
+        setChanged();
+    }
+
+    public void setSoilBlock(String soilBlock) {
+        this.soilBlock = soilBlock;
+        setChanged();
+    }
+
+    public void setCbMetadataRaw(int value) {
+        this.cbMetadataRaw = value;
+        setChanged();
+    }
+
+    // --- ModelData for BakedModel rendering --------------------------------
+
+    @Override
+    public IModelData getModelData() {
+        BlockState coverState = resolveCoverState();
+        return CarpenterModelData.create(coverState, getQuadDepths());
+    }
+
+    private BlockState resolveCoverState() {
+        if (coverBlock.isEmpty()) {
+            return net.minecraft.world.level.block.Blocks.OAK_PLANKS.defaultBlockState();
+        }
+        net.minecraft.resources.ResourceLocation id = net.minecraft.resources.ResourceLocation.tryParse(coverBlock);
+        if (id == null) {
+            return net.minecraft.world.level.block.Blocks.OAK_PLANKS.defaultBlockState();
+        }
+        net.minecraft.world.level.block.Block block = net.minecraftforge.registries.ForgeRegistries.BLOCKS.getValue(id);
+        if (block == null) {
+            return net.minecraft.world.level.block.Blocks.OAK_PLANKS.defaultBlockState();
+        }
+        return block.defaultBlockState();
     }
 }

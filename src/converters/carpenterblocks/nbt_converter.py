@@ -253,8 +253,6 @@ def _convert_slope(te: ParsedTEBase, result: CBConversionResult) -> None:
     result.blockstate_props["slope_type"] = props.slope_type
     result.blockstate_props["facing"] = props.facing
     result.blockstate_props["half"] = props.half
-    if props.shape:
-        result.blockstate_props["shape"] = props.shape
     result.nbt_1182["facing"] = FACING_TO_FORGE_DIR.get(props.facing, 2)
     result.nbt_1182["shape"] = slope_id
     result.nbt_1182["flags"] = 0
@@ -284,7 +282,6 @@ def _convert_block(te: ParsedTEBase, result: CBConversionResult) -> None:
         slab_id = 0
     props: SlabProps = SLAB_ID_TO_PROPS[slab_id]
     result.blockstate_props["type"] = props.type
-    result.blockstate_props["axis"] = props.axis
     result.nbt_1182["facing"] = 1  # UP
     result.nbt_1182["shape"] = slab_id
     result.nbt_1182["flags"] = 0
@@ -396,7 +393,7 @@ def _convert_hatch(te: ParsedTEBase, result: CBConversionResult) -> None:
     result.blockstate_props["facing"] = facing_str
     result.blockstate_props["half"] = "top" if position == 1 else "bottom"
     result.blockstate_props["open"] = "true" if is_open else "false"
-    result.blockstate_props["powered"] = "false"  # rigid = wymaga redstone
+    result.blockstate_props["rigid"] = "true" if rigid else "false"
     flags = 0
     if is_open:
         flags |= FLAG_STATE
@@ -494,6 +491,7 @@ def _convert_lever(te: ParsedTEBase, result: CBConversionResult) -> None:
     result.blockstate_props["face"] = "wall" if dir_ord >= 2 else (
         "ceiling" if dir_ord == 0 else "floor"
     )
+    result.blockstate_props["polarity"] = "true" if polarity_neg else "false"
     flags = 0
     if powered:
         flags |= FLAG_STATE
@@ -541,8 +539,6 @@ def _convert_pressure_plate(te: ParsedTEBase, result: CBConversionResult) -> Non
     dir_ord = data & 0x7
     powered = bool((data & 0x8) >> 3)
 
-    facing = FORGE_DIR_TO_FACING.get(dir_ord, "up")
-    result.blockstate_props["facing"] = facing
     result.blockstate_props["powered"] = "true" if powered else "false"
     result.nbt_1182["facing"] = dir_ord
     result.nbt_1182["shape"] = 0
@@ -601,11 +597,36 @@ def _convert_daylight_sensor(te: ParsedTEBase, result: CBConversionResult) -> No
     result.nbt_1182["lightLevel"] = light_level
 
 
+def _convert_bed(te: ParsedTEBase, result: CBConversionResult) -> None:
+    """
+    BlockCarpentersBed: cbMetadata zakodowany jak vanilla bed metadata.
+      bits 1:0 = facing (0=south, 1=west, 2=north, 3=east)
+      bit  2   = occupied (0=false, 1=true)
+      bit  3   = part (0=foot, 1=head)
+    """
+    data = te.cb_metadata
+    facing_id = data & 0x3
+    occupied = bool((data & 0x4) >> 2)
+    part = (data & 0x8) >> 3
+
+    _BED_FACINGS = {0: "south", 1: "west", 2: "north", 3: "east"}
+    facing_str = _BED_FACINGS.get(facing_id, "north")
+
+    result.blockstate_props["facing"] = facing_str
+    result.blockstate_props["part"] = "head" if part == 1 else "foot"
+    result.blockstate_props["occupied"] = "true" if occupied else "false"
+    flags = FLAG_UPPER_HALF if part == 1 else 0
+    result.nbt_1182["facing"] = facing_id
+    result.nbt_1182["shape"] = 0
+    result.nbt_1182["flags"] = flags
+    result.nbt_1182["cbMetadataRaw"] = te.cb_metadata
+
+
 def _convert_multiblock(
         te: ParsedTEBase, result: CBConversionResult, block_name: str
 ) -> None:
     """
-    Uproszczona konwersja bloków wielosegmentowych (Bed, GarageDoor).
+    Uproszczona konwersja bloków wielosegmentowych (GarageDoor).
     Zachowujemy cbMetadata jako surową wartość w NBT dla przyszłego modułu.
     """
     result.add_warning("MULTIBLOCK", f"{block_name}: blok wielosegmentowy - uproszczona konwersja")
@@ -658,8 +679,7 @@ _GEOMETRY_CONVERTERS: dict[str, Any] = {
     "CarpentersBlocks:blockCarpentersSafe": _convert_safe,
     "CarpentersBlocks:blockCarpentersFlowerPot": _convert_flower_pot,
     # Multiblock
-    "CarpentersBlocks:blockCarpentersBed":
-        lambda te, r: _convert_multiblock(te, r, "Bed"),
+    "CarpentersBlocks:blockCarpentersBed": _convert_bed,
     "CarpentersBlocks:blockCarpentersGarageDoor":
         lambda te, r: _convert_multiblock(te, r, "GarageDoor"),
 }

@@ -3,6 +3,7 @@ package pl.pawel.cuttableblocks.world;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import pl.pawel.cuttableblocks.registry.ModBlockEntities;
@@ -53,6 +54,11 @@ public class CuttableBlockEntity extends BlockEntity {
         CompoundTag tag = super.getUpdateTag();
         saveAdditional(tag);
         return tag;
+    }
+
+    @Override
+    public ClientboundBlockEntityDataPacket getUpdatePacket() {
+        return ClientboundBlockEntityDataPacket.create(this);
     }
 
     public String getOriginalBlock() { return originalBlock; }

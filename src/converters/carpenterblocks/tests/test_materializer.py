@@ -270,8 +270,8 @@ class TestSetblockCommand:
         assert "minecraft:air" in cmd
         assert cmd.endswith(" replace")
 
-    def test_command_no_blockstate_props_in_block_string(self):
-        """Block string must NOT contain '[', all geometry goes into NBT."""
+    def test_command_has_blockstate_props_in_block_string(self):
+        """Block string MUST contain '[' with blockstate props for 1.18.2."""
         event = MAT.materialize_block(
             (0, 0, 0),
             "CarpentersBlocks:blockCarpentersSlope",
@@ -279,7 +279,8 @@ class TestSetblockCommand:
         )
         cmd = event.to_setblock_command()
         block_part = cmd.split("{")[0]  # before NBT
-        assert "[" not in block_part
+        assert "[" in block_part
+        assert "slope_type=" in block_part
 
 
 # ─────────────────────────────────────────────────────────────────────────────

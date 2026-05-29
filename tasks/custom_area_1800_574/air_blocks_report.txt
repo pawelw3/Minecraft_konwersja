@@ -1,0 +1,85 @@
+TOP BLOKOW POSLYCH W AIR (target_block == minecraft:air)
+======================================================================
+   2299  ThermalDynamics:ThermalDynamics_0
+         Thermal Dynamics energy/fluid/item ducts are network/BE-owned
+   1764  BigReactors:BRTurbinePart
+         Block fell through to default fallback
+   1453  tc:tcRailGag
+         Traincraft rails/machines are handled by TE/track converter
+   1438  ThermalDynamics:ThermalDynamics_32
+         Thermal Dynamics energy/fluid/item ducts are network/BE-owned
+   1016  BigReactors:BRMultiblockGlass
+         Block fell through to default fallback
+    891  tc:tcRail
+         Traincraft rails/machines are handled by TE/track converter
+    750  BuildCraft|Transport:pipeBlock
+         Block fell through to default fallback
+    732  ProjRed|Illumination:projectred.illumination.lamp
+         block is TE/multipart or functional ProjectRed block
+    686  BigReactors:BRReactorPart
+         Block fell through to default fallback
+    678  Mekanism:BasicBlock2
+         block must be handled by Mekanism TE/NBT converter
+    584  appliedenergistics2:tile.BlockCableBus
+         Block fell through to default fallback
+    564  BigReactors:BRTurbineRotorPart
+         Block fell through to default fallback
+    305  ExtraUtilities:filing
+         block has functional NBT converter and is outside block-only
+    288  Railcraft:machine.beta
+         block is handled by Railcraft TE/event converter
+    221  ThermalDynamics:ThermalDynamics_16
+         Thermal Dynamics energy/fluid/item ducts are network/BE-owned
+    208  openmodularturrets:baseTierFourBlock
+         block is owned by OMT TE/entity converter
+    189  BiblioCraft:BiblioTable
+         Block fell through to default fallback
+    171  BigReactors:YelloriumFuelRod
+         Block fell through to default fallback
+    149  openmodularturrets:laserTurret
+         block is owned by OMT TE/entity converter
+    129  ThermalExpansion:Machine
+         Thermal block has BE/NBT mapping and is outside block-only
+    121  Mekanism:MachineBlock2
+         block must be handled by Mekanism TE/NBT converter
+     95  Railcraft:residual.heat
+         RC-BO-W-MAPPED: Residual Heat (RCHiddenTile) → air (ignored per user request)
+     84  BiblioCraft:Bibliotheca
+         Block fell through to default fallback
+     83  appliedenergistics2:tile.BlockDenseEnergyCell
+         Block fell through to default fallback
+     76  witchery:poppetshelf
+         Witchery functional/decorative TE remains placeholder/NBT converter scope
+     60  openmodularturrets:teleporterTurret
+         block is owned by OMT TE/entity converter
+     56  BiblioCraft:BiblioDesk
+         Block fell through to default fallback
+     53  Mekanism:MachineBlock
+         block must be handled by Mekanism TE/NBT converter
+     50  appliedenergistics2:tile.BlockController
+         Block fell through to default fallback
+     43  BuildCraft|Factory:pumpBlock
+         Block fell through to default fallback
+     41  JammyFurniture:WoodBlocksFour
+         mapping preserves inventory and is outside block-only
+     37  Mekanism:MachineBlock3
+         block must be handled by Mekanism TE/NBT converter
+     33  BuildCraft|Core:engineBlock
+         Block fell through to default fallback
+     26  Growthcraft|Hops:grc.hopAleFluid.0
+         fluid blocks require a separate fluid conversion policy
+     22  IC2:blockGenerator
+         block must be handled by IC2 TE/NBT converter
+     21  BiblioCraft:BiblioShelf
+         Block fell through to default fallback
+     19  AWWayofTime:blockCrystalBelljar
+         Block fell through to default fallback
+     17  BiblioCraft:BiblioStuffs
+         Block fell through to default fallback
+     16  ThermalExpansion:Cell
+         Thermal block has BE/NBT mapping and is outside block-only
+     14  BiblioCraft:BiblioTypewriter
+         Block fell through to default fallback
+
+RAZEM w air: 15728
+Unikalnych typow: 91

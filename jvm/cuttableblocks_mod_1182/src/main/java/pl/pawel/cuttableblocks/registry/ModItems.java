@@ -15,46 +15,27 @@ public final class ModItems {
         DeferredRegister.create(ForgeRegistries.ITEMS, CuttableBlocksMod.MODID);
 
     // Carpenter blocks (18 CB counterparts)
-    public static final RegistryObject<Item> CARPENTER_SLOPE =
-        fromBlock(ModBlocks.CARPENTER_SLOPE, "carpenter_slope");
-    public static final RegistryObject<Item> CARPENTER_STAIRS =
-        fromBlock(ModBlocks.CARPENTER_STAIRS, "carpenter_stairs");
-    public static final RegistryObject<Item> CARPENTER_BLOCK =
-        fromBlock(ModBlocks.CARPENTER_BLOCK, "carpenter_block");
-    public static final RegistryObject<Item> COLLAPSIBLE_BLOCK =
-        fromBlock(ModBlocks.COLLAPSIBLE_BLOCK, "collapsible_block");
-    public static final RegistryObject<Item> CARPENTER_BARRIER =
-        fromBlock(ModBlocks.CARPENTER_BARRIER, "carpenter_barrier");
-    public static final RegistryObject<Item> CARPENTER_GATE =
-        fromBlock(ModBlocks.CARPENTER_GATE, "carpenter_gate");
-    public static final RegistryObject<Item> CARPENTER_HATCH =
-        fromBlock(ModBlocks.CARPENTER_HATCH, "carpenter_hatch");
-    public static final RegistryObject<Item> CARPENTER_DOOR =
-        fromBlock(ModBlocks.CARPENTER_DOOR, "carpenter_door");
-    public static final RegistryObject<Item> CARPENTER_LADDER =
-        fromBlock(ModBlocks.CARPENTER_LADDER, "carpenter_ladder");
-    public static final RegistryObject<Item> CARPENTER_LEVER =
-        fromBlock(ModBlocks.CARPENTER_LEVER, "carpenter_lever");
-    public static final RegistryObject<Item> CARPENTER_BUTTON =
-        fromBlock(ModBlocks.CARPENTER_BUTTON, "carpenter_button");
-    public static final RegistryObject<Item> CARPENTER_PRESSURE_PLATE =
-        fromBlock(ModBlocks.CARPENTER_PRESSURE_PLATE, "carpenter_pressure_plate");
-    public static final RegistryObject<Item> CARPENTER_TORCH =
-        fromBlock(ModBlocks.CARPENTER_TORCH, "carpenter_torch");
-    public static final RegistryObject<Item> CARPENTER_DAYLIGHT_SENSOR =
-        fromBlock(ModBlocks.CARPENTER_DAYLIGHT_SENSOR, "carpenter_daylight_sensor");
-    public static final RegistryObject<Item> CARPENTER_SAFE =
-        fromBlock(ModBlocks.CARPENTER_SAFE, "carpenter_safe");
-    public static final RegistryObject<Item> CARPENTER_FLOWER_POT =
-        fromBlock(ModBlocks.CARPENTER_FLOWER_POT, "carpenter_flower_pot");
-    public static final RegistryObject<Item> CARPENTER_BED =
-        fromBlock(ModBlocks.CARPENTER_BED, "carpenter_bed");
-    public static final RegistryObject<Item> CARPENTER_GARAGE_DOOR =
-        fromBlock(ModBlocks.CARPENTER_GARAGE_DOOR, "carpenter_garage_door");
+    public static final RegistryObject<Item> CARPENTER_SLOPE = fromBlock(ModBlocks.CARPENTER_SLOPE);
+    public static final RegistryObject<Item> CARPENTER_STAIRS = fromBlock(ModBlocks.CARPENTER_STAIRS);
+    public static final RegistryObject<Item> CARPENTER_BLOCK = fromBlock(ModBlocks.CARPENTER_BLOCK);
+    public static final RegistryObject<Item> COLLAPSIBLE_BLOCK = fromBlock(ModBlocks.COLLAPSIBLE_BLOCK);
+    public static final RegistryObject<Item> CARPENTER_BARRIER = fromBlock(ModBlocks.CARPENTER_BARRIER);
+    public static final RegistryObject<Item> CARPENTER_GATE = fromBlock(ModBlocks.CARPENTER_GATE);
+    public static final RegistryObject<Item> CARPENTER_HATCH = fromBlock(ModBlocks.CARPENTER_HATCH);
+    public static final RegistryObject<Item> CARPENTER_DOOR = fromBlock(ModBlocks.CARPENTER_DOOR);
+    public static final RegistryObject<Item> CARPENTER_LADDER = fromBlock(ModBlocks.CARPENTER_LADDER);
+    public static final RegistryObject<Item> CARPENTER_LEVER = fromBlock(ModBlocks.CARPENTER_LEVER);
+    public static final RegistryObject<Item> CARPENTER_BUTTON = fromBlock(ModBlocks.CARPENTER_BUTTON);
+    public static final RegistryObject<Item> CARPENTER_PRESSURE_PLATE = fromBlock(ModBlocks.CARPENTER_PRESSURE_PLATE);
+    public static final RegistryObject<Item> CARPENTER_TORCH = fromBlock(ModBlocks.CARPENTER_TORCH);
+    public static final RegistryObject<Item> CARPENTER_DAYLIGHT_SENSOR = fromBlock(ModBlocks.CARPENTER_DAYLIGHT_SENSOR);
+    public static final RegistryObject<Item> CARPENTER_SAFE = fromBlock(ModBlocks.CARPENTER_SAFE);
+    public static final RegistryObject<Item> CARPENTER_FLOWER_POT = fromBlock(ModBlocks.CARPENTER_FLOWER_POT);
+    public static final RegistryObject<Item> CARPENTER_BED = fromBlock(ModBlocks.CARPENTER_BED);
+    public static final RegistryObject<Item> CARPENTER_GARAGE_DOOR = fromBlock(ModBlocks.CARPENTER_GARAGE_DOOR);
 
     // Free-cut block
-    public static final RegistryObject<Item> CUTTABLE_BLOCK =
-        fromBlock(ModBlocks.CUTTABLE_BLOCK, "cuttable_block");
+    public static final RegistryObject<Item> CUTTABLE_BLOCK = fromBlock(ModBlocks.CUTTABLE_BLOCK);
 
     // Tools
     public static final RegistryObject<Item> CUTTING_TOOL =
@@ -65,8 +46,8 @@ public final class ModItems {
         ITEMS.register("carpenter_hammer",
             () -> new CarpenterHammer(new Item.Properties().tab(CuttableBlocksMod.TAB).durability(256)));
 
-    private static RegistryObject<Item> fromBlock(RegistryObject<? extends Block> block, String name) {
-        return ITEMS.register(name,
+    private static RegistryObject<Item> fromBlock(RegistryObject<? extends Block> block) {
+        return ITEMS.register(block.getId().getPath(),
             () -> new BlockItem(block.get(), new Item.Properties().tab(CuttableBlocksMod.TAB)));
     }
 

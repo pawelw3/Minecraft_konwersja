@@ -18,7 +18,7 @@ import sys
 import threading
 import time
 import zlib
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 
 import nbtlib  # type: ignore
@@ -28,12 +28,15 @@ ROOT = SCRIPT_DIR.parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from minecraft_map_parser.anvil_parser import AnvilParser  # noqa: E402
+from converters.block_only_router import convert_block_only  # noqa: E402
+from converters.common.item_id_resolver import load_item_id_mapping  # noqa: E402
 
 SRC_WORLD = ROOT / "mapa_1710"
 DST_WORLD = SCRIPT_DIR / "world"
 EVENTS_FILE = SCRIPT_DIR / "events.jsonl"
 WORKER_JAR = ROOT / "jvm" / "worker" / "build" / "libs" / "mc-editkit-worker-1.0-SNAPSHOT.jar"
 LOG_FILE = SCRIPT_DIR / "direct_conversion.log"
+BLOCK_REMAP_AUDIT_FILE = SCRIPT_DIR / "block_remap_audit.jsonl"
 
 TEMPLATES = [
     ROOT / "lightweigh_map_templates" / "118_modded" / "ae2_1",
@@ -55,6 +58,9 @@ SPAWN_Z = (Z_MIN + Z_MAX) // 2
 
 DATA_VERSION_1182 = 2975
 PROGRESS_INTERVAL_SECONDS = 60.0
+BLOCK_ONLY_REGISTRY: dict[int, str] | None = None
+BLOCK_ONLY_AUDIT_HANDLE = None
+BLOCK_ONLY_STATS: Counter[str] = Counter()
 
 
 class Tee:
@@ -271,14 +277,82 @@ VANILLA_BLOCKS: dict[tuple[int, int | None], str] = {
 }
 
 
-def map_block(block_id: int, meta: int) -> str:
+BlockState = tuple[str, tuple[tuple[str, str], ...]]
+
+
+def map_block(block_id: int, meta: int, position: tuple[int, int, int]) -> BlockState:
     if block_id == 0:
-        return "minecraft:air"
-    return (
-        VANILLA_BLOCKS.get((block_id, meta & 0xF))
-        or VANILLA_BLOCKS.get((block_id, None))
-        or "minecraft:air"
-    )
+        return ("minecraft:air", ())
+    vanilla = VANILLA_BLOCKS.get((block_id, meta & 0xF)) or VANILLA_BLOCKS.get((block_id, None))
+    if vanilla:
+        return (vanilla, ())
+
+    registry_name = get_block_registry_name(block_id)
+    if not registry_name:
+        BLOCK_ONLY_STATS["unknown_numeric_id_to_air"] += 1
+        write_block_only_audit({
+            "pos": list(position),
+            "source_numeric_id": int(block_id),
+            "source_registry": "",
+            "source_metadata": int(meta & 0xF),
+            "target_block": "minecraft:air",
+            "blockstate_props": {},
+            "confidence": "none",
+            "warnings": ["DIRECT-W-NO-FML-REGISTRY"],
+            "errors": ["no registry name for non-vanilla numeric id"],
+        })
+        return ("minecraft:air", ())
+
+    result = convert_block_only(block_id, registry_name, meta, position)
+    if result.success:
+        BLOCK_ONLY_STATS[f"mapped:{registry_name.split(':', 1)[0]}"] += 1
+        write_block_only_audit({
+            "pos": list(position),
+            "source_numeric_id": int(block_id),
+            "source_registry": registry_name,
+            "source_metadata": int(meta & 0xF),
+            "target_block": result.target_block,
+            "blockstate_props": result.blockstate_props,
+            "confidence": result.confidence,
+            "warnings": result.warnings,
+        })
+        props = tuple(sorted((str(k), str(v)) for k, v in result.blockstate_props.items()))
+        return (result.target_block, props)
+
+    BLOCK_ONLY_STATS["requires_event_or_failed_to_air"] += 1
+    write_block_only_audit({
+        "pos": list(position),
+        "source_numeric_id": int(block_id),
+        "source_registry": registry_name,
+        "source_metadata": int(meta & 0xF),
+        "target_block": "minecraft:air",
+        "blockstate_props": {},
+        "confidence": result.confidence,
+        "warnings": result.warnings,
+        "errors": result.errors,
+    })
+    return ("minecraft:air", ())
+
+
+def get_block_registry_name(block_id: int) -> str | None:
+    global BLOCK_ONLY_REGISTRY
+    if BLOCK_ONLY_REGISTRY is None:
+        raw = load_item_id_mapping(SRC_WORLD / "level.dat")
+        BLOCK_ONLY_REGISTRY = {}
+        for numeric_id, registry_name in raw.items():
+            try:
+                parsed = int(numeric_id)
+            except ValueError:
+                continue
+            if 0 <= parsed <= 4095:
+                BLOCK_ONLY_REGISTRY[parsed] = str(registry_name)
+    return BLOCK_ONLY_REGISTRY.get(int(block_id))
+
+
+def write_block_only_audit(entry: dict):
+    if BLOCK_ONLY_AUDIT_HANDLE is None:
+        return
+    BLOCK_ONLY_AUDIT_HANDLE.write(json.dumps(entry, ensure_ascii=False, sort_keys=True) + "\n")
 
 
 def to_signed_long(value: int) -> int:
@@ -299,27 +373,34 @@ def pack_values(values: list[int], bits: int) -> list[int]:
     return [to_signed_long(v) for v in longs]
 
 
-def make_palette_entry(name: str):
-    return nbtlib.Compound({"Name": nbtlib.String(name)})
+def make_palette_entry(state: BlockState):
+    name, props = state
+    entry = nbtlib.Compound({"Name": nbtlib.String(name)})
+    if props:
+        entry["Properties"] = nbtlib.Compound({
+            key: nbtlib.String(value)
+            for key, value in props
+        })
+    return entry
 
 
-def make_section(section_y: int, names: list[str]):
-    palette_names: list[str] = []
-    palette_index: dict[str, int] = {}
+def make_section(section_y: int, states: list[BlockState]):
+    palette_states: list[BlockState] = []
+    palette_index: dict[BlockState, int] = {}
     indices: list[int] = []
-    for name in names:
-        idx = palette_index.get(name)
+    for state in states:
+        idx = palette_index.get(state)
         if idx is None:
-            idx = len(palette_names)
-            palette_names.append(name)
-            palette_index[name] = idx
+            idx = len(palette_states)
+            palette_states.append(state)
+            palette_index[state] = idx
         indices.append(idx)
 
     block_states = nbtlib.Compound({
-        "palette": nbtlib.List[nbtlib.Compound]([make_palette_entry(n) for n in palette_names])
+        "palette": nbtlib.List[nbtlib.Compound]([make_palette_entry(state) for state in palette_states])
     })
-    if len(palette_names) > 1:
-        bits = max(4, math.ceil(math.log2(len(palette_names))))
+    if len(palette_states) > 1:
+        bits = max(4, math.ceil(math.log2(len(palette_states))))
         block_states["data"] = nbtlib.LongArray(pack_values(indices, bits))
 
     return nbtlib.Compound({
@@ -332,7 +413,7 @@ def make_section(section_y: int, names: list[str]):
 
 
 def make_empty_section(section_y: int):
-    return make_section(section_y, ["minecraft:air"] * 4096)
+    return make_section(section_y, [("minecraft:air", ())] * 4096)
 
 
 def make_heightmap(heights: list[int]) -> nbtlib.LongArray:
@@ -348,20 +429,21 @@ def build_chunk_nbt(gcx: int, gcz: int, block_meta: dict[tuple[int, int, int], t
             sections.append(make_empty_section(section_y))
             continue
 
-        names = []
+        states = []
         non_air = False
         for y_in_section in range(16):
             y = section_y * 16 + y_in_section
             for z in range(16):
                 for x in range(16):
                     block_id, meta = block_meta.get((x, y, z), (0, 0))
-                    name = map_block(block_id, meta)
-                    names.append(name)
+                    state = map_block(block_id, meta, (gcx * 16 + x, y, gcz * 16 + z))
+                    states.append(state)
+                    name = state[0]
                     if name != "minecraft:air":
                         non_air = True
                         idx = z * 16 + x
                         heightmap[idx] = max(heightmap[idx], y + 1)
-        sections.append(make_section(section_y, names) if non_air else make_empty_section(section_y))
+        sections.append(make_section(section_y, states) if non_air else make_empty_section(section_y))
 
     root = nbtlib.Compound({
         "DataVersion": nbtlib.Int(DATA_VERSION_1182),
@@ -425,38 +507,50 @@ def write_region_file(region_path: Path, chunks: dict[tuple[int, int], bytes]):
 
 def write_vanilla_terrain():
     print("\n[2/6] Writing 1.18.2 terrain chunks directly")
+    global BLOCK_ONLY_AUDIT_HANDLE
+    BLOCK_ONLY_STATS.clear()
+    if BLOCK_REMAP_AUDIT_FILE.exists():
+        BLOCK_REMAP_AUDIT_FILE.unlink()
     parsers = source_region_parsers()
     region_chunks: dict[tuple[int, int], dict[tuple[int, int], bytes]] = defaultdict(dict)
     total = (CHUNK_X_MAX - CHUNK_X_MIN + 1) * (CHUNK_Z_MAX - CHUNK_Z_MIN + 1)
     done = 0
     written = 0
     missing = 0
-    with ProgressReporter("Direct terrain conversion", total=total) as progress:
-        for gcx, gcz in chunks_in_area():
-            rx, rz = gcx // 32, gcz // 32
-            parser = parsers.get((rx, rz))
-            done += 1
-            if parser is None:
-                missing += 1
-                progress.update(done, f"chunk=({gcx},{gcz}) written={written} missing={missing}")
-                continue
-            lcx, lcz = global_to_local_chunk(gcx, gcz)
-            src_chunk = parser.get_chunk(lcx, lcz)
-            if src_chunk is None:
-                missing += 1
-                progress.update(done, f"chunk=({gcx},{gcz}) written={written} missing={missing}")
-                continue
+    with BLOCK_REMAP_AUDIT_FILE.open("w", encoding="utf-8") as audit:
+        BLOCK_ONLY_AUDIT_HANDLE = audit
+        try:
+            with ProgressReporter("Direct terrain conversion", total=total) as progress:
+                for gcx, gcz in chunks_in_area():
+                    rx, rz = gcx // 32, gcz // 32
+                    parser = parsers.get((rx, rz))
+                    done += 1
+                    if parser is None:
+                        missing += 1
+                        progress.update(done, f"chunk=({gcx},{gcz}) written={written} missing={missing}")
+                        continue
+                    lcx, lcz = global_to_local_chunk(gcx, gcz)
+                    src_chunk = parser.get_chunk(lcx, lcz)
+                    if src_chunk is None:
+                        missing += 1
+                        progress.update(done, f"chunk=({gcx},{gcz}) written={written} missing={missing}")
+                        continue
 
-            chunk_nbt = build_chunk_nbt(gcx, gcz, src_chunk.get_blocks_and_metadata_at_positions())
-            region_chunks[(rx, rz)][(lcx, lcz)] = chunk_to_bytes(chunk_nbt)
-            written += 1
-            progress.update(done, f"chunk=({gcx},{gcz}) written={written} missing={missing}")
+                    chunk_nbt = build_chunk_nbt(gcx, gcz, src_chunk.get_blocks_and_metadata_at_positions())
+                    region_chunks[(rx, rz)][(lcx, lcz)] = chunk_to_bytes(chunk_nbt)
+                    written += 1
+                    progress.update(done, f"chunk=({gcx},{gcz}) written={written} missing={missing}")
+        finally:
+            BLOCK_ONLY_AUDIT_HANDLE = None
 
     for (rx, rz), chunks in sorted(region_chunks.items()):
         path = DST_WORLD / "region" / f"r.{rx}.{rz}.mca"
         write_region_file(path, chunks)
         print(f"      wrote {path.name}: {len(chunks)} chunks")
     print(f"      chunks written: {written}, missing: {missing}")
+    if BLOCK_ONLY_STATS:
+        print(f"      block-only stats: {dict(BLOCK_ONLY_STATS)}")
+        print(f"      block-only audit: {BLOCK_REMAP_AUDIT_FILE}")
 
 
 def patch_level_dat():

@@ -1,3 +1,32 @@
+# Handoff: CuttableBlocks - stabilizacja assetow klienta
+
+## Podsumowanie sesji
+
+Wykonano bezfunkcjonalne zmiany w modzie `jvm/cuttableblocks_mod_1182`, aby zmienić ksztalt resource/model pipeline bez ruszania `ENTITYBLOCK_ANIMATED` ani rejestracji BlockEntityRendererow. Mod zostal przebudowany Gradle wrapperem do nowego jar-a.
+
+## Ukończono
+
+- [x] Usunieto osierocone aliasy assetow (`slope`, `door`, `block`, itp.) z blockstates i item models
+- [x] Zastapiono wspolny model `cuttableblocks:block/cuttable` osobnymi modelami per zarejestrowany blok
+- [x] Dodano bezpieczne `ResourceLocation.tryParse(...)` w rendererach klienta
+- [x] Zweryfikowano build: `BUILD SUCCESSFUL`
+
+## Nowe/zmodyfikowane pliki
+
+- `jvm/cuttableblocks_mod_1182/src/main/java/pl/pawel/cuttableblocks/client/CarpenterBlockEntityRenderer.java`
+- `jvm/cuttableblocks_mod_1182/src/main/java/pl/pawel/cuttableblocks/client/CuttableBlockEntityRenderer.java`
+- `jvm/cuttableblocks_mod_1182/src/main/resources/assets/cuttableblocks/blockstates/*.json`
+- `jvm/cuttableblocks_mod_1182/src/main/resources/assets/cuttableblocks/models/block/*.json`
+- `jvm/cuttableblocks_mod_1182/src/main/resources/assets/cuttableblocks/models/item/*.json`
+- `jvm/cuttableblocks_mod_1182/build/libs/cuttableblocks-1.0.0.jar`
+
+## Następne kroki
+
+1. [ ] Podmienic jar w `.minecraft118/mods` i sprawdzic start klienta
+2. [ ] Jesli dalej wystapi `jvm.dll+0xc656`, wykonac nastepny test z tym samym modem na Adoptium Java 17
+
+---
+
 # Handoff: CarpentersBlocks - Zadanie 3
 
 ## Podsumowanie sesji

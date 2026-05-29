@@ -122,9 +122,10 @@ def dict_to_snbt(d: dict) -> str:
 class MaterializeEvent:
     """Jeden blok CB po konwersji → gotowy do umieszczenia w świecie 1.18.2."""
     pos: tuple[int, int, int]
-    block_id: str              # np. "cuttableblocks:slope"  (bez blockstate props)
+    block_id: str              # np. "cuttableblocks:slope"
     nbt_snbt: str | None       # SNBT dołączony do komendy setblock
     be_type: str               # semantyczny typ BE ("coverable", "collapsible", …)
+    blockstate_props: dict[str, str] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
 
@@ -135,6 +136,9 @@ class MaterializeEvent:
     def to_setblock_command(self) -> str:
         x, y, z = self.pos
         cmd = f"setblock {x} {y} {z} {self.block_id}"
+        if self.blockstate_props:
+            props_str = ",".join(f"{k}={v}" for k, v in self.blockstate_props.items())
+            cmd += f"[{props_str}]"
         if self.nbt_snbt:
             cmd += self.nbt_snbt
         cmd += " replace"
@@ -188,6 +192,7 @@ class CBMaterializer:
         return MaterializeEvent(
             pos=pos,
             block_id=result.block_id_1182,
+            blockstate_props=dict(result.blockstate_props),
             nbt_snbt=dict_to_snbt(merged),
             be_type=be_type,
             errors=result.errors,

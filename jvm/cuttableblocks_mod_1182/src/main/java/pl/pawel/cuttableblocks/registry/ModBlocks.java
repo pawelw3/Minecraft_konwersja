@@ -7,77 +7,69 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 import pl.pawel.cuttableblocks.CuttableBlocksMod;
-import pl.pawel.cuttableblocks.world.CarpenterBlock;
-import pl.pawel.cuttableblocks.world.CuttableBlock;
+import pl.pawel.cuttableblocks.world.*;
 
-/**
- * Block registrations for cuttableblocks mod.
- *
- * Registry ID → CB 1.7.10 counterpart:
- *   carpenter_slope          blockCarpentersSlope
- *   carpenter_stairs         blockCarpentersStairs
- *   carpenter_block          blockCarpentersBlock (slab/full)
- *   collapsible_block        blockCarpentersCollapsibleBlock
- *   carpenter_barrier        blockCarpentersBarrier
- *   carpenter_gate           blockCarpentersGate
- *   carpenter_hatch          blockCarpentersHatch
- *   carpenter_door           blockCarpentersDoor
- *   carpenter_ladder         blockCarpentersLadder
- *   carpenter_lever          blockCarpentersLever
- *   carpenter_button         blockCarpentersButton
- *   carpenter_pressure_plate blockCarpentersPressurePlate
- *   carpenter_torch          blockCarpentersTorch
- *   carpenter_daylight_sensor blockCarpentersDaylightSensor
- *   carpenter_safe           blockCarpentersSafe
- *   carpenter_flower_pot     blockCarpentersFlowerPot
- *   carpenter_bed            blockCarpentersBed
- *   carpenter_garage_door    blockCarpentersGarageDoor
- *
- *   cuttable_block           (free-cut concept, not from CB)
- */
 public final class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS =
         DeferredRegister.create(ForgeRegistries.BLOCKS, CuttableBlocksMod.MODID);
 
     // -- Geometric CB blocks -----------------------------------------------
     public static final RegistryObject<Block> CARPENTER_SLOPE =
-        registerCarpenter("carpenter_slope");
+        BLOCKS.register("carpenter_slope",
+            () -> new CarpenterSlopeBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_STAIRS =
-        registerCarpenter("carpenter_stairs");
+        BLOCKS.register("carpenter_stairs",
+            () -> new CarpenterStairsBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_BLOCK =
-        registerCarpenter("carpenter_block");
+        BLOCKS.register("carpenter_block",
+            () -> new CarpenterBlockBlock(carpenterProperties()));
     public static final RegistryObject<Block> COLLAPSIBLE_BLOCK =
-        registerCarpenter("collapsible_block");
+        BLOCKS.register("collapsible_block",
+            () -> new CarpenterCollapsibleBlock(carpenterProperties()));
 
     // -- Functional CB blocks ----------------------------------------------
     public static final RegistryObject<Block> CARPENTER_BARRIER =
-        registerCarpenter("carpenter_barrier");
+        BLOCKS.register("carpenter_barrier",
+            () -> new CarpenterBarrierBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_GATE =
-        registerCarpenter("carpenter_gate");
+        BLOCKS.register("carpenter_gate",
+            () -> new CarpenterGateBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_HATCH =
-        registerCarpenter("carpenter_hatch");
+        BLOCKS.register("carpenter_hatch",
+            () -> new CarpenterHatchBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_DOOR =
-        registerCarpenter("carpenter_door");
+        BLOCKS.register("carpenter_door",
+            () -> new CarpenterDoorBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_LADDER =
-        registerCarpenter("carpenter_ladder");
+        BLOCKS.register("carpenter_ladder",
+            () -> new CarpenterLadderBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_LEVER =
-        registerCarpenter("carpenter_lever");
+        BLOCKS.register("carpenter_lever",
+            () -> new CarpenterLeverBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_BUTTON =
-        registerCarpenter("carpenter_button");
+        BLOCKS.register("carpenter_button",
+            () -> new CarpenterButtonBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_PRESSURE_PLATE =
-        registerCarpenter("carpenter_pressure_plate");
+        BLOCKS.register("carpenter_pressure_plate",
+            () -> new CarpenterPressurePlateBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_TORCH =
-        registerCarpenter("carpenter_torch");
+        BLOCKS.register("carpenter_torch",
+            () -> new CarpenterTorchBlock(carpenterProperties().noOcclusion().lightLevel(s -> 14)));
     public static final RegistryObject<Block> CARPENTER_DAYLIGHT_SENSOR =
-        registerCarpenter("carpenter_daylight_sensor");
+        BLOCKS.register("carpenter_daylight_sensor",
+            () -> new CarpenterDaylightSensorBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_SAFE =
-        registerCarpenter("carpenter_safe");
+        BLOCKS.register("carpenter_safe",
+            () -> new CarpenterSafeBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_FLOWER_POT =
-        registerCarpenter("carpenter_flower_pot");
+        BLOCKS.register("carpenter_flower_pot",
+            () -> new CarpenterFlowerPotBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_BED =
-        registerCarpenter("carpenter_bed");
+        BLOCKS.register("carpenter_bed",
+            () -> new CarpenterBedBlock(carpenterProperties()));
     public static final RegistryObject<Block> CARPENTER_GARAGE_DOOR =
-        registerCarpenter("carpenter_garage_door");
+        BLOCKS.register("carpenter_garage_door",
+            () -> new CarpenterGarageDoorBlock(carpenterProperties()));
 
     // -- Free-cut block (not from CB) -------------------------------------
     public static final RegistryObject<Block> CUTTABLE_BLOCK = BLOCKS.register(
@@ -87,11 +79,10 @@ public final class ModBlocks {
             .noOcclusion())
     );
 
-    private static RegistryObject<Block> registerCarpenter(String name) {
-        return BLOCKS.register(name,
-            () -> new CarpenterBlock(BlockBehaviour.Properties.of(Material.WOOD)
-                .strength(1.5F, 6.0F)
-                .noOcclusion()));
+    private static BlockBehaviour.Properties carpenterProperties() {
+        return BlockBehaviour.Properties.of(Material.WOOD)
+            .strength(1.5F, 6.0F)
+            .noOcclusion();
     }
 
     private ModBlocks() {}

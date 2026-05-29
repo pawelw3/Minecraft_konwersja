@@ -297,22 +297,18 @@ class TestBlockConverter:
     def test_full_block(self):
         result = CONVERTER.convert("CarpentersBlocks:blockCarpentersBlock", _base_te(0))
         assert result.blockstate_props["type"] == "double"
-        assert result.blockstate_props["axis"] == "y"
 
     def test_slab_y_bottom(self):
         result = CONVERTER.convert("CarpentersBlocks:blockCarpentersBlock", _base_te(3))
         assert result.blockstate_props["type"] == "bottom"
-        assert result.blockstate_props["axis"] == "y"
 
     def test_slab_y_top(self):
         result = CONVERTER.convert("CarpentersBlocks:blockCarpentersBlock", _base_te(4))
         assert result.blockstate_props["type"] == "top"
-        assert result.blockstate_props["axis"] == "y"
 
     def test_slab_x_neg(self):
         result = CONVERTER.convert("CarpentersBlocks:blockCarpentersBlock", _base_te(1))
         assert result.blockstate_props["type"] == "bottom"
-        assert result.blockstate_props["axis"] == "x"
 
 
 # -------------------------------------------------------------------
@@ -519,7 +515,6 @@ class TestPressurePlateConverter:
     def test_not_powered(self):
         # dir=UP=1, powered=0
         result = CONVERTER.convert("CarpentersBlocks:blockCarpentersPressurePlate", _base_te(1))
-        assert result.blockstate_props["facing"] == "up"
         assert result.blockstate_props["powered"] == "false"
 
     def test_powered(self):
@@ -613,9 +608,12 @@ class TestFlowerPotConverter:
 # -------------------------------------------------------------------
 
 class TestMultiblockConverters:
-    def test_bed_warning(self):
+    def test_bed_basic(self):
+        # cbMetadata=5: facing=1(west), occupied=1(true), part=0(foot)
         result = CONVERTER.convert("CarpentersBlocks:blockCarpentersBed", _base_te(5))
-        assert any("CB-W-MULTIBLOCK" in w for w in result.warnings)
+        assert result.blockstate_props["facing"] == "west"
+        assert result.blockstate_props["part"] == "foot"
+        assert result.blockstate_props["occupied"] == "true"
         assert result.nbt_1182.get("cbMetadataRaw") == 5
 
     def test_garage_door_warning(self):
