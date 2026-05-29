@@ -81,15 +81,15 @@ Przykłady:
     
     script_dir = Path(__file__).parent
     
-    # Sprawdź czy JVM worker jest zbudowany
-    worker_jar = Path(__file__).parent.parent / "jvm" / "worker" / "build" / "libs" / "mc-editkit-worker-1.0-SNAPSHOT.jar"
-    if not worker_jar.exists():
-        print("⚠️  UWAGA: JVM worker nie jest zbudowany!")
-        print(f"   Nie znaleziono: {worker_jar}")
-        print("   Zbuduj go za pomocą:")
-        print("   cd jvm/worker && .\\gradlew.bat build")
+    # Sprawdź czy map-cleaner JAR jest zbudowany
+    cleaner_jar = Path(__file__).parent / "jvm" / "build" / "libs" / "map-cleaner-1.0-SNAPSHOT.jar"
+    if not cleaner_jar.exists():
+        print("UWAGA: map-cleaner JAR nie jest zbudowany!")
+        print(f"   Nie znaleziono: {cleaner_jar}")
+        print("   Zbuduj go za pomoca:")
+        print("   cd map_cleaning\\jvm && .\\gradlew.bat build")
         print()
-        response = input("Czy chcesz kontynuować mimo to? (t/n): ")
+        response = input("Czy chcesz kontynuowac mimo to? (t/n): ")
         if response.lower() not in ('t', 'tak', 'y', 'yes'):
             sys.exit(1)
     

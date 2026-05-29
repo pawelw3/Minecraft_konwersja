@@ -19,7 +19,13 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 from converters.forge_multipart.forge_multipart_converter import ForgeMultipartConverter
 from converters.forge_multipart.nbt_converter import TileMultipartNBTConverter
-from converters.forge_multipart.mappings import map_block_id, map_microblock_material, map_part_id, map_te_id
+from converters.forge_multipart.mappings import (
+    SAFE_MICROBLOCK_MATERIALS_1182,
+    map_block_id,
+    map_microblock_material,
+    map_part_id,
+    map_te_id,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -63,6 +69,44 @@ def test_map_microblock_material_extrautils_colored_blocks():
 
 def test_map_microblock_material_falls_back_to_valid_resource_location():
     assert map_microblock_material("bad material with spaces") == "minecraft:stone"
+
+
+def test_map_microblock_material_rejects_unknown_but_syntactically_valid_ids():
+    assert map_microblock_material("unknownmod:looks_valid") == "minecraft:stone"
+    assert map_microblock_material("chisel:glowstone_4") == "minecraft:glowstone"
+    assert map_microblock_material("chisel:gold2_2") == "minecraft:gold_block"
+    assert map_microblock_material("chisel:marble") == "minecraft:calcite"
+
+
+def test_map_microblock_material_converts_legacy_vanilla_names():
+    assert map_microblock_material("minecraft:stonebrick") == "minecraft:stone_bricks"
+    assert map_microblock_material("minecraft:brick_block") == "minecraft:bricks"
+    assert map_microblock_material("minecraft:stained_hardened_clay_13") == "minecraft:green_terracotta"
+    assert map_microblock_material("minecraft:wool_14") == "minecraft:red_wool"
+
+
+def test_map_microblock_material_converts_old_mod_materials_to_safe_vanilla():
+    assert map_microblock_material("tile.extrautils:colorstonebrick_7") == "minecraft:stone_bricks"
+    assert map_microblock_material("thermalfoundation:storage_2") == "minecraft:iron_block"
+    assert map_microblock_material("mekanism:basicblock_5") == "minecraft:iron_block"
+
+
+def test_regression_crash_materials_resolve_to_known_safe_materials():
+    crash_materials = [
+        "chisel:glowstone_4",
+        "chisel:gold2_2",
+        "chisel:marble",
+        "chisel:concrete_4",
+        "minecraft:stained_hardened_clay_13",
+        "tile.extrautils:colorstonebrick_7",
+        "thermalfoundation:storage_2",
+        "mekanism:basicblock_5",
+        "unknownmod:looks_valid",
+    ]
+
+    for material in crash_materials:
+        mapped = map_microblock_material(material)
+        assert mapped in SAFE_MICROBLOCK_MATERIALS_1182
 
 
 # ---------------------------------------------------------------------------

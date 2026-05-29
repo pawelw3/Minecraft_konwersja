@@ -2,15 +2,13 @@
 Skrypt do czyszczenia mapy Minecraft 1.7.10 z:
 - Entities (mobów, przedmiotów, etc.)
 - Block Entities/Tile Entities (skrzynie, maszyny modów)
-- Bloków z modów (zamiana na bedrock)
+- Bloków z modów (zamiana na air)
 
-Używa JVM workera do odczytu/zapisu Sections w plikach .mca.
+Używa map-cleaner JVM workera (map_cleaning/jvm/) do modyfikacji bloków/TE/entities.
 """
-import json
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 from typing import Dict, List, Set, Tuple, Optional
 from dataclasses import dataclass, field
@@ -22,15 +20,11 @@ from minecraft_map_parser.anvil_parser import AnvilParser, ChunkData
 from minecraft_map_parser.nbt_parser import NBTTag
 
 
-# Vanilla block IDs w Minecraft 1.7.10 (0-197)
-VANILLA_BLOCK_IDS = set(range(0, 198))
-
-# Dodatkowe ID bloków vanilla które mogą być powyżej 197 w niektórych wersjach
-# (np. w 1.7.10 stained clay to 159, ale sprawdźmy)
-VANILLA_BLOCK_IDS.add(159)  # stained_hardened_clay
-
-# Bedrock block ID
-BEDROCK_ID = 7
+# Vanilla block IDs w Minecraft 1.7.10
+VANILLA_BLOCK_IDS = set(range(0, 176))
+VANILLA_BLOCK_IDS.update(range(176, 198))  # 1.7.x additions
+VANILLA_BLOCK_IDS.update([159, 160, 161, 162, 163, 164, 165, 166, 167,
+                           168, 169, 170, 171, 172, 173, 174, 175])
 
 
 @dataclass
@@ -67,24 +61,37 @@ class ChunkAnalysis:
 
 
 def get_block_id_from_section(section: Dict, local_x: int, local_y: int, local_z: int) -> int:
-    """Pobiera ID bloku z sekcji."""
+    """Pobiera pełne 12-bitowe ID bloku z sekcji (Blocks + Add array)."""
     blocks = section.get('Blocks')
     if blocks is None:
         return 0
-    
     if isinstance(blocks, NBTTag):
         blocks = blocks.value
-    if blocks is None:
+    if not isinstance(blocks, (list, tuple, bytes, bytearray)):
         return 0
-    
-    # Index w tablicy Blocks: y * 256 + z * 16 + x
+
     index = local_y * 256 + local_z * 16 + local_x
-    
-    if isinstance(blocks, (list, tuple, bytes)):
-        if 0 <= index < len(blocks):
-            val = blocks[index]
-            return val if isinstance(val, int) else ord(val) if isinstance(val, str) else int(val)
-    return 0
+    if index >= len(blocks):
+        return 0
+
+    raw = blocks[index]
+    low = raw if isinstance(raw, int) else ord(raw)
+    low &= 0xFF
+
+    # Górne 4 bity z tablicy Add (bloki z modów mają ID >= 256)
+    add = section.get('Add') or section.get('AddBlocks')
+    if isinstance(add, NBTTag):
+        add = add.value
+    high = 0
+    if add and isinstance(add, (bytes, bytearray, list)) and index // 2 < len(add):
+        nibble_byte = add[index // 2]
+        nibble_byte = nibble_byte if isinstance(nibble_byte, int) else ord(nibble_byte)
+        if index % 2 == 0:
+            high = nibble_byte & 0x0F
+        else:
+            high = (nibble_byte >> 4) & 0x0F
+
+    return (high << 8) | low
 
 
 def analyze_chunk(chunk: ChunkData, region_file: Path, local_x: int, local_z: int) -> ChunkAnalysis:
@@ -153,66 +160,33 @@ def analyze_chunk(chunk: ChunkData, region_file: Path, local_x: int, local_z: in
     return result
 
 
-def generate_patch(analysis_results: List[ChunkAnalysis]) -> Dict:
-    """Generuje patch JSON dla JVM workera."""
-    edits = []
-    
-    # Zbierz wszystkie pozycje bloków do zamiany
-    bedrock_positions = set()
-    
-    for chunk_analysis in analysis_results:
-        # Dodaj pozycje z mod blocks
-        for pos in chunk_analysis.mod_blocks:
-            bedrock_positions.add(pos)
-        
-        # Dodaj pozycje z tile entities
-        for x, y, z, _ in chunk_analysis.tile_entities:
-            bedrock_positions.add((x, y, z))
-    
-    # Generuj operacje set_block dla bedrocka
-    for x, y, z in sorted(bedrock_positions):
-        edits.append({
-            "op": "set_block",
-            "x": x,
-            "y": y,
-            "z": z,
-            "id": BEDROCK_ID,
-            "meta": 0
-        })
-    
-    return {"edits": edits}
+def run_map_cleaner(world_path: Path) -> bool:
+    """Uruchamia map-cleaner JAR na podanym świecie.
 
+    JAR czyta pełne 12-bitowe ID bloków (Blocks + Add), zastępuje bloki modów
+    (ID >= 256) na air (replacementBlock=0), czyści TileEntities i Entities.
+    """
+    cleaner_jar = Path(__file__).parent / "jvm" / "build" / "libs" / "map-cleaner-1.0-SNAPSHOT.jar"
 
-def run_jvm_worker(world_path: Path, patch_path: Path) -> bool:
-    """Uruchamia JVM workera z danym patchem."""
-    worker_jar = Path(__file__).parent.parent / "jvm" / "worker" / "build" / "libs" / "mc-editkit-worker-1.0-SNAPSHOT.jar"
-    
-    if not worker_jar.exists():
-        print(f"Błąd: Nie znaleziono JVM workera: {worker_jar}")
-        print("Zbuduj worker za pomocą: cd jvm/worker && ./gradlew build")
+    if not cleaner_jar.exists():
+        print(f"Błąd: Nie znaleziono map-cleaner JAR: {cleaner_jar}")
+        print("Zbuduj: cd map_cleaning/jvm && .\\gradlew.bat build")
         return False
-    
-    cmd = [
-        "java", "-jar", str(worker_jar),
-        "--world", str(world_path),
-        "--patch", str(patch_path)
-    ]
-    
-    print(f"Uruchamiam JVM workera...")
-    print(f"  World: {world_path}")
-    print(f"  Patch: {patch_path}")
-    
+
+    cmd = ["java", "-jar", str(cleaner_jar), str(world_path), "--full"]
+
+    print(f"Uruchamiam map-cleaner JAR...")
+    print(f"  Świat: {world_path}")
+    print(f"  Tryb: --full (bloki -> air, TE, entities)")
+
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-        print(result.stdout)
-        if result.stderr:
-            print("STDERR:", result.stderr)
+        result = subprocess.run(cmd, capture_output=False, text=True, timeout=3600)
         return result.returncode == 0
     except subprocess.TimeoutExpired:
-        print("Błąd: Timeout podczas wykonywania patcha")
+        print("Błąd: Timeout podczas czyszczenia (>1h)")
         return False
     except Exception as e:
-        print(f"Błąd podczas uruchamiania JVM workera: {e}")
+        print(f"Błąd podczas uruchamiania map-cleaner: {e}")
         return False
 
 
@@ -428,7 +402,7 @@ def clean_map(source_world: Path, output_world: Path, regions_filter: Optional[L
     print(f"Cel: {output_world}")
     
     # Przygotuj świat
-    print("\n[1/5] Przygotowywanie świata...")
+    print("\n[1/3] Przygotowywanie świata...")
     if output_world.exists():
         print(f"  Usuwanie starego katalogu: {output_world}")
         shutil.rmtree(output_world)
@@ -446,7 +420,7 @@ def clean_map(source_world: Path, output_world: Path, regions_filter: Optional[L
     print(f"  Gotowe")
     
     # Analizuj regiony
-    print("\n[2/5] Analiza regionów...")
+    print("\n[2/3] Analiza regionów...")
     output_region = output_world / "region"
     region_files = list(output_region.glob("r.*.mca"))
     
@@ -490,33 +464,14 @@ def clean_map(source_world: Path, output_world: Path, regions_filter: Optional[L
     if not all_analysis:
         print("\n  Brak zmian do wykonania!")
         return True
-    
-    # Generuj patch
-    print("\n[3/5] Generowanie patcha...")
-    patch = generate_patch(all_analysis)
-    
-    # Zapisz patch do pliku tymczasowego
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        json.dump(patch, f, indent=2)
-        patch_path = Path(f.name)
-    
-    print(f"  Wygenerowano {len(patch['edits'])} operacji")
-    print(f"  Zapisano do: {patch_path}")
-    
-    # Uruchom JVM workera
-    print("\n[4/5] Aplikowanie zmian (bloki -> bedrock)...")
-    success = run_jvm_worker(output_world, patch_path)
-    
-    # Usuń plik patcha
-    patch_path.unlink()
-    
+
+    # Uruchom map-cleaner JAR — zastępuje bloki modów na air, czyści TE i entities
+    print("\n[3/3] Czyszczenie bloków, TileEntities i Entities (map-cleaner JAR)...")
+    success = run_map_cleaner(output_world)
+
     if not success:
-        print("  Błąd podczas aplikowania patcha!")
+        print("  Błąd podczas czyszczenia!")
         return False
-    
-    # Wyczysc entities
-    print("\n[5/5] Czyszczenie entities...")
-    clean_entities_via_python(output_world, all_analysis)
     
     print("\n" + "=" * 60)
     print("CZYSZCZENIE ZAKONCZONE")

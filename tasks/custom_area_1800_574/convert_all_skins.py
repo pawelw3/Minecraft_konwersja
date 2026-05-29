@@ -8,7 +8,7 @@ import json
 import subprocess
 import sys
 import time
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -17,7 +17,7 @@ GRADLEW = WORK_DIR / "gradlew.bat"
 MANIFEST = ROOT / "output" / "armourers_workshop_step4" / "skin_library_migration_manifest.json"
 SOURCE_ROOT = ROOT / "pliki_globalne_serwer_1710" / "armourersWorkshop"
 TARGET_ROOT = ROOT / "tasks" / "custom_area_1800_574" / "world" / "skin-library"
-MAX_WORKERS = 4
+MAX_WORKERS = 1
 
 
 def convert_one(entry: dict) -> dict:
@@ -26,19 +26,15 @@ def convert_one(entry: dict) -> dict:
     dst = TARGET_ROOT / rel
     dst.parent.mkdir(parents=True, exist_ok=True)
 
-    cmd = [
-        str(GRADLEW),
-        "-p", str(WORK_DIR),
-        ":forge:runSkinLibraryConvertCli",
-        f"-PawSource={src}",
-        f"-PawTarget={dst}",
-        "--no-daemon",
-        "--console=plain",
-    ]
+    cmd = (
+        f'"{GRADLEW}" -p "{WORK_DIR}" :forge:runSkinLibraryConvertCli '
+        f'"-PawSource={src}" "-PawTarget={dst}" --no-daemon --console=plain'
+    )
 
     try:
         result = subprocess.run(
             cmd,
+            shell=True,
             capture_output=True,
             text=True,
             encoding="utf-8",
@@ -81,7 +77,7 @@ def main():
     ok_count = fail_count = 0
     start = time.time()
 
-    with ProcessPoolExecutor(max_workers=MAX_WORKERS) as pool:
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
         futures = {pool.submit(convert_one, e): e for e in entries}
         for future in as_completed(futures):
             res = future.result()
